@@ -1,10 +1,10 @@
 import type { Component } from 'solid-js';
+import { Song } from './SongList';
 
-const SongListItem: Component = () => {
+const SongListItem: Component<{song: Song}> = (props) => {
   return (
     <div>
-      <h2>SongListItem</h2>
-      stuff about a song
+      <b>{props.song.artist}</b> - {props.song.title}
     </div>
   );
 };
