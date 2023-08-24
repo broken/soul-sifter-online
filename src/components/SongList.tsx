@@ -1,6 +1,6 @@
 import { createSignal, type Component, createEffect, For } from 'solid-js';
 import SongListItem from './SongListItem';
-import { DocumentData, QueryDocumentSnapshot, SnapshotOptions, collection, getDocs, query } from 'firebase/firestore';
+import { DocumentData, QueryDocumentSnapshot, SnapshotOptions, collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../App';
 
 class Song {
@@ -59,12 +59,14 @@ const songConverter = {
 };
 
 const [songs, setSongs] = createSignal<Song[]>([]);
+const [searchQuery, setSearchQuery] = createSignal<string>('');
 
 
 const SongList: Component = () => {
   createEffect(async () => {
-    const q = query(collection(db, 'songs').withConverter(songConverter));
-    // db.collection('songs');  // withConverter
+    const q = !!searchQuery()
+        ? query(collection(db, 'songs').withConverter(songConverter), where('title', '>=', searchQuery()), where('title', '<=', searchQuery()+'\uf8ff'))
+        : query(collection(db, 'songs').withConverter(songConverter));
     const snapshot = await getDocs(q);
     let songList: Song[] = []
     snapshot.forEach((doc) => {
@@ -89,4 +91,4 @@ const SongList: Component = () => {
 };
 
 export default SongList;
-export {Song, songs};
+export {Song, songs, setSearchQuery};

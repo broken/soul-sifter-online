@@ -5,6 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import logo from './logo.svg';
 import styles from './App.module.css';
 import SongList from './components/SongList';
+import SearchToolbar from './components/SearchToolbar';
 
 // Initialize firebase
 const firebaseConfig = {
@@ -18,6 +19,7 @@ const App: Component = () => {
     <div class={styles.App}>
       <header class={styles.header}>
         <img src={logo} class={styles.logo} alt="logo" />
+        <SearchToolbar />
         <SongList />
       </header>
     </div>
