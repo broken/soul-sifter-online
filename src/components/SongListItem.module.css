@@ -1,0 +1,12 @@
+.SongListItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 30px;
+  padding: 0 8px;
+  margin: 0 10px;
+  border-bottom: var(--ss-song-list-item-border-bottom);
+}
+.SongListItem .artist {
+  color: var(--ss-song-list-item-artist-color);
+}
