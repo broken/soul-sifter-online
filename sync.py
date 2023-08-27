@@ -16,7 +16,24 @@ class SoulSifterSync(object):
     update_songs: uploads songs
   """
 
-  def update_songs(self):
+  def pull(self):
+    # MySQL
+    connection = connect_mysql()
+    # Firebase
+    cred = credentials.ApplicationDefault()
+    firebase_admin.initialize_app(cred)
+    db = firestore.Client('soul-sifter')
+    changes = db.collection('changes')
+    for change in tqdm.tqdm(changes):
+      statement = f'update {change.table} set {change.field}={change.value} where id={change.id}'
+      cursor = connection.cursor()
+      cursor.execute(statement)
+      # cursor.commit?
+      cursor.close()
+      # change.delete()
+
+
+  def push(self):
     # Firebase
     cred = credentials.ApplicationDefault()
     firebase_admin.initialize_app(cred)
@@ -29,7 +46,6 @@ class SoulSifterSync(object):
     for i in tqdm.tqdm(range(0, max_id, step)):
       cursor = connection.cursor()
       cursor.execute(f"select s.id, s.artist, s.track, s.title, s.remixer, s.rating, s.youtubeId, a.name, a.releaseDateYear, a.releaseDateMonth, a.releaseDateDay, group_concat('-', y.id, ':', y.name) as styles from Songs s inner join Albums a on s.albumid=a.id left outer join SongStyles ss on ss.songid=s.id inner join Styles y on ss.styleid=y.id where s.trashed != 1 group by s.id limit {i}, {step}")
-
 
       # Iterate over the rows
       for row in cursor:
