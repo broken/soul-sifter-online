@@ -1,3 +1,5 @@
 node_modules
 dist
 .firebase/
+.mysql_settings.json
+.soul-sifter-firebase-adminsdk-zd288-4abb1142ec.json
