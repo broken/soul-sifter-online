@@ -2,7 +2,7 @@ import type { Component } from 'solid-js';
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import logo from './logo.svg';
+import logo from './assets/hires_candidate_2.png';
 import styles from './App.module.css';
 import SongList from './components/SongList';
 import SearchToolbar from './components/SearchToolbar';
@@ -23,12 +23,12 @@ const db = getFirestore(firebase);
 
 const App: Component = () => {
   return (
-    <div class={styles.App}>
-      <header class={styles.header}>
-        <img src={logo} class={styles.logo} alt="logo" />
+    <div class="flex flex-col h-screen w-screen overflow-hidden">
+      <div class="flex flex-row p-5">
         <SearchToolbar />
-        <SongList />
-      </header>
+        <img src={logo} class={styles.logo} alt="logo" />
+      </div>
+      <SongList />
     </div>
   );
 };

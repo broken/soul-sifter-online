@@ -81,10 +81,15 @@ const SongList: Component = () => {
 
   let s = new Song(1, 'Dogatech', '1', 'oh hai', undefined, 5, 'none', 'bai', 2023, 8, 23);
   return (
-    <div  class={styles.SongList}>
-      <For each={songs()}>
-        {song => <SongListItem song={song} />}
-      </For>
+    <div class="overflow-x-hidden overflow-y-scroll">
+      <table class="table">
+        <SongListItem song={s} />
+        <SongListItem song={s} />
+        <SongListItem song={s} />
+        <For each={songs()}>
+          {song => <SongListItem song={song} />}
+        </For>
+      </table>
     </div>
   );
 };

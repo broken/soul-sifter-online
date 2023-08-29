@@ -4,10 +4,16 @@ import styles from './SongListItem.module.css';
 
 const SongListItem: Component<{song: Song}> = (props) => {
   return (
-    <div class={styles.SongListItem}>
-      <span class="{styles.artist}">{props.song.artist}</span>
-       - {props.song.title}
-    </div>
+    <tr>
+      <td class="flex flex-row">
+        <span>
+          <span>{props.song.artist}</span>
+          <span> - </span>
+          <span><b>{props.song.title}</b></span>
+        </span>
+        <span class="">{props.song.rating}</span>
+      </td>
+    </tr>
   );
 };
 
