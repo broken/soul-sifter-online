@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js';
+import { type Component } from 'solid-js';
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -6,6 +6,7 @@ import logo from './assets/hires_candidate_2.png';
 import styles from './App.module.css';
 import SongList from './components/SongList';
 import SearchToolbar from './components/SearchToolbar';
+import SongInfo from './components/SongInfo';
 
 // Initialize firebase
 const firebaseConfig = {
@@ -29,6 +30,7 @@ const App: Component = () => {
         <img src={logo} class={styles.logo} alt="logo" />
       </div>
       <SongList />
+      <SongInfo />
     </div>
   );
 };

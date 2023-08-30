@@ -1,10 +1,12 @@
-import { For, type Component, Index, Show } from 'solid-js';
+import { For, type Component, Show, createSignal } from 'solid-js';
 import { Song } from './SongList';
 import { ImStarEmpty, ImStarFull } from 'solid-icons/im';
 
+const [song, setSong] = createSignal<Song>();
+
 const SongListItem: Component<{song: Song}> = (props) => {
   return (
-    <tr>
+    <tr onclick={() => setSong(props.song)}>
       <td class="flex flex-row justify-between">
         <span>
           <span>{props.song.artist}</span>
@@ -15,7 +17,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
           <For each={[...Array(5).keys()]}>
             {
               (i) => {
-                return <Show when={i < (props.song.rating || 0)} fallback={<ImStarEmpty children />}>
+                return <Show when={i < (props.song.rating || 0)} fallback={<ImStarEmpty />}>
                         <ImStarFull class="fill-secondary"/>
                       </Show>
               }
@@ -28,3 +30,4 @@ const SongListItem: Component<{song: Song}> = (props) => {
 };
 
 export default SongListItem;
+export {song, setSong};
