@@ -1,6 +1,6 @@
 import { For, type Component, Show, createSignal } from 'solid-js';
 import { Song } from './SongList';
-import { ImStarEmpty, ImStarFull } from 'solid-icons/im';
+import Rating from './Rating';
 
 const [song, setSong] = createSignal<Song>();
 
@@ -13,17 +13,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
           <span> - </span>
           <span><b>{props.song.title}</b></span>
         </span>
-        <span class="flex flex-row text-primary items-center">
-          <For each={[...Array(5).keys()]}>
-            {
-              (i) => {
-                return <Show when={i < (props.song.rating || 0)} fallback={<ImStarEmpty />}>
-                        <ImStarFull class="fill-secondary"/>
-                      </Show>
-              }
-            }
-          </For>
-        </span>
+        <Rating song={props.song} mutable={false} />
       </td>
     </tr>
   );

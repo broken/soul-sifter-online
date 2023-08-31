@@ -79,7 +79,7 @@ const SongList: Component = () => {
     console.log(songList);
   });
 
-  let s = new Song(1, 'Dogatech', '1', 'oh hai', undefined, 5, 'none', 'bai', 2023, 8, 23);
+  let s = new Song(1, 'Dogatech', '1', 'oh hai', undefined, 3, 'none', 'bai', 2023, 8, 23);
   return (
     <div class="overflow-x-hidden overflow-y-scroll">
       <table class="table">
@@ -95,4 +95,4 @@ const SongList: Component = () => {
 };
 
 export default SongList;
-export {Song, songs};
+export {Song, songs, songConverter};
