@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "start": "vite",
+    "deploy": "npm run build && firebase deploy",
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview"
