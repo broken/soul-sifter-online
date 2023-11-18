@@ -12,7 +12,7 @@ const SearchToolbar: Component = () => {
           class="input input-bordered flex-1"
           classList={{["input-primary"]:inputFocused()}}
           onfocusin={() => setInputFocused(true)} onfocusout={() => setInputFocused(false)}></input>
-      <button onclick={() => setSearchField(searchField() == 'title' ? 'artist' : 'title')} />
+      <button class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded" onclick={() => setSearchField(searchField() == 'title' ? 'artist' : 'title')}>{searchField()}</button>
     </div>
   );
 };
