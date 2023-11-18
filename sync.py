@@ -23,14 +23,16 @@ class SoulSifterSync(object):
     cred = credentials.ApplicationDefault()
     firebase_admin.initialize_app(cred)
     db = firestore.Client('soul-sifter')
-    changes = db.collection('changes')
-    for change in tqdm.tqdm(changes):
-      statement = f'update {change.table} set {change.field}={change.value} where id={change.id}'
+    changes = db.collection('changes').order_by('timestamp', direction=firestore.Query.ASCENDING).stream()
+    for c in tqdm.tqdm(list(changes)):
+      change = c.to_dict()
+      statement = f"update {change['table']} set {change['field']}={change['value']} where id={change['id']}"
       cursor = connection.cursor()
       cursor.execute(statement)
-      # cursor.commit?
+      connection.commit()
       cursor.close()
-      # change.delete()
+      c.reference.delete()
+    connection.close()
 
 
   def push(self):
