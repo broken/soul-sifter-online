@@ -1,12 +1,12 @@
-import { For, type Component, Show, createSignal } from 'solid-js';
-import { Song } from './SongList';
+import { type Component } from 'solid-js';
 import Rating from './Rating';
-
-const [song, setSong] = createSignal<Song>();
+import Song from '../dataclasses/Song';
+import { SongConsumer } from './SongContext';
 
 const SongListItem: Component<{song: Song}> = (props) => {
+  const {setSong} = SongConsumer();
   return (
-    <tr onclick={() => setSong(props.song)}>
+    <tr onclick={() => setSong?.(props.song)}>
       <td class="flex flex-row justify-between">
         <span>
           <span>{props.song.artist}</span>
@@ -20,4 +20,3 @@ const SongListItem: Component<{song: Song}> = (props) => {
 };
 
 export default SongListItem;
-export {song, setSong};

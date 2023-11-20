@@ -7,6 +7,8 @@ import styles from './App.module.css';
 import SongList from './components/SongList';
 import SearchToolbar from './components/SearchToolbar';
 import SongInfo from './components/SongInfo';
+import SongsContext from './components/SongsContext';
+import SongContext from './components/SongContext';
 
 // Initialize firebase
 const firebaseConfig = {
@@ -24,14 +26,18 @@ const db = getFirestore(firebase);
 
 const App: Component = () => {
   return (
-    <div class="flex flex-col h-screen w-screen overflow-hidden">
-      <div class="flex flex-row p-5">
-        <SearchToolbar />
-        <img src={logo} class={styles.logo} alt="logo" />
-      </div>
-      <SongList />
-      <SongInfo />
-    </div>
+    <SongsContext>
+      <SongContext>
+        <div class="flex flex-col h-screen w-screen overflow-hidden">
+          <div class="flex flex-row p-5">
+            <SearchToolbar />
+            <img src={logo} class={styles.logo} alt="logo" />
+          </div>
+          <SongList />
+          <SongInfo />
+        </div>
+      </SongContext>
+    </SongsContext>
   );
 };
 

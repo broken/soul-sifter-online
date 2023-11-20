@@ -1,29 +1,34 @@
-import { For, type Component, Show, mergeProps, createSignal, createEffect, untrack } from "solid-js";
-import { createStore } from "solid-js/store";
+import { For, type Component, Show, mergeProps } from "solid-js";
+import { produce } from "solid-js/store";
 import { ImStarEmpty, ImStarFull } from 'solid-icons/im';
-import { Song, songConverter } from "./SongList";
 import { db } from "../App";
 import { addDoc, collection, doc, setDoc } from "firebase/firestore";
+import { SongsConsumer } from "./SongsContext";
+import Song, { songConverter } from "../dataclasses/Song";
+import { SongConsumer } from "./SongContext";
 
-const Rating: Component<{song: Song, mutable: boolean}> = (props) => {
+const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) => {
   props = mergeProps({ mutable: false }, props);
-  let emptySong = new Song(-1, '', '', '');
-
-  const [getSong, setSong] = createStore<Song>(emptySong);
-  createEffect(() => { setSong(props.song); });
+  const {setSongs} = SongsConsumer();
+  const {setSong} = SongConsumer();
 
   let setRating = (rating: number) => {
-    if (!getSong) {
+    if (!props.song) {
       console.error('Trying to set rating of an undefined song.');
       return;
     }
-    setSong('rating', rating);
-    setDoc(doc(db, 'songs', getSong.id.toString()).withConverter(songConverter), getSong);
+    props.song.rating = rating;
+    setSong(props.song);
+    setSongs(
+        (s: Song) => s.id === props.song?.id,
+        produce((s: Song) => s.rating = rating)
+    );
+    setDoc(doc(db, 'songs', props.song.id.toString()).withConverter(songConverter), props.song, { merge: true });
     addDoc(collection(db, 'changes'), {
-      id: getSong.id,
+      id: props.song.id,
       table: 'songs',
       field: 'rating',
-      value: getSong.rating,
+      value: props.song.rating,
       timestamp: new Date().getTime()
     });
   };
@@ -34,7 +39,7 @@ const Rating: Component<{song: Song, mutable: boolean}> = (props) => {
         {
           (i) => {
             return (
-              <Show when={i < (getSong.rating || 0)} fallback={<ImStarEmpty onclick={() => props.mutable ? setRating(i+1) : ''} />}>
+              <Show when={i < (props.song?.rating || 0)} fallback={<ImStarEmpty onclick={() => props.mutable ? setRating(i+1) : ''} />}>
                 <ImStarFull onclick={() => props.mutable ? setRating(i+1) : ''} class="fill-secondary"/>
               </Show>
             );
