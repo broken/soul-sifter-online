@@ -2,8 +2,6 @@ import { type Component } from 'solid-js';
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import logo from './assets/hires_candidate_2.png';
-import styles from './App.module.css';
 import SongList from './components/SongList';
 import SearchToolbar from './components/SearchToolbar';
 import SongInfo from './components/SongInfo';
@@ -29,10 +27,7 @@ const App: Component = () => {
     <SongsContext>
       <SongContext>
         <div class="flex flex-col h-screen w-screen overflow-hidden">
-          <div class="flex flex-row p-5">
-            <SearchToolbar />
-            <img src={logo} class={styles.logo} alt="logo" />
-          </div>
+          <SearchToolbar />
           <SongList />
           <SongInfo />
         </div>
