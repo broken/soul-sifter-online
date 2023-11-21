@@ -27,10 +27,21 @@ const SongList: Component = () => {
 
   return (
     <div class="overflow-x-hidden overflow-y-scroll">
-      <table class="table">
-        <Index each={songs}>
-          {song => <SongListItem song={song()} />}
-        </Index>
+      <table class="table table-pin-rows">
+        {/* head */}
+        <thead>
+          <tr>
+            <th class="flex flex-row justify-between">
+              <span>track</span>
+              <span>rating</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <Index each={songs}>
+            {song => <SongListItem song={song()} />}
+          </Index>
+        </tbody>
       </table>
     </div>
   );
