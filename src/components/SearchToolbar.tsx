@@ -10,16 +10,16 @@ const [searchField, setSearchField] = createSignal<string>('artist');
 const SearchToolbar: Component = () => {
   const [inputFocused, setInputFocused] = createSignal<boolean>(false);
   return (
-    <div class="navbar bg-base-100">
+    <div class="navbar bg-base-200">
       <div class="flex-1">
         <a class="btn btn-ghost text-xl">Soul Sifter Online</a>
       </div>
       <div class="flex-none gap-2">
-        <div class="form-control">
+        <div>
           <input type="text"
               placeholder="Search"
               onInput={(e) => setSearchQuery(e.target.value)}
-              class="input input-bordered w-24 md:w-auto flex-1"
+              class="input input-bordered md:w-auto flex-1"
               classList={{["input-primary"]:inputFocused()}}
               onfocusin={() => setInputFocused(true)} onfocusout={() => setInputFocused(false)}></input>
         </div>
