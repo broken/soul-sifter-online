@@ -27,16 +27,7 @@ const SongList: Component = () => {
 
   return (
     <div class="overflow-x-hidden overflow-y-scroll">
-      <table class="table table-pin-rows">
-        {/* head */}
-        <thead>
-          <tr>
-            <th class="flex flex-row justify-between">
-              <span>track</span>
-              <span>rating</span>
-            </th>
-          </tr>
-        </thead>
+      <table class="table">
         <tbody>
           <Index each={songs}>
             {song => <SongListItem song={song()} />}
