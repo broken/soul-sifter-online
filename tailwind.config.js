@@ -52,6 +52,17 @@ module.exports = {
           "warning": "#fbbd23",
           "error": "#ec4899",
         },
+        sifter: {
+          "primary": "#ca8a04",
+          "secondary": "#6e6000",
+          "accent": "#4d7c0f",
+          "neutral": "#161011",
+          "base-100": "#2e2726",
+          "info": "#0284c7",
+          "success": "#759e00",
+          "warning": "#eab308",
+          "error": "#ea580c",
+        },
       },
     ], // true: all themes | false: only light + dark | array: specific themes like this ["light", "dark", "cupcake"]
     darkTheme: "soul", // name of one of the included themes for dark mode

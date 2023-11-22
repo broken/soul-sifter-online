@@ -7,7 +7,7 @@ const SongInfo: Component = () => {
   const {song, setSong} = SongConsumer();
   return (
     <Show when={!!song()}>
-      <div class="card w-96 bg-base-100 shadow-xl m-auto">
+      <div class="card w-96 bg-neutral shadow-xl m-auto">
         <div class="card-body">
           <h2 class="card-title">Track</h2>
           <span>{song()?.artist}</span>

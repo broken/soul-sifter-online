@@ -7,6 +7,7 @@ import SearchToolbar from './components/SearchToolbar';
 import SongInfo from './components/SongInfo';
 import SongsContext from './components/SongsContext';
 import SongContext from './components/SongContext';
+import Settings from './components/Settings';
 
 // Initialize firebase
 const firebaseConfig = {
@@ -30,6 +31,7 @@ const App: Component = () => {
           <SearchToolbar />
           <SongList />
           <SongInfo />
+          <Settings />
         </div>
       </SongContext>
     </SongsContext>
