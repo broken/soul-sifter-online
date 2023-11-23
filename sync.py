@@ -15,6 +15,56 @@ class SoulSifterSync(object):
   Commands:
     update_songs: uploads songs
   """
+  # untested
+  def push_playlists(self):
+    # Firebase
+    cred = credentials.ApplicationDefault()
+    firebase_admin.initialize_app(cred)
+    db = firestore.Client('soul-sifter')
+
+    # MySQL
+    connection = connect_mysql()
+    cursor = connection.cursor()
+    cursor.execute("select p.id, p.name, p.query, p.youtubeid from playlists p where p.youtubeid is not null and p.youtubeid!='')")
+    playlists = []
+    for row in cursor:
+      playlists.append({
+        'id': row[0],
+        'name': row[1],
+        'query': row[2],
+        'youtubeId': row[3]
+      });
+    cursor.close()
+
+    for playlist in tqdm.tqdm(playlists):
+      cursor = connection.cursor()
+      cursor.execute(f"select s.id, s.artist, s.track, s.title, s.remixer, s.rating, s.youtubeId, a.name, a.releaseDateYear, a.releaseDateMonth, a.releaseDateDay, e.position from playlistentries e inner join songs s on s.id=e.songid where e.playlistid={playlist.id} order by e.position")
+      songs = []
+      for row in cursor:
+        # Create a Firestore document
+        songs.append({
+          'id': row[0],
+          'artist': row[1],
+          'track': row[2],
+          'title': row[3],
+          'remixer': row[4],
+          'rating': row[5],
+          'youtubeId': row[6],
+          'albumName': row[7],
+          'releaseDateYear': row[8],
+          'releaseDateMonth': row[9],
+          'releaseDateDay': row[10],
+          # 'genres': genres
+          'position': row[11]
+        });
+
+      # Add the document to Firestore
+      db.collection('playlists').document(str(playlist['id'])).set(playlist)
+      time.sleep(.1)
+      cursor.close()
+
+    # Close the MySQL connection
+    connection.close()
 
   def pull(self):
     # MySQL
