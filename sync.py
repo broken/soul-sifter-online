@@ -57,9 +57,9 @@ class SoulSifterSync(object):
     connection = connect_mysql()
 
     # Update songs
-    # push_genres(connection, db)
+    push_genres(connection, db)
     # push_playlists(connection, db)
-    push_songs(connection, db)
+    # push_songs(connection, db)
 
     # Close the MySQL connection
     connection.close()
@@ -129,7 +129,7 @@ def push_songs(mysql_connection, firestore_db):
 
 def push_genres(mysql_connection, firestore_db):
   max_id = get_max_id(mysql_connection, 'styles')
-  step = 100
+  step = 5
   for i in tqdm.tqdm(range(0, max_id, step), desc="genres"):
     cursor = mysql_connection.cursor()
     cursor.execute(f"select s.id, s.name, group_concat(parentId) from Styles s left outer join StyleChildren c on s.id=c.childid group by s.id limit {i}, {step}")
@@ -137,11 +137,11 @@ def push_genres(mysql_connection, firestore_db):
     # Iterate over the rows
     for row in cursor:
       # Create a Firestore document
-      parents = row[2] if row[2] else ''
+      parents = row[2].split(',') if row[2] else []
       doc = {
         'id': row[0],
         'name': row[1],
-        'parents': parents.split(','),
+        'parents': [int(x) for x in parents],
       }
 
       # Add the document to Firestore
