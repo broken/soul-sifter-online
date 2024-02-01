@@ -1,21 +1,39 @@
-import { type Component, createEffect, Index, DEV } from 'solid-js';
-import SongListItem from './SongListItem';
-import { collection, getDocs, limit, query, where } from 'firebase/firestore';
+import { type Component, createEffect, Index, createSignal, DEV } from 'solid-js';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '../App';
-import styles from './SongList.module.css';
-import { searchField, searchQuery } from './SearchToolbar';
-import { SongsConsumer } from './SongsContext';
-import Song, { songConverter } from '../dataclasses/Song';
+import Genre, { genreConverter } from '../dataclasses/Genre';
 
 
 const GenreList: Component = () => {
-
+  const [genres, setGenres] = createSignal<Genre[]>([]);
+  createEffect(async () => {
+    const q = query(collection(db, 'genres').withConverter(genreConverter));
+    const snapshot = await getDocs(q);
+    let genreList: Genre[] = []
+    snapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+      genreList.push(doc.data());
+      if (!!DEV) console.log(doc.id, ' => ', doc.data());
+    });
+    setGenres(genreList);
+    if (!!DEV) console.log(genreList);
+  });
 
   return (
-    <div class="overflow-x-hidden overflow-y-scroll">
+    <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
       <table class="table">
         <tbody>
-          GenreList
+          <Index each={genres()}>
+            {genre => (
+              <tr>
+              <td class="flex flex-row justify-between px-6 py-3">
+                <span>
+                  <span><b>{genre().name}</b></span>
+                </span>
+              </td>
+            </tr>
+            )}
+          </Index>
         </tbody>
       </table>
     </div>
