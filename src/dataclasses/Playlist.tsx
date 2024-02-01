@@ -1,15 +1,17 @@
 import { QueryDocumentSnapshot, DocumentData, SnapshotOptions } from "firebase/firestore";
 import { createMutable } from "solid-js/store";
 
-class Genre {
+class Playlist {
   id: number;
   name: string;
-  parents: number[];
+  query?: string;
+  youtubeId?: string;
 
-  constructor(id: number, name: string, parents: number[]) {
+  constructor(id: number, name: string, query?: string, youtubeId?: string) {
     this.id = id;
     this.name = name;
-    this.parents = parents;
+    this.query =  query;
+    this.youtubeId = youtubeId;
     return createMutable(this);
   }
 
@@ -19,21 +21,22 @@ class Genre {
 }
 
 // Firestore data converter
-const genreConverter = {
-  toFirestore: (g: Genre) => {
+const playlistConverter = {
+  toFirestore: (p: Playlist) => {
     return {
-      id: g.id,
-      name: g.name,
-      parents: g.parents
+      id: p.id,
+      name: p.name,
+      query: p.query,
+      youtubeId: p.youtubeId
     };
   },
   fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>, options?: SnapshotOptions) => {
     const d = snapshot.data(options);
-    return new Genre(d.id, d.name, d.parents);
+    return new Playlist(d.id, d.name, d.query, d.youtubeId);
   }
 };
 
-const emptyGenre = new Genre(-1, '', []);
+const emptyPlaylist = new Playlist(-1, '');
 
-export default Genre;
-export {emptyGenre, genreConverter};
+export default Playlist;
+export {emptyPlaylist, playlistConverter};

@@ -60,7 +60,7 @@ const songConverter = {
   }
 };
 
-const emptySong = new Song(-1, '', '', '', '')
+const emptySong = new Song(-1, '', '', '', '');
 
 export default Song;
 export {emptySong, songConverter};
