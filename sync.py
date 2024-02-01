@@ -12,7 +12,7 @@ import tqdm
 
 """
 tracks
-  array genres
+  map genres
 genres
 playlists
   subcollection entries
@@ -20,7 +20,6 @@ playlists
 get tracks in a genre:
 1. array of genres => array_contains genre on tracks (only 1)
 2. map of genres => chain together where statements
-3.
 
 algolia for full text search
 
@@ -59,8 +58,8 @@ class SoulSifterSync(object):
 
     # Update songs
     # push_genres(connection, db)
-    push_playlists(connection, db)
-    # push_songs(connection, db)
+    # push_playlists(connection, db)
+    push_songs(connection, db)
 
     # Close the MySQL connection
     connection.close()
@@ -92,7 +91,8 @@ def normalize_string(str):
 
 def push_songs(mysql_connection, firestore_db):
   max_id = get_max_id(mysql_connection, 'songs')
-  step = 100
+  step = 50
+  songsRef = firestore_db.collection('songs')
   for i in tqdm.tqdm(range(0, max_id, step), desc="songs"):
     cursor = mysql_connection.cursor()
     cursor.execute(f"select s.id, s.artist, s.track, s.title, s.remixer, s.rating, s.youtubeId, a.name, a.releaseDateYear, a.releaseDateMonth, a.releaseDateDay, group_concat('-', y.id, ':', y.name) as styles from Songs s inner join Albums a on s.albumid=a.id left outer join SongStyles ss on ss.songid=s.id inner join Styles y on ss.styleid=y.id where s.trashed != 1 group by s.id limit {i}, {step}")
@@ -100,13 +100,10 @@ def push_songs(mysql_connection, firestore_db):
     # Iterate over the rows
     for row in cursor:
       # Create a Firestore document
-      genres = []
+      genres = {}
       for s in row[11][1:].split(',-'):
         g = s.split(':')
-        genres.append({
-          'id': g[0],
-          'genre': g[1]
-        })
+        genres[g[0]] = g[1]
       doc = {
         'id': row[0],
         'artist': row[1],
@@ -125,7 +122,7 @@ def push_songs(mysql_connection, firestore_db):
       }
 
       # Add the document to Firestore
-      firestore_db.collection('songs').document(str(doc['id'])).set(doc)
+      songsRef.document(str(doc['id'])).set(doc)
       time.sleep(.1)
     cursor.close()
 
