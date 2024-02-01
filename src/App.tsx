@@ -34,7 +34,7 @@ const App: Component = () => {
       <SongContext>
         <div class="flex flex-col h-screen w-screen overflow-hidden">
           <SearchToolbar />
-          <div class="tab" classList={{ pending: pending() }}>
+          <div class="tab px-0" classList={{ pending: pending() }}>
             <Suspense fallback={<div class="loader">Loading...</div>}>
               <Switch>
                 <Match when={tab() === 0}>

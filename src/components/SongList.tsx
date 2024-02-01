@@ -28,7 +28,7 @@ const SongList: Component = () => {
   });
 
   return (
-    <div class="overflow-x-hidden overflow-y-scroll">
+    <div class="overflow-x-hidden overflow-y-scroll w-screen">
       <table class="table">
         <tbody>
           <Index each={songs}>
