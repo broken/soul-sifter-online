@@ -1,7 +1,10 @@
-import { type Component } from 'solid-js';
+import { Suspense, type Component, Switch, Match, createSignal, useTransition } from 'solid-js';
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import GenreList from './components/GenreList';
+import NavBar from './components/NavBar';
+import PlaylistList from './components/PlaylistList';
 import SongList from './components/SongList';
 import SearchToolbar from './components/SearchToolbar';
 import SongInfo from './components/SongInfo';
@@ -24,14 +27,33 @@ const db = getFirestore(firebase);
 
 
 const App: Component = () => {
+  const [tab, setTab] = createSignal(0);
+  const [pending, start] = useTransition();
   return (
     <SongsContext>
       <SongContext>
         <div class="flex flex-col h-screen w-screen overflow-hidden">
           <SearchToolbar />
-          <SongList />
+          <div class="tab" classList={{ pending: pending() }}>
+            <Suspense fallback={<div class="loader">Loading...</div>}>
+              <Switch>
+                <Match when={tab() === 0}>
+                  <SongList />
+                </Match>
+                <Match when={tab() === 1}>
+                  <GenreList />
+                </Match>
+                <Match when={tab() === 2}>
+                  <PlaylistList />
+                </Match>
+                <Match when={tab() === 3}>
+                  <Settings />
+                </Match>
+              </Switch>
+            </Suspense>
+          </div>
           <SongInfo />
-          <Settings />
+          <NavBar start={start} setTab={setTab}/>
         </div>
       </SongContext>
     </SongsContext>

@@ -1,14 +1,12 @@
 import { Show, type Component, createSignal, createEffect } from "solid-js";
 
-const [showSettings, setShowSettings] = createSignal(false);
-
 const Settings: Component = () => {
   const [theme, setTheme] = createSignal('soul');
   createEffect(() => {
     document.querySelector('html')!.setAttribute('data-theme', theme());
   });
   return (
-    <Show when={showSettings()}>
+    <Show when={true}>
       <div class="absolute h-screen w-screen bg-base-100 flex flex-col justify-center items-center">
         <div class="form-control">
           <label class="label cursor-pointer gap-4">
@@ -202,16 +200,9 @@ const Settings: Component = () => {
             <input type="radio" name="theme-radios" class="radio theme-controller" onclick={() => setTheme('wireframe')} value="wireframe"/>
           </label>
         </div> */}
-        <div class="modal-action">
-          <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
-            <button class="btn" onclick={() => setShowSettings(false)}>Close</button>
-          </form>
-        </div>
       </div>
     </Show>
   );
 };
 
 export default Settings;
-export {setShowSettings};

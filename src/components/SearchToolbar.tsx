@@ -2,7 +2,6 @@ import { createSignal, type Component } from 'solid-js';
 
 import logo from '../assets/hires_candidate_2.png';
 import styles from './SearchToolbar.module.css';
-import { setShowSettings } from './Settings';
 
 const [searchQuery, setSearchQuery] = createSignal<string>('');
 const [searchField, setSearchField] = createSignal<string>('artist');
@@ -37,7 +36,7 @@ const SearchToolbar: Component = () => {
                 <span class="badge">New</span>
               </a>
             </li>
-            <li><a onclick={() => setShowSettings(true)}>Settings</a></li>
+            <li><a>Settings</a></li>
             <li><a>Logout</a></li>
           </ul>
         </div>
