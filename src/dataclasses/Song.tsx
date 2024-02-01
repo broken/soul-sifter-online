@@ -13,8 +13,9 @@ class Song {
   releaseDateYear?: number;
   releaseDateMonth?: number;
   releaseDateDay?: number;
+  genres?: { [key: number]: string };
 
-  constructor(id: number, artist: string, track: string, title: string, remixer?: string, rating?: number, youtubeId?: string, albumName?: string, releaseDateYear?: number, releaseDateMonth?: number, releaseDateDay?: number) {
+  constructor(id: number, artist: string, track: string, title: string, remixer?: string, rating?: number, youtubeId?: string, albumName?: string, releaseDateYear?: number, releaseDateMonth?: number, releaseDateDay?: number, genres?: { [key: number]: string }) {
     this.id = id;
     this.artist = artist;
     this.track = track;
@@ -26,6 +27,7 @@ class Song {
     this.releaseDateYear = releaseDateYear;
     this.releaseDateMonth = releaseDateMonth;
     this.releaseDateDay = releaseDateDay;
+    this.genres = genres;
     return createMutable(this);
   }
 
@@ -48,12 +50,13 @@ const songConverter = {
       albumName: s.albumName,
       releaseDateYear: s.releaseDateYear,
       releaseDateMonth: s.releaseDateMonth,
-      releaseDateDay: s.releaseDateDay
+      releaseDateDay: s.releaseDateDay,
+      genres: s.genres
     };
   },
   fromFirestore: (snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>, options?: SnapshotOptions) => {
     const d = snapshot.data(options);
-    return new Song(d.id, d.artist, d.track, d.title, d.remixer, d.rating, d.youtubeId, d.albumName, d.releaseDateYear, d.releaseDateMonth, d.releaseDateDay);
+    return new Song(d.id, d.artist, d.track, d.title, d.remixer, d.rating, d.youtubeId, d.albumName, d.releaseDateYear, d.releaseDateMonth, d.releaseDateDay, d.genres);
   }
 };
 
