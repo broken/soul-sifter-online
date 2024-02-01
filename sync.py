@@ -3,68 +3,31 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 import mysql.connector
+import re
 import time
 from functools import reduce
 import json
 import tqdm
 
 
+"""
+tracks
+  array genres
+genres
+playlists
+  subcollection entries
+
+get tracks in a genre:
+1. array of genres => array_contains genre on tracks (only 1)
+2. map of genres => chain together where statements
+3.
+
+algolia for full text search
+
+"""
+
 class SoulSifterSync(object):
-  """Sync local DB with Firebase.
-
-  Commands:
-    update_songs: uploads songs
-  """
-  # untested
-  def push_playlists(self):
-    # Firebase
-    cred = credentials.ApplicationDefault()
-    firebase_admin.initialize_app(cred)
-    db = firestore.Client('soul-sifter')
-
-    # MySQL
-    connection = connect_mysql()
-    cursor = connection.cursor()
-    cursor.execute("select p.id, p.name, p.query, p.youtubeid from playlists p where p.youtubeid is not null and p.youtubeid!='')")
-    playlists = []
-    for row in cursor:
-      playlists.append({
-        'id': row[0],
-        'name': row[1],
-        'query': row[2],
-        'youtubeId': row[3]
-      });
-    cursor.close()
-
-    for playlist in tqdm.tqdm(playlists):
-      cursor = connection.cursor()
-      cursor.execute(f"select s.id, s.artist, s.track, s.title, s.remixer, s.rating, s.youtubeId, a.name, a.releaseDateYear, a.releaseDateMonth, a.releaseDateDay, e.position from playlistentries e inner join songs s on s.id=e.songid where e.playlistid={playlist.id} order by e.position")
-      songs = []
-      for row in cursor:
-        # Create a Firestore document
-        songs.append({
-          'id': row[0],
-          'artist': row[1],
-          'track': row[2],
-          'title': row[3],
-          'remixer': row[4],
-          'rating': row[5],
-          'youtubeId': row[6],
-          'albumName': row[7],
-          'releaseDateYear': row[8],
-          'releaseDateMonth': row[9],
-          'releaseDateDay': row[10],
-          # 'genres': genres
-          'position': row[11]
-        });
-
-      # Add the document to Firestore
-      db.collection('playlists').document(str(playlist['id'])).set(playlist)
-      time.sleep(.1)
-      cursor.close()
-
-    # Close the MySQL connection
-    connection.close()
+  """Sync local DB with Firebase."""
 
   def pull(self):
     # MySQL
@@ -93,41 +56,11 @@ class SoulSifterSync(object):
 
     # MySQL
     connection = connect_mysql()
-    max_id = max_song_id(connection)
-    step = 100
-    for i in tqdm.tqdm(range(0, max_id, step)):
-      cursor = connection.cursor()
-      cursor.execute(f"select s.id, s.artist, s.track, s.title, s.remixer, s.rating, s.youtubeId, a.name, a.releaseDateYear, a.releaseDateMonth, a.releaseDateDay, group_concat('-', y.id, ':', y.name) as styles from Songs s inner join Albums a on s.albumid=a.id left outer join SongStyles ss on ss.songid=s.id inner join Styles y on ss.styleid=y.id where s.trashed != 1 group by s.id limit {i}, {step}")
 
-      # Iterate over the rows
-      for row in cursor:
-        # Create a Firestore document
-        genres = []
-        for s in row[11][1:].split(',-'):
-          g = s.split(':')
-          genres.append({
-            'id': g[0],
-            'genre': g[1]
-          })
-        doc = {
-          'id': row[0],
-          'artist': row[1],
-          'track': row[2],
-          'title': row[3],
-          'remixer': row[4],
-          'rating': row[5],
-          'youtubeId': row[6],
-          'albumName': row[7],
-          'releaseDateYear': row[8],
-          'releaseDateMonth': row[9],
-          'releaseDateDay': row[10],
-          'genres': genres
-        }
-
-        # Add the document to Firestore
-        db.collection('songs').document(str(doc['id'])).set(doc)
-        time.sleep(.1)
-      cursor.close()
+    # Update songs
+    # push_genres(connection, db)
+    push_playlists(connection, db)
+    # push_songs(connection, db)
 
     # Close the MySQL connection
     connection.close()
@@ -143,13 +76,120 @@ def connect_mysql():
       database=settings['database']
     )
 
-def max_song_id(connection):
+
+def get_max_id(connection, table):
   cursor = connection.cursor()
   try:
-    cursor.execute("select max(id) from songs")
+    cursor.execute("select max(id) from " + table)
     return reduce(lambda x, y: x, [x[0] for x in cursor])
   finally:
     cursor.close()
+
+
+def normalize_string(str):
+  return re.sub('[^a-z0-9 ]', '', str.lower())
+
+
+def push_songs(mysql_connection, firestore_db):
+  max_id = get_max_id(mysql_connection, 'songs')
+  step = 100
+  for i in tqdm.tqdm(range(0, max_id, step), desc="songs"):
+    cursor = mysql_connection.cursor()
+    cursor.execute(f"select s.id, s.artist, s.track, s.title, s.remixer, s.rating, s.youtubeId, a.name, a.releaseDateYear, a.releaseDateMonth, a.releaseDateDay, group_concat('-', y.id, ':', y.name) as styles from Songs s inner join Albums a on s.albumid=a.id left outer join SongStyles ss on ss.songid=s.id inner join Styles y on ss.styleid=y.id where s.trashed != 1 group by s.id limit {i}, {step}")
+
+    # Iterate over the rows
+    for row in cursor:
+      # Create a Firestore document
+      genres = []
+      for s in row[11][1:].split(',-'):
+        g = s.split(':')
+        genres.append({
+          'id': g[0],
+          'genre': g[1]
+        })
+      doc = {
+        'id': row[0],
+        'artist': row[1],
+        'normArtist': normalize_string(row[1]),
+        'track': row[2],
+        'title': row[3],
+        'normTitle': normalize_string(row[3]),
+        'remixer': row[4],
+        'rating': row[5],
+        'youtubeId': row[6],
+        'albumName': row[7],
+        'releaseDateYear': row[8],
+        'releaseDateMonth': row[9],
+        'releaseDateDay': row[10],
+        'genres': genres
+      }
+
+      # Add the document to Firestore
+      firestore_db.collection('songs').document(str(doc['id'])).set(doc)
+      time.sleep(.1)
+    cursor.close()
+
+
+def push_genres(mysql_connection, firestore_db):
+  max_id = get_max_id(mysql_connection, 'styles')
+  step = 100
+  for i in tqdm.tqdm(range(0, max_id, step), desc="genres"):
+    cursor = mysql_connection.cursor()
+    cursor.execute(f"select s.id, s.name, group_concat(parentId) from Styles s left outer join StyleChildren c on s.id=c.childid group by s.id limit {i}, {step}")
+
+    # Iterate over the rows
+    for row in cursor:
+      # Create a Firestore document
+      parents = row[2] if row[2] else ''
+      doc = {
+        'id': row[0],
+        'name': row[1],
+        'parents': parents.split(','),
+      }
+
+      # Add the document to Firestore
+      firestore_db.collection('genres').document(str(doc['id'])).set(doc)
+      time.sleep(.1)
+    cursor.close()
+
+
+def push_playlists(mysql_connection, firestore_db):
+  max_id = get_max_id(mysql_connection, 'playlists')
+  step = 2
+  playlistsCollectionRef = firestore_db.collection('playlists')
+  for i in tqdm.tqdm(range(0, max_id, step), desc='playlists'):
+    playlistQuery = mysql_connection.cursor()
+    playlistQuery.execute(f'select id, name, query, youtubeId from Playlists limit {i}, {step}')
+
+    # Iterate over the rows
+    for playlistRow in playlistQuery.fetchall():
+      # Create a Firestore document
+      playlist = {
+        'id': playlistRow[0],
+        'name': playlistRow[1],
+        'query': playlistRow[2],
+        'youtubeId': playlistRow[3],
+      }
+
+      # Add the document to Firestore
+      playlistDocRef = playlistsCollectionRef.document(str(playlist['id']))
+      playlistDocRef.set(playlist)
+
+      # Add subcollection of song IDs
+      entriesQuery = mysql_connection.cursor()
+      entriesQuery.execute(f'select songId, position from playlistEntries where playlistId = {playlist["id"]}')
+      entriesCollectionRef = playlistDocRef.collection('entries')
+      for entryRow in entriesQuery:
+        entry = {
+          'id': entryRow[0],
+          'position': entryRow[1],
+        }
+        entriesCollectionRef.document(str(entry['id'])).set(entry)
+        time.sleep(.1)
+      entriesQuery.close()
+
+      time.sleep(.1)
+    playlistQuery.close()
 
 if __name__ == '__main__':
   fire.Fire(SoulSifterSync)

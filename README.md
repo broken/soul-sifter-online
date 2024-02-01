@@ -32,3 +32,7 @@ Your app is ready to be deployed!
 ## Deployment `firebase deploy --only hosting`
 
 You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+
+### Synchronize with DB
+
+`python sync.py push`
