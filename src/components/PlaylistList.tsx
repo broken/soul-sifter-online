@@ -1,4 +1,4 @@
-import { type Component, createEffect, Index, createSignal, DEV } from 'solid-js';
+import { type Component, createEffect, Index, createSignal, DEV, Show } from 'solid-js';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '../App';
 import Playlist, { playlistConverter } from '../dataclasses/Playlist';
@@ -6,6 +6,14 @@ import Playlist, { playlistConverter } from '../dataclasses/Playlist';
 
 const PlaylistList: Component = () => {
   const [playlists, setPlaylists] = createSignal<Playlist[]>([]);
+  const openPlaylist = (playlistId: string | undefined) =>  {
+    if (!playlistId) {
+      console.log('Playlist is undefined.');
+      return;
+    }
+    const appLink = `https://music.youtube.com/playlist?list=${playlistId}`;
+    window.open(appLink);
+  }
   createEffect(async () => {
     const q = query(collection(db, 'playlists').withConverter(playlistConverter));
     const snapshot = await getDocs(q);
@@ -26,13 +34,25 @@ const PlaylistList: Component = () => {
         <tbody>
           <Index each={playlists()}>
             {playlist => (
-              <tr>
-              <td class="flex flex-row justify-between px-6 py-3">
-                <span>
-                  <span><b>{playlist().name}</b></span>
-                </span>
-              </td>
-            </tr>
+              <tr onclick={() => openPlaylist(playlist().youtubeId)}>
+                <td class="flex flex-row justify-between px-7 py-4">
+                  <span class="flex flex-row">
+                    <span><b>{playlist().name}</b></span>
+                    <Show when={!!playlist().query}>
+                      <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
+                      </svg>
+                    </Show>
+                  </span>
+                  <span class="flex flex-row">
+                    <Show when={!!playlist().youtubeId}>
+                      <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M21.7 8c0-.7-.4-1.3-.8-2-.5-.5-1.2-.8-2-.8C16.2 5 12 5 12 5s-4.2 0-7 .2c-.7 0-1.4.3-2 .9-.3.6-.6 1.2-.7 2l-.2 3.1v1.5c0 1.1 0 2.2.2 3.3 0 .7.4 1.3.8 2 .6.5 1.4.8 2.2.8l6.7.2s4.2 0 7-.2c.7 0 1.4-.3 2-.9.3-.5.6-1.2.7-2l.2-3.1v-1.6c0-1 0-2.1-.2-3.2ZM10 14.6V9l5.4 2.8-5.4 2.8Z" clip-rule="evenodd"/>
+                      </svg>
+                    </Show>
+                  </span>
+                </td>
+              </tr>
             )}
           </Index>
         </tbody>
