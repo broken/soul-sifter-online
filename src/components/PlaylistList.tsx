@@ -15,6 +15,7 @@ const PlaylistList: Component = () => {
       playlistList.push(doc.data());
       if (!!DEV) console.log(doc.id, ' => ', doc.data());
     });
+    playlistList.sort((a, b) => a.name.localeCompare(b.name));
     setPlaylists(playlistList);
     if (!!DEV) console.log(playlistList);
   });
