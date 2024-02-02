@@ -1,13 +1,26 @@
 import { type Component, createEffect, Index, createSignal, DEV } from 'solid-js';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { collection, getDocs, limit, query } from 'firebase/firestore';
 import { db } from '../App';
+import GenreListItem, { GenreWrapper } from './GenreListItem';
 import Genre, { genreConverter } from '../dataclasses/Genre';
 
 
+const addChildren = (genre: GenreWrapper, genres: Genre[]) => {
+  for (let g of genres) {
+    if (g.parents.includes(genre.genre.id)) {
+      let wrapper = new GenreWrapper(g);
+      addChildren(wrapper, genres);
+      genre.children.push(wrapper);
+    }
+  }
+  return genre;
+}
+
+
 const GenreList: Component = () => {
-  const [genres, setGenres] = createSignal<Genre[]>([]);
+  const [genres, setGenres] = createSignal<GenreWrapper[]>([]);
   createEffect(async () => {
-    const q = query(collection(db, 'genres').withConverter(genreConverter));
+    const q = query(collection(db, 'genres').withConverter(genreConverter), limit(17));
     const snapshot = await getDocs(q);
     let genreList: Genre[] = []
     snapshot.forEach((doc) => {
@@ -15,8 +28,11 @@ const GenreList: Component = () => {
       genreList.push(doc.data());
       if (!!DEV) console.log(doc.id, ' => ', doc.data());
     });
-    setGenres(genreList);
-    if (!!DEV) console.log(genreList);
+    genreList.sort((a, b) => a.name.localeCompare(b.name));
+    let parentGenres: GenreWrapper[] = genreList.filter(g => !g.parents.length).map(g => new GenreWrapper(g));
+    parentGenres = parentGenres.map(g => addChildren(g, genreList));
+    setGenres(parentGenres);
+    if (!!DEV) console.log(parentGenres);
   });
 
   return (
@@ -24,15 +40,7 @@ const GenreList: Component = () => {
       <table class="table">
         <tbody>
           <Index each={genres()}>
-            {genre => (
-              <tr>
-              <td class="flex flex-row justify-between px-6 py-3">
-                <span>
-                  <span><b>{genre().name}</b></span>
-                </span>
-              </td>
-            </tr>
-            )}
+            {genre => <GenreListItem genre={genre()} />}
           </Index>
         </tbody>
       </table>
