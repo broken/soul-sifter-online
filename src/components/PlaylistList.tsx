@@ -5,6 +5,7 @@ import Playlist, { playlistConverter } from '../dataclasses/Playlist';
 import styles from './PlaylistList.module.css';
 
 
+const [selectedPlaylist, setSelectedPlaylist] = createSignal<Playlist | undefined>(undefined);
 const PlaylistList: Component = () => {
   const [playlists, setPlaylists] = createSignal<Playlist[]>([]);
   const openPlaylist = (playlistId: string | undefined) =>  {
@@ -39,11 +40,11 @@ const PlaylistList: Component = () => {
     snapshot.forEach((doc) => {
       // doc.data() is never undefined for query doc snapshots
       playlistList.push(doc.data());
-      if (!!DEV) console.log(doc.id, ' => ', doc.data());
+      // if (!!DEV) console.log(doc.id, ' => ', doc.data());
     });
     playlistList.sort((a, b) => a.name.localeCompare(b.name));
     setPlaylists(playlistList);
-    if (!!DEV) console.log(playlistList);
+    // if (!!DEV) console.log(playlistList);
   });
   return (
     <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
@@ -51,11 +52,11 @@ const PlaylistList: Component = () => {
         <tbody>
           <Index each={playlists()}>
             {playlist => (
-              <tr onclick={() => openPlaylist(playlist().youtubeId)}>
+              <tr onclick={() => setSelectedPlaylist(playlist())}>
                 <td class={`px-0 py-0 ${styles["swipe-container"]}`} ontouchend={[handleSwipe, playlist().youtubeId]}>
                   <div class={`flex flex-row justify-between px-7 py-4 ${styles["swipe-element"]}`}>
                     <span class="flex flex-row">
-                      <span><b>{playlist().name}</b></span>
+                      <span>{playlist().name}</span>
                       <Show when={!!playlist().query}>
                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
@@ -86,3 +87,4 @@ const PlaylistList: Component = () => {
 };
 
 export default PlaylistList;
+export {selectedPlaylist};
