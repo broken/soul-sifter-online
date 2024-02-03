@@ -20,7 +20,7 @@ const addChildren = (genre: GenreWrapper, genres: Genre[]) => {
 const GenreList: Component = () => {
   const [genres, setGenres] = createSignal<GenreWrapper[]>([]);
   createEffect(async () => {
-    const q = query(collection(db, 'genres').withConverter(genreConverter), limit(17));
+    const q = query(collection(db, 'genres').withConverter(genreConverter));
     const snapshot = await getDocs(q);
     let genreList: Genre[] = []
     snapshot.forEach((doc) => {
@@ -40,7 +40,7 @@ const GenreList: Component = () => {
       <table class="table">
         <tbody>
           <Index each={genres()}>
-            {genre => <GenreListItem genre={genre()} />}
+            {genre => <GenreListItem genre={genre()} padding={0} />}
           </Index>
         </tbody>
       </table>

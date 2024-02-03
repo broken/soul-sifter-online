@@ -1,4 +1,4 @@
-import { Index, type Component, createSignal } from 'solid-js';
+import { Index, type Component, createSignal, Show, mergeProps } from 'solid-js';
 import Genre from '../dataclasses/Genre';
 import { createMutable } from 'solid-js/store';
 
@@ -26,7 +26,8 @@ class GenreWrapper {
 
 const [selectedGenres, setSelectedGenres] = createSignal<number[]>([]);
 
-const GenreListItem: Component<{genre: GenreWrapper}> = (props) => {
+const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props) => {
+  props = mergeProps({ padding: 0 }, props);
   const toggleGenre = () => {
     let genres = selectedGenres();
     if (props.genre.genre.id in genres) {
@@ -35,24 +36,45 @@ const GenreListItem: Component<{genre: GenreWrapper}> = (props) => {
       genres.push(props.genre.genre.id);
       setSelectedGenres(genres);
     }
-    
   };
+  const [collapsed, setCollapsed] = createSignal<boolean>(true);
   return (
-    <tr>
-      <td class="flex flex-row justify-between px-6 py-3" onclick={toggleGenre}>
-        {props.genre.genre.name}
-        <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
-        </svg>
-        <table class="table">
-          <tbody>
-            <Index each={props.genre.children}>
-              {genre => <GenreListItem genre={genre()} />}
-            </Index>
-          </tbody>
-        </table>
-      </td>
-    </tr>
+    <>
+      <tr onclick={toggleGenre}>
+        <td class="px-0 py-0">
+          <div class={`flex flex-row justify-between px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
+            <span>{props.genre.genre.name}</span>
+            <Show when={!!props.genre.children.length}>
+              <span onclick={() => setCollapsed(!collapsed())}>
+                <Show when={collapsed()}>
+                  <svg class="w-5 h-5 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
+                  </svg>
+                </Show>
+                <Show when={!collapsed()}>
+                  <svg class="w-5 h-5 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/>
+                  </svg>
+                </Show>
+              </span>
+            </Show>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="px-0 py-0">
+          <Show when={!collapsed()}>
+            <table class="table">
+              <tbody>
+                <Index each={props.genre.children}>
+                  {genre => <GenreListItem genre={genre()} padding={props.padding + 32} />}
+                </Index>
+              </tbody>
+            </table>
+          </Show>
+        </td>
+      </tr>
+    </>
   );
 };
 
