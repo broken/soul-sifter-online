@@ -3,6 +3,7 @@ import SongListItem from './SongListItem';
 import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '../App';
 import { searchField, searchQuery } from './SearchToolbar';
+import { selectedGenres } from './GenreListItem';
 import { SongsConsumer } from './SongsContext';
 import Song, { songConverter } from '../dataclasses/Song';
 
@@ -12,9 +13,14 @@ const SongList: Component = () => {
   createEffect(async () => {
     console.log("is dev: ", DEV);
     let max = !DEV ? 20 : 3;
-    const q = !!searchQuery()
-        ? query(collection(db, 'songs').withConverter(songConverter), where(searchField(), '>=', searchQuery()), where(searchField(), '<=', searchQuery()+'\uf8ff'), limit(max))
-        : query(collection(db, 'songs').withConverter(songConverter), limit(max));
+    let q = undefined;
+    if (!!searchQuery()) {
+      q = query(collection(db, 'songs').withConverter(songConverter), where(searchField(), '>=', searchQuery()), where(searchField(), '<=', searchQuery()+'\uf8ff'), limit(max))
+    } else if (!!selectedGenres().length) {
+      q = query(collection(db, 'songs').withConverter(songConverter), where(`genres.${selectedGenres()[0].toString()}`, '!=', null), limit(max))
+    } else {
+      q = query(collection(db, 'songs').withConverter(songConverter), limit(max));
+    }
     const snapshot = await getDocs(q);
     let songList: Song[] = []
     snapshot.forEach((doc) => {

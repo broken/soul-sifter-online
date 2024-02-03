@@ -1,4 +1,4 @@
-import { Index, type Component } from 'solid-js';
+import { Index, type Component, createSignal } from 'solid-js';
 import Genre from '../dataclasses/Genre';
 import { createMutable } from 'solid-js/store';
 
@@ -24,10 +24,22 @@ class GenreWrapper {
 }
 
 
+const [selectedGenres, setSelectedGenres] = createSignal<number[]>([]);
+
 const GenreListItem: Component<{genre: GenreWrapper}> = (props) => {
+  const toggleGenre = () => {
+    let genres = selectedGenres();
+    if (props.genre.genre.id in genres) {
+      setSelectedGenres(genres.filter(gid => gid != props.genre.genre.id));
+    } else {
+      genres.push(props.genre.genre.id);
+      setSelectedGenres(genres);
+    }
+    
+  };
   return (
     <tr>
-      <td class="flex flex-row justify-between px-6 py-3">
+      <td class="flex flex-row justify-between px-6 py-3" onclick={toggleGenre}>
         {props.genre.genre.name}
         <svg data-accordion-icon class="w-3 h-3 rotate-180 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5 5 1 1 5"/>
@@ -45,4 +57,4 @@ const GenreListItem: Component<{genre: GenreWrapper}> = (props) => {
 };
 
 export default GenreListItem;
-export {GenreWrapper};
+export {GenreWrapper, selectedGenres};
