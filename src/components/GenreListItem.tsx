@@ -79,4 +79,4 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
 };
 
 export default GenreListItem;
-export {GenreWrapper, selectedGenres};
+export {GenreWrapper, selectedGenres, setSelectedGenres};

@@ -87,4 +87,4 @@ const PlaylistList: Component = () => {
 };
 
 export default PlaylistList;
-export {selectedPlaylist};
+export {selectedPlaylist, setSelectedPlaylist};

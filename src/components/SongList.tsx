@@ -3,8 +3,8 @@ import SongListItem from './SongListItem';
 import { collection, doc, getDocs, limit, query, where } from 'firebase/firestore';
 import { db } from '../App';
 import { searchField, searchQuery } from './SearchToolbar';
-import { selectedGenres } from './GenreListItem';
-import { selectedPlaylist } from './PlaylistList';
+import { selectedGenres, setSelectedGenres } from './GenreListItem';
+import { selectedPlaylist, setSelectedPlaylist } from './PlaylistList';
 import { SongsConsumer } from './SongsContext';
 import Song, { songConverter } from '../dataclasses/Song';
 import Playlist from '../dataclasses/Playlist';
@@ -55,6 +55,7 @@ const SongList: Component = () => {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
         <span>Genre {selectedGenres()[0]}.</span>
+        <button class="btn btn-sm btn-primary" onclick={() => setSelectedGenres([])}>Clear</button>
       </div>
     </Show>
       <Show when={!!selectedPlaylist()}>
@@ -63,6 +64,7 @@ const SongList: Component = () => {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <span>Playlist {selectedPlaylist()?.name}.</span>
+          <button class="btn btn-sm btn-primary" onclick={() => setSelectedPlaylist(undefined)}>Remove</button>
         </div>
       </Show>
       <table class="table">
