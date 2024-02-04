@@ -9,7 +9,7 @@ const [searchField, setSearchField] = createSignal<string>('artist');
 const SearchToolbar: Component = () => {
   const [inputFocused, setInputFocused] = createSignal<boolean>(false);
   return (
-    <div class="navbar bg-base-200">
+    <div class="navbar bg-base-300">
       <div class="flex-1">
         <a class="btn btn-ghost text-xl">Soul Sifter Online</a>
       </div>
