@@ -20,7 +20,7 @@ const SongList: Component = () => {
     if (!!searchQuery()) {
       q = query(collection(db, 'songs').withConverter(songConverter), where(searchField(), '>=', searchQuery()), where(searchField(), '<=', searchQuery()+'\uf8ff'), limit(max));
     } else if (!!selectedGenres().length) {
-      q = query(collection(db, 'songs').withConverter(songConverter), where(`genres.${selectedGenres()[0].toString()}`, '!=', null), limit(max));
+      q = query(collection(db, 'songs').withConverter(songConverter), where(`genres.${selectedGenres()[0].id.toString()}`, '!=', null), limit(max));
     } else if (!!selectedPlaylist()) {
       let playlist = selectedPlaylist() as Playlist;
       if (!!playlist.query) return;
@@ -54,7 +54,7 @@ const SongList: Component = () => {
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <span>Genre {selectedGenres()[0]}.</span>
+        <span>Genre {selectedGenres()[0].name} ({selectedGenres()[0].id}).</span>
         <button class="btn btn-sm btn-primary" onclick={() => setSelectedGenres([])}>Clear</button>
       </div>
     </Show>

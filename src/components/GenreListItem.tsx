@@ -24,26 +24,26 @@ class GenreWrapper {
 }
 
 
-const [selectedGenres, setSelectedGenres] = createSignal<number[]>([]);
+const [selectedGenres, setSelectedGenres] = createSignal<Genre[]>([]);
 
 const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props) => {
   props = mergeProps({ padding: 0 }, props);
   const toggleGenre = () => {
     let genres = selectedGenres();
     if (props.genre.genre.id in genres) {
-      setSelectedGenres(genres.filter(gid => gid != props.genre.genre.id));
+      setSelectedGenres(genres.filter(g => g.id != props.genre.genre.id));
     } else {
-      genres.push(props.genre.genre.id);
+      genres.push(props.genre.genre);
       setSelectedGenres(genres);
     }
   };
   const [collapsed, setCollapsed] = createSignal<boolean>(true);
   return (
     <>
-      <tr onclick={toggleGenre}>
+      <tr>
         <td class="px-0 py-0">
           <div class={`flex flex-row justify-between px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
-            <span>{props.genre.genre.name}</span>
+            <span onclick={toggleGenre}>{props.genre.genre.name}</span>
             <Show when={!!props.genre.children.length}>
               <span onclick={() => setCollapsed(!collapsed())}>
                 <Show when={collapsed()}>
