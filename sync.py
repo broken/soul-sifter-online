@@ -57,9 +57,9 @@ class SoulSifterSync(object):
     connection = connect_mysql()
 
     # Update songs
-    push_genres(connection, db)
+    # push_genres(connection, db)
     # push_playlists(connection, db)
-    # push_songs(connection, db)
+    push_songs(connection, db)
 
     # Close the MySQL connection
     connection.close()
@@ -86,6 +86,8 @@ def get_max_id(connection, table):
 
 
 def normalize_string(str):
+  if not str:
+    return str;
   return re.sub('[^a-z0-9 ]', '', str.lower())
 
 
