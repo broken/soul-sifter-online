@@ -4,6 +4,7 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 import mysql.connector
 import re
+import subprocess
 import time
 from functools import reduce
 import json
@@ -46,7 +47,6 @@ class SoulSifterSync(object):
       c.reference.delete()
     connection.close()
 
-
   def push(self):
     # Firebase
     cred = credentials.ApplicationDefault()
@@ -59,7 +59,7 @@ class SoulSifterSync(object):
     # Update songs
     # push_genres(connection, db)
     # push_playlists(connection, db)
-    push_songs(connection, db)
+    push_song_updates(connection, db)
 
     # Close the MySQL connection
     connection.close()
@@ -91,7 +91,99 @@ def normalize_string(str):
   return re.sub('[^a-z0-9 ]', '', str.lower())
 
 
-def push_songs(mysql_connection, firestore_db):
+def push_song_updates(mysql_connection, firestore_db):
+  with open('.musicdb_settings.json', 'r') as f:
+    settings = json.load(f)
+    music_db_dir = settings['dir']
+    last_commit = settings['last_commit']
+
+  command = "git log -1 --oneline | awk '{print $1}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  latest_commit = process.stdout.rstrip()
+
+  print('Finding songs requiring updates.')
+  songs_to_remove = []
+  new_songs = []
+  # git diff b696f75 9e1e061 Songs.txt | awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'
+  command = f'git diff {last_commit} {latest_commit} Songs.txt | ' "awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  output_lines = process.stdout.splitlines()
+  for line in output_lines:
+    if line[0:1] == '-':
+      songs_to_remove.append(line[1:])
+    else:
+      new_songs.append(line[1:])
+
+  print('Finding songs that were trashed.')
+  trashed_songs = []
+  if new_songs:
+    cursor = mysql_connection.cursor()
+    cursor.execute(f"select id from Songs where trashed = 1 and id in ({','.join(new_songs)})")
+    for row in cursor:
+      trashed_songs.append(row[0])
+    cursor.close()
+
+  print('initial songs_to_remove: ', songs_to_remove)
+  print('initial new_songs: ', new_songs)
+  print('initial trashed_songs: ', trashed_songs)
+
+  songs_to_remove = [x for x in songs_to_remove if x not in new_songs]
+  songs_to_remove.extend(trashed_songs)
+  new_songs = [x for x in new_songs if x not in trashed_songs]
+
+  print('final songs_to_remove: ', songs_to_remove)
+  print('final new_songs: ', new_songs)
+
+  print(f'Updating / adding {len(new_songs)} new songs.')
+  songs_ref = firestore_db.collection('songs')
+  if new_songs:
+    cursor = mysql_connection.cursor()
+    cursor.execute(f"select s.id, s.artist, s.track, s.title, s.remixer, s.rating, s.youtubeId, a.name, a.releaseDateYear, a.releaseDateMonth, a.releaseDateDay, group_concat('-', y.id, ':', y.name) as styles from Songs s inner join Albums a on s.albumid=a.id left outer join SongStyles ss on ss.songid=s.id inner join Styles y on ss.styleid=y.id where s.trashed != 1 and s.id in ({','.join(new_songs)}) group by s.id")
+    for row in cursor:
+      # Create a Firestore document
+      genres = {}
+      for s in row[11][1:].split(',-'):
+        g = s.split(':')
+        genres[g[0]] = g[1]
+      doc = {
+        'id': row[0],
+        'artist': row[1],
+        'normArtist': normalize_string(row[1]),
+        'track': row[2],
+        'title': row[3],
+        'normTitle': normalize_string(row[3]),
+        'remixer': row[4],
+        'rating': row[5],
+        'youtubeId': row[6],
+        'albumName': row[7],
+        'releaseDateYear': row[8],
+        'releaseDateMonth': row[9],
+        'releaseDateDay': row[10],
+        'genres': genres
+      }
+
+      # Add the document to Firestore
+      songs_ref.document(str(doc['id'])).set(doc)
+      time.sleep(.1)
+    cursor.close()
+
+  print(f'Removing {len(songs_to_remove)} trashed songs.')
+  for sid in songs_to_remove:
+    songs_ref.document(str(sid)).delete()
+    time.sleep(.1)
+
+  with open('.musicdb_settings.json', 'w') as f:
+    settings['last_commit'] = latest_commit
+    json.dump(settings, f, indent=2)
+
+
+def push_all_songs(mysql_connection, firestore_db):
   max_id = get_max_id(mysql_connection, 'songs')
   step = 50
   songsRef = firestore_db.collection('songs')
