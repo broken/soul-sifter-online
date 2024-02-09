@@ -73,6 +73,30 @@ class SoulSifterSync(object):
     # Close the MySQL connection
     connection.close()
 
+  def push_all_playlists(self):
+    cred = credentials.ApplicationDefault()
+    firebase_admin.initialize_app(cred)
+    db = firestore.Client('soul-sifter')
+    connection = connect_mysql()
+    push_all_playlists(connection, db)
+    connection.close()
+
+  def push_all_songs(self):
+    cred = credentials.ApplicationDefault()
+    firebase_admin.initialize_app(cred)
+    db = firestore.Client('soul-sifter')
+    connection = connect_mysql()
+    push_all_songs(connection, db)
+    connection.close()
+
+  def push_all_genres(self):
+    cred = credentials.ApplicationDefault()
+    firebase_admin.initialize_app(cred)
+    db = firestore.Client('soul-sifter')
+    connection = connect_mysql()
+    push_all_genres(connection, db)
+    connection.close()
+
 
 def connect_mysql():
   with open(MYSQL_SETTINGS_FILE, 'r') as f:
