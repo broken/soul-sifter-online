@@ -11,6 +11,9 @@ import json
 import tqdm
 
 
+MUSIC_DB_SETTINGS_FILE = '.musicdb_settings.json'
+MYSQL_SETTINGS_FILE = '.mysql_settings.json'
+
 """
 tracks
   map genres
@@ -66,7 +69,7 @@ class SoulSifterSync(object):
 
 
 def connect_mysql():
-  with open('.mysql_settings.json', 'r') as f:
+  with open(MYSQL_SETTINGS_FILE, 'r') as f:
     settings = json.load(f)
     return mysql.connector.connect(
       host=settings['host'],
@@ -92,7 +95,7 @@ def normalize_string(str):
 
 
 def push_song_updates(mysql_connection, firestore_db):
-  with open('.musicdb_settings.json', 'r') as f:
+  with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
     settings = json.load(f)
     music_db_dir = settings['dir']
     last_commit = settings['last_commit']
@@ -105,8 +108,8 @@ def push_song_updates(mysql_connection, firestore_db):
   latest_commit = process.stdout.rstrip()
 
   print('Finding songs requiring updates.')
-  songs_to_remove = []
-  new_songs = []
+  songs_to_remove = set()
+  new_songs = set()
   # git diff b696f75 9e1e061 Songs.txt | awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'
   command = f'git diff {last_commit} {latest_commit} Songs.txt | ' "awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'"
   process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
@@ -116,9 +119,19 @@ def push_song_updates(mysql_connection, firestore_db):
   output_lines = process.stdout.splitlines()
   for line in output_lines:
     if line[0:1] == '-':
-      songs_to_remove.append(line[1:])
+      songs_to_remove.add(line[1:])
     else:
-      new_songs.append(line[1:])
+      new_songs.add(line[1:])
+
+  print('Finding songs whose genres have updated.')
+  command = f'git diff {last_commit} {latest_commit} SongStyles.txt | ' "awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  output_lines = process.stdout.splitlines()
+  for line in output_lines:
+    new_songs.add(line[1:])
 
   print('Finding songs that were trashed.')
   trashed_songs = []
@@ -126,16 +139,16 @@ def push_song_updates(mysql_connection, firestore_db):
     cursor = mysql_connection.cursor()
     cursor.execute(f"select id from Songs where trashed = 1 and id in ({','.join(new_songs)})")
     for row in cursor:
-      trashed_songs.append(row[0])
+      trashed_songs.append(str(row[0]))
     cursor.close()
 
   print('initial songs_to_remove: ', songs_to_remove)
   print('initial new_songs: ', new_songs)
   print('initial trashed_songs: ', trashed_songs)
 
-  songs_to_remove = [x for x in songs_to_remove if x not in new_songs]
-  songs_to_remove.extend(trashed_songs)
-  new_songs = [x for x in new_songs if x not in trashed_songs]
+  songs_to_remove = songs_to_remove - new_songs
+  songs_to_remove.update(trashed_songs)
+  new_songs = new_songs - set(trashed_songs)
 
   print('final songs_to_remove: ', songs_to_remove)
   print('final new_songs: ', new_songs)
@@ -178,7 +191,7 @@ def push_song_updates(mysql_connection, firestore_db):
     songs_ref.document(str(sid)).delete()
     time.sleep(.1)
 
-  with open('.musicdb_settings.json', 'w') as f:
+  with open(MUSIC_DB_SETTINGS_FILE, 'w') as f:
     settings['last_commit'] = latest_commit
     json.dump(settings, f, indent=2)
 
