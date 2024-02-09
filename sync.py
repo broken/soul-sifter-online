@@ -15,12 +15,15 @@ MUSIC_DB_SETTINGS_FILE = '.musicdb_settings.json'
 MYSQL_SETTINGS_FILE = '.mysql_settings.json'
 
 MUSICDB_DIR_KEY = 'dir'
-MUSICDB_LAST_COMMIT_KEY = 'last_commit'
+MUSICDB_SONG_COMMIT_KEY = 'song_commit'
+MUSICDB_GENRE_COMMIT_KEY = 'genre_commit'
+MUSICDB_PLAYLIST_COMMIT_KEY = 'playlist_commit'
 
 """
 tracks
   map genres
 genres
+  array of parents
 playlists
   subcollection entries
 
@@ -62,9 +65,9 @@ class SoulSifterSync(object):
     # MySQL
     connection = connect_mysql()
 
-    # Update songs
-    # push_genres(connection, db)
-    # push_playlists(connection, db)
+    # Update
+    push_genre_updates(connection, db)
+    push_playlist_updates(connection, db)
     push_song_updates(connection, db)
 
     # Close the MySQL connection
@@ -101,7 +104,7 @@ def push_song_updates(mysql_connection, firestore_db):
   with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
     settings = json.load(f)
     music_db_dir = settings[MUSICDB_DIR_KEY]
-    last_commit = settings[MUSICDB_LAST_COMMIT_KEY]
+    last_commit = settings[MUSICDB_SONG_COMMIT_KEY]
 
   command = "git log -1 --oneline | awk '{print $1}'"
   process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
@@ -127,6 +130,7 @@ def push_song_updates(mysql_connection, firestore_db):
       new_songs.add(line[1:])
 
   print('Finding songs whose genres have updated.')
+  songs_with_updated_genres = set()
   command = f'git diff {last_commit} {latest_commit} SongStyles.txt | ' "awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'"
   process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
   if process.returncode != 0:
@@ -134,7 +138,7 @@ def push_song_updates(mysql_connection, firestore_db):
     return
   output_lines = process.stdout.splitlines()
   for line in output_lines:
-    new_songs.add(line[1:])
+    songs_with_updated_genres.add(line[1:])
 
   print('Finding songs that were trashed.')
   trashed_songs = []
@@ -152,6 +156,8 @@ def push_song_updates(mysql_connection, firestore_db):
   songs_to_remove = songs_to_remove - new_songs
   songs_to_remove.update(trashed_songs)
   new_songs = new_songs - set(trashed_songs)
+  songs_with_updated_genres = songs_with_updated_genres - songs_to_remove
+  new_songs.update(songs_with_updated_genres)
 
   # print('final songs_to_remove: ', songs_to_remove)
   # print('final new_songs: ', new_songs)
@@ -195,7 +201,7 @@ def push_song_updates(mysql_connection, firestore_db):
     time.sleep(.1)
 
   with open(MUSIC_DB_SETTINGS_FILE, 'w') as f:
-    settings[MUSICDB_LAST_COMMIT_KEY] = latest_commit
+    settings[MUSICDB_SONG_COMMIT_KEY] = latest_commit
     json.dump(settings, f, indent=2)
 
 
@@ -237,7 +243,76 @@ def push_all_songs(mysql_connection, firestore_db):
     cursor.close()
 
 
-def push_genres(mysql_connection, firestore_db):
+def push_genre_updates(mysql_connection, firestore_db):
+  with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
+    settings = json.load(f)
+    music_db_dir = settings[MUSICDB_DIR_KEY]
+    last_commit = settings[MUSICDB_GENRE_COMMIT_KEY]
+
+  command = "git log -1 --oneline | awk '{print $1}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  latest_commit = process.stdout.rstrip()
+
+  print(f'Finding genres requiring updates.')
+  to_remove = set()
+  to_update = set()
+  command = f'git diff {last_commit} {latest_commit} Styles.txt | ' "awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  output_lines = process.stdout.splitlines()
+  for line in output_lines:
+    if line[0:1] == '-':
+      to_remove.add(line[1:])
+    else:
+      to_update.add(line[1:])
+
+  print('Finding genres whose parents have updated.')
+  parents_updated = set()
+  command = f'git diff {last_commit} {latest_commit} StyleChildren.txt | ' "perl -nle 'print if m{^[+-]\d+}' | awk '{print $2}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  output_lines = process.stdout.splitlines()
+  for line in output_lines:
+    parents_updated.add(line)
+
+  to_remove = to_remove - to_update
+  parents_updated = parents_updated - to_remove
+  to_update.update(parents_updated)
+
+  print(f'Updating / adding {len(to_update)} new genres.')
+  collection_ref = firestore_db.collection('genres')
+  if to_update:
+    cursor = mysql_connection.cursor()
+    cursor.execute(f"select s.id, s.name, group_concat(parentId) from Styles s left outer join StyleChildren c on s.id=c.childid where s.id in ({','.join(to_update)})")
+    for row in cursor:
+      parents = row[2].split(',') if row[2] else []
+      doc = {
+        'id': row[0],
+        'name': row[1],
+        'parents': [int(x) for x in parents],
+      }
+      collection_ref.document(str(doc['id'])).set(doc)
+      time.sleep(.1)
+    cursor.close()
+
+  print(f'Removing {len(to_remove)} trashed genres.')
+  for gid in to_remove:
+    collection_ref.document(str(gid)).delete()
+    time.sleep(.1)
+
+  with open(MUSIC_DB_SETTINGS_FILE, 'w') as f:
+    settings[MUSICDB_GENRE_COMMIT_KEY] = latest_commit
+    json.dump(settings, f, indent=2)
+
+
+def push_all_genres(mysql_connection, firestore_db):
   max_id = get_max_id(mysql_connection, 'styles')
   step = 5
   for i in tqdm.tqdm(range(0, max_id, step), desc="genres"):
@@ -260,7 +335,88 @@ def push_genres(mysql_connection, firestore_db):
     cursor.close()
 
 
-def push_playlists(mysql_connection, firestore_db):
+def push_playlist_updates(mysql_connection, firestore_db):
+  with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
+    settings = json.load(f)
+    music_db_dir = settings[MUSICDB_DIR_KEY]
+    last_commit = settings[MUSICDB_PLAYLIST_COMMIT_KEY]
+
+  command = "git log -1 --oneline | awk '{print $1}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  latest_commit = process.stdout.rstrip()
+
+  print(f'Finding playlists requiring updates.')
+  to_remove = set()
+  to_update = set()
+  command = f'git diff {last_commit} {latest_commit} Playlists.txt | ' "awk '{print $1}' | perl -nle 'print if m{^[+-]\d+$}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  output_lines = process.stdout.splitlines()
+  for line in output_lines:
+    if line[0:1] == '-':
+      to_remove.add(line[1:])
+    else:
+      to_update.add(line[1:])
+
+  print('Finding playlists whose entries have updated.')
+  entries_updated = set()
+  command = f'git diff {last_commit} {latest_commit} PlaylistEntries.txt | ' "perl -nle 'print if m{^[+-]\d+}' | awk '{print $2}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    return
+  output_lines = process.stdout.splitlines()
+  for line in output_lines:
+    entries_updated.add(line)
+
+  to_remove = to_remove - to_update
+  entries_updated = entries_updated - to_remove
+  to_update.update(entries_updated)
+
+  print(f'Updating / adding {len(to_update)} new playlists.')
+  collection_ref = firestore_db.collection('playlists')
+  if to_update:
+    playlist_query = mysql_connection.cursor()
+    playlist_query.execute(f"select id, name, query, youtubeId from Playlists where id in ({','.join(to_update)})")
+    for playlist_row in playlist_query.fetchall():
+      playlist = {
+        'id': playlist_row[0],
+        'name': playlist_row[1],
+        'query': playlist_row[2],
+        'youtubeId': playlist_row[3],
+      }
+      playlist_doc_ref = collection_ref.document(str(playlist['id']))
+      playlist_doc_ref.set(playlist)
+      entries_query = mysql_connection.cursor()
+      entries_query.execute(f'select songId, position from playlistEntries where playlistId = {playlist["id"]}')
+      entries_collection_ref = playlist_doc_ref.collection('entries')
+      for entryRow in entries_query:
+        entry = {
+          'id': entryRow[0],
+          'position': entryRow[1],
+        }
+        entries_collection_ref.document(str(entry['id'])).set(entry)
+        time.sleep(.1)
+      entries_query.close()
+      time.sleep(.1)
+    playlist_query.close()
+
+  print(f'Removing {len(to_remove)} trashed playlists.')
+  for pid in to_remove:
+    collection_ref.document(str(pid)).delete()
+    time.sleep(.1)
+
+  with open(MUSIC_DB_SETTINGS_FILE, 'w') as f:
+    settings[MUSICDB_PLAYLIST_COMMIT_KEY] = latest_commit
+    json.dump(settings, f, indent=2)
+
+
+def push_all_playlists(mysql_connection, firestore_db):
   max_id = get_max_id(mysql_connection, 'playlists')
   step = 2
   playlistsCollectionRef = firestore_db.collection('playlists')
