@@ -2,12 +2,13 @@ import fire
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from functools import reduce
+import json
 import mysql.connector
 import re
 import subprocess
+import sys
 import time
-from functools import reduce
-import json
 import tqdm
 
 
@@ -34,7 +35,6 @@ get tracks in a genre:
 algolia for full text search
 
 """
-
 class SoulSifterSync(object):
   """Sync local DB with Firebase."""
 
@@ -94,6 +94,24 @@ def get_max_id(connection, table):
     cursor.close()
 
 
+def get_most_recent_commit(music_db_dir: str):
+  command = "git log -1 --oneline | awk '{print $1}'"
+  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
+  if process.returncode != 0:
+    print('Error:', process.stderr)
+    sys.exit(1)
+  return process.stdout.rstrip()
+
+
+def update_musicdb_latest_commit(key: str):
+  with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
+    settings = json.load(f)
+  latest_commit = get_most_recent_commit(settings[MUSICDB_DIR_KEY])
+  with open(MUSIC_DB_SETTINGS_FILE, 'w') as f:
+    settings[key] = latest_commit
+    json.dump(settings, f, indent=2)
+
+
 def normalize_string(str):
   if not str:
     return str;
@@ -105,13 +123,7 @@ def push_song_updates(mysql_connection, firestore_db):
     settings = json.load(f)
     music_db_dir = settings[MUSICDB_DIR_KEY]
     last_commit = settings[MUSICDB_SONG_COMMIT_KEY]
-
-  command = "git log -1 --oneline | awk '{print $1}'"
-  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
-  if process.returncode != 0:
-    print('Error:', process.stderr)
-    return
-  latest_commit = process.stdout.rstrip()
+  latest_commit = get_most_recent_commit(music_db_dir)
 
   print('Finding songs requiring updates.')
   songs_to_remove = set()
@@ -242,19 +254,15 @@ def push_all_songs(mysql_connection, firestore_db):
       time.sleep(.1)
     cursor.close()
 
+  update_musicdb_latest_commit(MUSICDB_SONG_COMMIT_KEY)
+
 
 def push_genre_updates(mysql_connection, firestore_db):
   with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
     settings = json.load(f)
     music_db_dir = settings[MUSICDB_DIR_KEY]
     last_commit = settings[MUSICDB_GENRE_COMMIT_KEY]
-
-  command = "git log -1 --oneline | awk '{print $1}'"
-  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
-  if process.returncode != 0:
-    print('Error:', process.stderr)
-    return
-  latest_commit = process.stdout.rstrip()
+  latest_commit = get_most_recent_commit(music_db_dir)
 
   print(f'Finding genres requiring updates.')
   to_remove = set()
@@ -334,19 +342,15 @@ def push_all_genres(mysql_connection, firestore_db):
       time.sleep(.1)
     cursor.close()
 
+  update_musicdb_latest_commit(MUSICDB_GENRE_COMMIT_KEY)
+
 
 def push_playlist_updates(mysql_connection, firestore_db):
   with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
     settings = json.load(f)
     music_db_dir = settings[MUSICDB_DIR_KEY]
     last_commit = settings[MUSICDB_PLAYLIST_COMMIT_KEY]
-
-  command = "git log -1 --oneline | awk '{print $1}'"
-  process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
-  if process.returncode != 0:
-    print('Error:', process.stderr)
-    return
-  latest_commit = process.stdout.rstrip()
+  latest_commit = get_most_recent_commit(music_db_dir)
 
   print(f'Finding playlists requiring updates.')
   to_remove = set()
@@ -453,6 +457,8 @@ def push_all_playlists(mysql_connection, firestore_db):
 
       time.sleep(.1)
     playlistQuery.close()
+
+  update_musicdb_latest_commit(MUSICDB_PLAYLIST_COMMIT_KEY)
 
 if __name__ == '__main__':
   fire.Fire(SoulSifterSync)
