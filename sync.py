@@ -14,6 +14,9 @@ import tqdm
 MUSIC_DB_SETTINGS_FILE = '.musicdb_settings.json'
 MYSQL_SETTINGS_FILE = '.mysql_settings.json'
 
+MUSICDB_DIR_KEY = 'dir'
+MUSICDB_LAST_COMMIT_KEY = 'last_commit'
+
 """
 tracks
   map genres
@@ -97,8 +100,8 @@ def normalize_string(str):
 def push_song_updates(mysql_connection, firestore_db):
   with open(MUSIC_DB_SETTINGS_FILE, 'r') as f:
     settings = json.load(f)
-    music_db_dir = settings['dir']
-    last_commit = settings['last_commit']
+    music_db_dir = settings[MUSICDB_DIR_KEY]
+    last_commit = settings[MUSICDB_LAST_COMMIT_KEY]
 
   command = "git log -1 --oneline | awk '{print $1}'"
   process = subprocess.run(command, cwd=music_db_dir, capture_output=True, text=True, shell=True)
@@ -142,16 +145,16 @@ def push_song_updates(mysql_connection, firestore_db):
       trashed_songs.append(str(row[0]))
     cursor.close()
 
-  print('initial songs_to_remove: ', songs_to_remove)
-  print('initial new_songs: ', new_songs)
-  print('initial trashed_songs: ', trashed_songs)
+  # print('initial songs_to_remove: ', songs_to_remove)
+  # print('initial new_songs: ', new_songs)
+  # print('initial trashed_songs: ', trashed_songs)
 
   songs_to_remove = songs_to_remove - new_songs
   songs_to_remove.update(trashed_songs)
   new_songs = new_songs - set(trashed_songs)
 
-  print('final songs_to_remove: ', songs_to_remove)
-  print('final new_songs: ', new_songs)
+  # print('final songs_to_remove: ', songs_to_remove)
+  # print('final new_songs: ', new_songs)
 
   print(f'Updating / adding {len(new_songs)} new songs.')
   songs_ref = firestore_db.collection('songs')
@@ -192,7 +195,7 @@ def push_song_updates(mysql_connection, firestore_db):
     time.sleep(.1)
 
   with open(MUSIC_DB_SETTINGS_FILE, 'w') as f:
-    settings['last_commit'] = latest_commit
+    settings[MUSICDB_LAST_COMMIT_KEY] = latest_commit
     json.dump(settings, f, indent=2)
 
 
