@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@solid-primitives/pagination": "^0.2.10",
+    "@supabase/supabase-js": "^2.45.3",
     "firebase": "^10.3.0",
     "solid-icons": "^1.0.11",
     "solid-js": "^1.7.6"
