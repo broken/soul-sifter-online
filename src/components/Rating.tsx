@@ -1,13 +1,12 @@
 import { For, type Component, Show, mergeProps } from "solid-js";
 import { produce } from "solid-js/store";
 import { ImStarEmpty, ImStarFull } from 'solid-icons/im';
-import { db } from "../App";
-import { addDoc, collection, doc, setDoc } from "firebase/firestore";
+import { supabase } from "../App";
 import { SongsConsumer } from "./SongsContext";
-import Song, { songConverter } from "../dataclasses/Song";
+import { Tables } from '../database.types';
 import { SongConsumer } from "./SongContext";
 
-const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) => {
+const Rating: Component<{song: Tables<'songs'> | undefined, mutable: boolean}> = (props) => {
   props = mergeProps({ mutable: false }, props);
   const {setSongs} = SongsConsumer();
   const {setSong} = SongConsumer();
@@ -17,20 +16,20 @@ const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) =>
       console.error('Trying to set rating of an undefined song.');
       return;
     }
-    props.song.rating = rating;
-    setSong(props.song);
-    setSongs(
-        (s: Song) => s.id === props.song?.id,
-        produce((s: Song) => s.rating = rating)
-    );
-    setDoc(doc(db, 'songs', props.song.id.toString()).withConverter(songConverter), props.song, { merge: true });
-    addDoc(collection(db, 'changes'), {
-      id: props.song.id,
-      table: 'songs',
-      field: 'rating',
-      value: props.song.rating,
-      timestamp: new Date().getTime()
-    });
+    // props.song.rating = rating;
+    // setSong(props.song);
+    // setSongs(
+    //     (s: Tables<'song'>) => s.id === props.song?.id,
+    //     produce((s: Tables<'song'>) => s.rating = rating)
+    // );
+    // setDoc(doc(db, 'songs', props.song.id.toString()).withConverter(songConverter), props.song, { merge: true });
+    // addDoc(collection(db, 'changes'), {
+    //   id: props.song.id,
+    //   table: 'songs',
+    //   field: 'rating',
+    //   value: props.song.rating,
+    //   timestamp: new Date().getTime()
+    // });
   };
 
   return (

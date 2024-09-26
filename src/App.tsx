@@ -1,7 +1,9 @@
 import { Suspense, type Component, Switch, Match, createSignal, useTransition } from 'solid-js';
 
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { createClient } from '@supabase/supabase-js'
+
+import { Database } from './database.types'
+
 import GenreList from './components/GenreList';
 import NavBar from './components/NavBar';
 import PlaylistList from './components/PlaylistList';
@@ -12,18 +14,10 @@ import SongsContext from './components/SongsContext';
 import SongContext from './components/SongContext';
 import Settings from './components/Settings';
 
-// Initialize firebase
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
-const firebase = initializeApp(firebaseConfig);
-const db = getFirestore(firebase);
+// Initialize supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 
 const App: Component = () => {
@@ -61,4 +55,4 @@ const App: Component = () => {
 };
 
 export default App;
-export {db};
+export {supabase};

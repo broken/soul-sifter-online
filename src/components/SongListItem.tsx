@@ -1,9 +1,9 @@
 import { type Component } from 'solid-js';
 import Rating from './Rating';
-import Song from '../dataclasses/Song';
+import { Tables } from '../database.types';
 import { SongConsumer } from './SongContext';
 
-const SongListItem: Component<{song: Song}> = (props) => {
+const SongListItem: Component<{song: Tables<'songs'>}> = (props) => {
   const {setSong} = SongConsumer();
   return (
     <tr onclick={() => setSong?.(props.song)}>

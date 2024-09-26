@@ -1,13 +1,13 @@
 import { Index, type Component, createSignal, Show, mergeProps } from 'solid-js';
-import Genre from '../dataclasses/Genre';
+import { Tables } from '../database.types';
 import { createMutable } from 'solid-js/store';
 
 
 class GenreWrapper {
-  genre: Genre;
+  genre: Tables<'styles'>;
   children: GenreWrapper[];
 
-  constructor(genre: Genre, children: GenreWrapper[] = []) {
+  constructor(genre: Tables<'styles'>, children: GenreWrapper[] = []) {
     this.genre = genre;
     this.children = children;
     return createMutable(this);
@@ -24,7 +24,7 @@ class GenreWrapper {
 }
 
 
-const [selectedGenres, setSelectedGenres] = createSignal<Genre[]>([]);
+const [selectedGenres, setSelectedGenres] = createSignal<Tables<'styles'>[]>([]);
 
 const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props) => {
   props = mergeProps({ padding: 0 }, props);

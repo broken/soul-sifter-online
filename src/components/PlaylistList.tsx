@@ -1,13 +1,12 @@
 import { type Component, createEffect, Index, createSignal, DEV, Show } from 'solid-js';
-import { collection, getDocs, query } from 'firebase/firestore';
-import { db } from '../App';
-import Playlist, { playlistConverter } from '../dataclasses/Playlist';
+import { supabase } from '../App';
+import { Tables } from '../database.types';
 import styles from './PlaylistList.module.css';
 
 
-const [selectedPlaylist, setSelectedPlaylist] = createSignal<Playlist | undefined>(undefined);
+const [selectedPlaylist, setSelectedPlaylist] = createSignal<Tables<'playlists'> | undefined>(undefined);
 const PlaylistList: Component = () => {
-  const [playlists, setPlaylists] = createSignal<Playlist[]>([]);
+  const [playlists, setPlaylists] = createSignal<Tables<'playlists'>[]>([]);
   const openPlaylist = (playlistId: string | undefined) =>  {
     if (!playlistId) {
       console.log('Playlist is undefined.');
@@ -34,16 +33,29 @@ const PlaylistList: Component = () => {
     }
   }
   createEffect(async () => {
-    const q = query(collection(db, 'playlists').withConverter(playlistConverter));
-    const snapshot = await getDocs(q);
-    let playlistList: Playlist[] = []
-    snapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
-      playlistList.push(doc.data());
-      // if (!!DEV) console.log(doc.id, ' => ', doc.data());
-    });
-    playlistList.sort((a, b) => a.name.localeCompare(b.name));
-    setPlaylists(playlistList);
+    let playlistsList: Tables<'playlists'>[] = []
+    const { data, error } = await supabase.from('playlists').select();
+    if (error) {
+      console.log(error);
+    }
+    if (data) {
+      if (DEV) console.log(data);
+      data.forEach((x) => {
+        playlistsList.push(x);
+      });
+    }
+    playlistsList.sort((a, b) => a.name!.localeCompare(b.name!));
+    setPlaylists(playlistsList);
+    // const q = query(collection(db, 'playlists').withConverter(playlistConverter));
+    // const snapshot = await getDocs(q);
+    // let playlistList: Tables<'playlists'>[] = []
+    // snapshot.forEach((doc) => {
+    //   // doc.data() is never undefined for query doc snapshots
+    //   playlistList.push(doc.data());
+    //   // if (!!DEV) console.log(doc.id, ' => ', doc.data());
+    // });
+    // playlistList.sort((a, b) => a.name.localeCompare(b.name));
+    // setPlaylists(playlistList);
     // if (!!DEV) console.log(playlistList);
   });
   return (
