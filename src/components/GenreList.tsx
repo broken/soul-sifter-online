@@ -4,13 +4,13 @@ import GenreListItem, { GenreWrapper } from './GenreListItem';
 import { Tables } from '../database.types';
 
 
-const addChildren = (genre: GenreWrapper, genres: Tables<'styles'>[]) => {
+const addChildren = (genre: GenreWrapper, genres: Tables<'styles'>[], children: Record<number, number[]>) => {
   for (let g of genres) {
-    // if (g.parents.includes(genre.genre.id)) {
-    //   let wrapper = new GenreWrapper(g);
-    //   addChildren(wrapper, genres);
-    //   genre.children.push(wrapper);
-    // }
+    if (children[genre.genre.id] && children[genre.genre.id].includes(g.id)) {
+      let wrapper = new GenreWrapper(g);
+      addChildren(wrapper, genres, children);
+      genre.children.push(wrapper);
+    }
   }
   return genre;
 }
@@ -20,45 +20,41 @@ const GenreList: Component = () => {
   const [genres, setGenres] = createSignal<GenreWrapper[]>([]);
   createEffect(async () => {
     let genreList: Tables<'styles'>[] = []
-    const { data, error } = await supabase.from('styles').select();
-    if (error) {
-      console.log(error);
-    }
-    if (data) {
-      if (DEV) console.log(data);
-      data.forEach((x) => {
-        genreList.push(x);
-      })
+    {
+      const { data, error } = await supabase.from('styles').select();
+      if (error) {
+        console.log(error);
+      }
+      if (data) {
+        if (DEV) console.log(data);
+        data.forEach((x) => {
+          genreList.push(x);
+        })
+      }
     }
     genreList.sort((a, b) => a.name!.localeCompare(b.name!));
 
-    // let genreChildrenList: Tables<'stylechildren'>[] = []
-    // const { data2, error2 } = await supabase.from('stylechildren').select();
-    // if (error2) {
-    //   console.log(error2);
-    // }
-    // if (data2) {
-    //   if (DEV) console.log(data2);
-    //   data2.forEach((x) => {
-    //     genreChildrenList.push(x);
-    //   })
-    // }
-    // let parentGenres: GenreWrapper[] = genreList.filter(g => !g.parents.length).map(g => new GenreWrapper(g));
-    // parentGenres = parentGenres.map(g => addChildren(g, genreList));
-    // setGenres(songList);
-    // const q = query(collection(db, 'genres').withConverter(genreConverter));
-    // const snapshot = await getDocs(q);
-    // let genreList: Tables<'styles'>[] = []
-    // snapshot.forEach((doc) => {
-    //   // doc.data() is never undefined for query doc snapshots
-    //   genreList.push(doc.data());
-    //   if (!!DEV) console.log(doc.id, ' => ', doc.data());
-    // });
-    // genreList.sort((a, b) => a.name.localeCompare(b.name));
-    // let parentGenres: GenreWrapper[] = genreList.filter(g => !g.parents.length).map(g => new GenreWrapper(g));
-    // parentGenres = parentGenres.map(g => addChildren(g, genreList));
-    // setGenres(parentGenres);
-    // if (!!DEV) console.log(parentGenres);
+    let children: Record<number, number[]> = {};
+    let childIds: Record<number, boolean> = {};
+    {
+      const { data, error } = await supabase.from('stylechildren').select();
+      if (error) {
+        console.log(error);
+      }
+      if (data) {
+        if (DEV) console.log(data);
+        data.forEach((x) => {
+          if (!children[x.parentId]) children[x.parentId] = [];
+          children[x.parentId].push(x.childId);
+          childIds[x.childId] = true;
+        })
+      }
+    }
+
+    let parentGenres: GenreWrapper[] = genreList.filter(g => !childIds[g.id]).map(g => new GenreWrapper(g));
+    parentGenres = parentGenres.map(g => addChildren(g, genreList, children));
+    setGenres(parentGenres);
+    if (DEV) console.log(parentGenres);
   });
 
   return (
