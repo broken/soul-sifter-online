@@ -281,6 +281,7 @@ export type Database = {
           rating: number | null
           remixer: string | null
           reSongId: number | null
+          search_text: string | null
           spotifyId: string | null
           title: string | null
           tonicKey: string | null
@@ -310,6 +311,7 @@ export type Database = {
           rating?: number | null
           remixer?: string | null
           reSongId?: number | null
+          search_text?: string | null
           spotifyId?: string | null
           title?: string | null
           tonicKey?: string | null
@@ -339,6 +341,7 @@ export type Database = {
           rating?: number | null
           remixer?: string | null
           reSongId?: number | null
+          search_text?: string | null
           spotifyId?: string | null
           title?: string | null
           tonicKey?: string | null

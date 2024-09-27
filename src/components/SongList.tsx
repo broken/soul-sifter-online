@@ -38,6 +38,13 @@ const SongList: Component = () => {
     let query: any = supabase.from('songs');
     if (genres().length) query = query.select('*, songstyles!inner(*)').in('songstyles.styleId', genres());
     else query = query.select();
+    if (searchQuery().length) {
+      // search_text is computed column
+      // alter table songs add column search_text text generated always as (coalesce(artist,'') || ' ' || coalesce(title,'') || ' ' || coalesce(remixer,'') || ' ' || coalesce(comments,'') || ' ' || coalesce(curator,'')) stored;
+      let q: string = searchQuery().split(' ').map(x => `%${x}%`)[0];
+      console.log('query: ' + q);
+      query = query.ilike('search_text', q);
+    }
     const { data, error } = await query.limit(max);
     if (error) {
       console.log(error);
