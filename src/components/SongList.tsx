@@ -4,12 +4,12 @@ import { supabase } from '../App';
 import { searchField, searchQuery } from './SearchToolbar';
 import { selectedGenres, setSelectedGenres } from './GenreListItem';
 import { selectedPlaylist, setSelectedPlaylist } from './PlaylistList';
-import { SongsConsumer } from './SongsContext';
+import { useSongs } from './SongsContext';
 import { Tables } from '../database.types';
 
 
 const SongList: Component = () => {
-  const {songs, setSongs} = SongsConsumer();
+  const {songs, setSongs} = useSongs();
   createEffect(async () => {
     console.log("is dev: ", DEV);
     let max = !DEV ? 20 : 3;
@@ -34,7 +34,9 @@ const SongList: Component = () => {
     //   q = query(collection(db, 'songs').withConverter(songConverter), limit(max));
     // }
     let songList: Tables<'songs'>[] = []
-    const { data, error } = await supabase.from('songs').select().limit(max);
+    let query: any = supabase.from('songs');
+    query = query.select();
+    const { data, error } = await query.limit(max);
     if (error) {
       console.log(error);
     }

@@ -16,9 +16,9 @@ const SongsContext: ParentComponent = (props) => {
   )
 }
 
-const SongsConsumer = () => {
+const useSongs = () => {
   return useContext(Songs)!;
 }
 
 export default SongsContext;
-export {SongsConsumer};
+export {useSongs};

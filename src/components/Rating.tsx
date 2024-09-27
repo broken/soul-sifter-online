@@ -2,13 +2,11 @@ import { For, type Component, Show, mergeProps } from "solid-js";
 import { produce } from "solid-js/store";
 import { ImStarEmpty, ImStarFull } from 'solid-icons/im';
 import { supabase } from "../App";
-import { SongsConsumer } from "./SongsContext";
 import { Tables } from '../database.types';
 import { SongConsumer } from "./SongContext";
 
 const Rating: Component<{song: Tables<'songs'> | undefined, mutable: boolean}> = (props) => {
   props = mergeProps({ mutable: false }, props);
-  const {setSongs} = SongsConsumer();
   const {setSong} = SongConsumer();
 
   let setRating = (rating: number) => {
