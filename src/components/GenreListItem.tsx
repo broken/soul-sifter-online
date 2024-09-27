@@ -29,11 +29,13 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
   const {genres, setGenres} = useGenres();
   props = mergeProps({ padding: 0 }, props);
   const toggleGenre = () => {
-    if (props.genre.genre.id in genres()) {
-      setGenres(genres().filter(g => g.id != props.genre.genre.id));
+    if (genres().includes(props.genre.genre.id)) {
+      console.log('deselected');
+      setGenres(genres().filter(gid => gid != props.genre.genre.id));
     } else {
+      console.log('selected');
       let g = [...genres()];
-      g.push(props.genre.genre);
+      g.push(props.genre.genre.id);
       setGenres(g);
     }
   };
@@ -42,7 +44,7 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
     <>
       <tr>
         <td class="px-0 py-0">
-          <div class={`flex flex-row justify-between px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
+          <div classList={{ 'bg-slate-50': genres().includes(props.genre.genre.id) }} class={`flex flex-row justify-between px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
             <span onclick={toggleGenre}>{props.genre.genre.name}</span>
             <Show when={!!props.genre.children.length}>
               <span onclick={() => setCollapsed(!collapsed())}>

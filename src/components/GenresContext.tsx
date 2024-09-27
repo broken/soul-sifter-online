@@ -1,9 +1,8 @@
 import { Accessor, createContext, createSignal, ParentComponent, Setter, useContext } from "solid-js";
-import { Tables } from '../database.types';
 
 
-const [genres, setGenres] = createSignal<Tables<'styles'>[]>([]);
-const Genres = createContext<{genres: Accessor<Tables<'styles'>[]>, setGenres: Setter<Tables<'styles'>[]>}>({genres, setGenres});
+const [genres, setGenres] = createSignal<number[]>([]);
+const Genres = createContext<{genres: Accessor<number[]>, setGenres: Setter<number[]>}>({genres, setGenres});
 
 const GenresContext: ParentComponent = (props) => {
 

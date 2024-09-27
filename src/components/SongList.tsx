@@ -36,7 +36,7 @@ const SongList: Component = () => {
     // }
     let songList: Tables<'songs'>[] = []
     let query: any = supabase.from('songs');
-    if (genres.length) query = query.select('*, songstyles!inner(*)').in('songstyles.styleId', [...genres()].map((g) => g.id));
+    if (genres().length) query = query.select('*, songstyles!inner(*)').in('songstyles.styleId', genres());
     else query = query.select();
     const { data, error } = await query.limit(max);
     if (error) {
@@ -44,7 +44,7 @@ const SongList: Component = () => {
     }
     if (data) {
       if (DEV) console.log(data);
-      data.forEach((song) => {
+      data.forEach((song: Tables<'songs'>) => {
         songList.push(song);
       })
     }
@@ -59,7 +59,7 @@ const SongList: Component = () => {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <span>Genre {genres[0].name} ({genres[0].id}).</span>
+          {/* <span>Genre {genres[0].name} ({genres[0].id}).</span> */}
           <button class="btn btn-sm btn-primary" onclick={() => setGenres([])}>Clear</button>
         </div>
       </div>
