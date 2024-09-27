@@ -1,6 +1,7 @@
 import { Index, type Component, createSignal, Show, mergeProps } from 'solid-js';
 import { Tables } from '../database.types';
 import { createMutable } from 'solid-js/store';
+import { useGenres } from './GenresContext';
 
 
 class GenreWrapper {
@@ -24,17 +25,16 @@ class GenreWrapper {
 }
 
 
-const [selectedGenres, setSelectedGenres] = createSignal<Tables<'styles'>[]>([]);
-
 const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props) => {
+  const {genres, setGenres} = useGenres();
   props = mergeProps({ padding: 0 }, props);
   const toggleGenre = () => {
-    let genres = selectedGenres();
-    if (props.genre.genre.id in genres) {
-      setSelectedGenres(genres.filter(g => g.id != props.genre.genre.id));
+    if (props.genre.genre.id in genres()) {
+      setGenres(genres().filter(g => g.id != props.genre.genre.id));
     } else {
-      genres.push(props.genre.genre);
-      setSelectedGenres(genres);
+      let g = [...genres()];
+      g.push(props.genre.genre);
+      setGenres(g);
     }
   };
   const [collapsed, setCollapsed] = createSignal<boolean>(true);
@@ -79,4 +79,4 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
 };
 
 export default GenreListItem;
-export {GenreWrapper, selectedGenres, setSelectedGenres};
+export {GenreWrapper};
