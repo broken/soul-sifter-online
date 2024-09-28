@@ -2,6 +2,7 @@ import { PostgrestQueryBuilder, PostgrestFilterBuilder } from '@supabase/postgre
 import { supabase } from '../App';
 import { Tables } from '../database.types';
 
+
 enum OrderBy {
   DATE_ADDED,
   RELEASE_DATE,
@@ -10,6 +11,7 @@ enum OrderBy {
   ALBUM,
   PLAYLIST
 };
+
 
 enum Type {
   ANY,
@@ -246,7 +248,7 @@ function buildQueryPredicate(
     energy?: number
 ): [PostgrestFilterBuilder<any, any, any[], 'songs', any>, number /* limit */, number /* OrderBy */] {
   // Split query into fragments
-  const fragments = query.split(" ");
+  const fragments = splitString(query);
 
   for (const fragment of fragments) {
     let atom = parse(fragment);
@@ -384,138 +386,6 @@ function buildQueryPredicate(
     return [builder, limit, orderBy];
   }
 
-  // function buildOptionPredicate(bpm, key, styles, songsToOmit, playlists, limit, energy, orderBy) {
-  //   const ss = [];
-  //   function buildOptionPredicate(bpm, key, styles, songsToOmit, playlists, limit, energy, orderBy) {
-  // const ss = [];
-
-  // // Assuming CamelotKeys is an object with a map and rmap property
-  // if (CamelotKeys.rmap && CamelotKeys.rmap.hasOwnProperty(key)) {
-  //   // Key lock always on for now
-  //   ss.push(" (");
-  //   let num = 0;
-  //   const keyIndex = CamelotKeys.rmap[key];
-
-  //   switch (keyIndex) {
-  //     // Handle B keys (0-11)
-  //     case 5:  // B = 1B
-  //       ss.push("tonicKey = '" + CamelotKeys.map["1A"] + "' OR tonicKey = '" + CamelotKeys.map["12B"] + "'");
-  //       num++;
-  //       break;
-  //     case 6:  // Gb = 2B
-  //     case 7:  // Db = 3B
-  //     case 8:  // Ab = 4B
-  //     case 9:  // Eb = 5B
-  //     case 10: // Bb = 6B
-  //     case 11: // F = 7B
-  //       const offset = keyIndex - 5;
-  //       ss.push("tonicKey = '" + CamelotKeys.map[(offset - 1).toString() + "A"] + "'"); // Key before
-  //       if (num < 2) ss.push(" OR ");
-  //       ss.push("tonicKey = '" + CamelotKeys.map[offset.toString() + "B"] + "'"); // Current key
-  //       num = 2;
-  //       break;
-  //     case 0:  // C = 8B
-  //     case 1:  // G = 9B
-  //     case 2:  // D = 10B
-  //     case 3:  // A = 11B
-  //     case 4:  // E = 12B
-  //       const nextOffset = (keyIndex + 1) % 12;
-  //       ss.push("tonicKey = '" + CamelotKeys.map[(nextOffset + 1).toString() + "A"] + "'"); // Key after
-  //       if (num < 2) ss.push(" OR ");
-  //       ss.push("tonicKey = '" + CamelotKeys.map[nextOffset.toString() + "B"] + "'"); // Current key
-  //       num = 2;
-  //       if (keyIndex === 4) { // Handle wrapping around for E (12B)
-  //         if (num < 3) ss.push(" OR ");
-  //         ss.push("tonicKey = '" + CamelotKeys.map["12B"] + "'"); // Current key (again)
-  //         if (num < 4) ss.push(" OR ");
-  //         ss.push("tonicKey = '" + CamelotKeys.map["1A"] + "'"); // Key before (wrapping)
-  //         num = 4;
-  //       }
-  //       break;
-
-  //     // Handle A keys (12-23)
-  //     case 17: // Abm = 1A
-  //     case 18: // Ebm = 2A
-  //     case 19: // Bbm = 3A
-  //     case 20: // Fm = 4A
-  //     case 21: // Cm = 5A
-  //     case 22: // Gm = 6A
-  //     case 23: // Dm = 7A
-  //       const aOffset = keyIndex - 11;
-  //       ss.push("tonicKey = '" + CamelotKeys.map[(aOffset - 1).toString() + "B"] + "'"); // Key before
-  //       if (num < 2) ss.push(" OR ");
-  //       ss.push("tonicKey = '" + CamelotKeys.map[aOffset.toString() + "A"] + "'"); // Current key
-  //       num = 2;
-  //       break;
-  //     case 12: // Am = 8A
-  //     case 13: // Em = 9A
-  //     case 14: // Bm = 10A
-  //     case 15: // Gbm = 11A
-  //     case 16: // Csm = 12A
-  //       const nextAOffset = (keyIndex + 1) % 12;
-  //       ss.push("tonicKey = '" + CamelotKeys.map[(nextAOffset + 1).toString() + "B
-
-  //   const pitchPctMax = 8; // TODO: Should be a setting
-  //   const maxBpm = Math.floor(bpm * (100 + pitchPctMax) / 100);
-  //   const minBpm = Math.floor(bpm * (100 - pitchPctMax) / 100);
-
-  //   if (maxBpm > 0 && minBpm > 0) {
-  //     ss.push(" (bpm BETWEEN " + minBpm + " AND " + maxBpm + ")");
-  //     if (maxBpm > 120) {
-  //       ss.push(" OR (bpm BETWEEN " + Math.floor(minBpm / 2) + " AND " + Math.floor(maxBpm / 2) + ")");
-  //     }
-  //     if (minBpm <= 90) {
-  //       ss.push(" OR (bpm BETWEEN " + (minBpm * 2) + " AND " + (maxBpm * 2) + ")");
-  //     }
-  //   }
-
-
-  //   if (styles.length > 0) {
-  //     ss.push(" AND EXISTS (SELECT 1 FROM SongStyles g WHERE s.id = g.songId AND g.styleId IN (" + styles.map(s => s.getId()).join(",") + "))");
-  //   }
-
-  //   if (songsToO omit.length > 0) {
-  //     ss.push(" AND s.id NOT IN (" + songsToOmit.map(s => s.getId()).join(",") + "))");
-  //   }
-
-  //   if (playlists.length > 0) {
-  //     ss.push(" AND pe.playlistid IN (" + playlists.map(p => p.getId()).join(",") + ")");
-  //   }
-
-  //   let groupBy = "";
-  //   if (playlists.length > 0) {
-  //     groupBy = "pe.id, ";
-  //   }
-  //   groupBy += "s.id";
-
-  //   let orderClause;
-  //   switch (orderBy) {
-  //     case "RELEASE_DATE":
-  //       orderClause = "a.releaseDateYear DESC, a.releaseDateMonth DESC, a.releaseDateDay DESC";
-  //       break;
-  //     case "RANDOM":
-  //       orderClause = "RAND()";
-  //       break;
-  //     case "BPM":
-  //       orderClause = "s.bpm ASC";
-  //       break;
-  //     case "PLAYLIST":
-  //       orderClause = "pe.playlistid DESC, pe.position ASC";
-  //       break;
-  //     case "ALBUM":
-  //       orderClause = "a.id DESC, CAST(s.track AS UNSIGNED) ASC, s.track ASC";
-  //       break;
-  //     default:
-  //       orderClause = "s.id DESC";
-  //   }
-
-  //   ss.push(" GROUP BY " + groupBy);
-  //   ss.push(" ORDER BY " + orderClause);
-  //   ss.push(" LIMIT " + limit);
-
-  //   return ss.join(" ");
-  // }
-
 
 async function searchSongs(
     query: string,
@@ -538,7 +408,31 @@ async function searchSongs(
   else builder = builder.select('*, albums!inner(*)');
 
   [builder, limit, orderBy] = buildQueryPredicate(builder, query, limit, orderBy, energy);
-  //   sql += await buildOptionPredicate(bpm, key, styles, songsToOmit, playlists, limit, orderBy);
+
+  switch (orderBy) {
+    case OrderBy.RELEASE_DATE:
+      builder = builder.order('albums.releaseDateYear', { ascending: false });
+      builder = builder.order('albums.releaseDateMonth', { ascending: false });
+      builder = builder.order('albums.releaseDateDay', { ascending: false });
+      break;
+    case OrderBy.RANDOM:
+      console.warn('Random order not supported (though it is possible).')
+      break;
+    case OrderBy.BPM:
+      builder = builder.order('bpm', { ascending: true });
+      break;
+    case OrderBy.PLAYLIST:
+      builder = builder.order('playlistentries.playlistId', { ascending: false });
+      builder = builder.order('playlistentries.position', { ascending: true });
+      break;
+    case OrderBy.ALBUM:
+      builder = builder.order('albumId', { ascending: false });
+      builder = builder.order('track', { ascending: true });
+      break;
+    default:
+      builder = builder.order('id', { ascending: false });
+  }
+
   const { data, error } = await builder.limit(limit);
   if (error) {
     console.log(error);
@@ -548,47 +442,6 @@ async function searchSongs(
       songList.push(song);
     })
   }
-
-//   console.debug("Query:", sql);
-
-//   // Replace database access with placeholder logic
-//   for (let i = 0; i < 2; i++) {
-//     try {
-//       // Simulate fetching data
-//       const mockData = [
-//         { /* Song data */ },
-//         { /* Song data */ },
-//         // ...
-//       ];
-//       for (const songData of mockData) {
-//         const song = new Song();
-//         // Populate song data using songData (implementation needed)
-//         song.setId(/* song id */);
-//         song.setArtist(/* song artist */);
-
-//         const album = new Album();
-//         // Populate album data using songData (implementation needed)
-//         album.setId(/* album id */);
-//         album.setArtist(/* album artist */);
-//         song.setAlbum(album);
-
-//         songs.push(back);
-//       }
-//       return songs;
-//     } catch (error) {
-//       console.warn("Error simulating data fetching:", error);
-//       if (i === 0) {
-//         console.log("Retrying..."); // Simulate reconnection attempt (logic needed)
-//       } else {
-//         console.warn(error.message);
-//         if (errorCallback) {
-//           errorCallback(error.message);
-//         } else {
-//           console.warn("Undefined callback. Unable to send error.");
-//         }
-//       }
-//     }
-//   }
 
   console.log(songList);
   return songList;
