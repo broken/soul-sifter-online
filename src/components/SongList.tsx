@@ -6,6 +6,7 @@ import { selectedPlaylist, setSelectedPlaylist } from './PlaylistList';
 import { useGenres } from './GenresContext';
 import { useSongs } from './SongsContext';
 import { Tables } from '../database.types';
+import { searchSongs, OrderBy } from './SearchUtil';
 
 
 const SongList: Component = () => {
@@ -13,7 +14,6 @@ const SongList: Component = () => {
   const {songs, setSongs} = useSongs();
   createEffect(async () => {
     console.log("is dev: ", DEV);
-    let max = !DEV ? 20 : 3;
     // let q = undefined;
     // if (!!searchQuery()) {
     //   q = query(collection(db, 'songs').withConverter(songConverter), where(searchField(), '>=', searchQuery()), where(searchField(), '<=', searchQuery()+'\uf8ff'), limit(max));
@@ -34,28 +34,21 @@ const SongList: Component = () => {
     // } else {
     //   q = query(collection(db, 'songs').withConverter(songConverter), limit(max));
     // }
-    let songList: Tables<'songs'>[] = []
-    let query: any = supabase.from('songs');
-    if (genres().length) query = query.select('*, songstyles!inner(*)').in('songstyles.styleId', genres());
-    else query = query.select();
-    if (searchQuery().length) {
-      // search_text is computed column
-      // alter table songs add column search_text text generated always as (coalesce(artist,'') || ' ' || coalesce(title,'') || ' ' || coalesce(remixer,'') || ' ' || coalesce(comments,'') || ' ' || coalesce(curator,'')) stored;
-      let q: string = searchQuery().split(' ').map(x => `%${x}%`)[0];
-      console.log('query: ' + q);
-      query = query.ilike('search_text', q);
-    }
-    const { data, error } = await query.limit(max);
-    if (error) {
-      console.log(error);
-    }
-    if (data) {
-      if (DEV) console.log(data);
-      data.forEach((song: Tables<'songs'>) => {
-        songList.push(song);
-      })
-    }
-    setSongs(songList);
+
+    let songResults = await searchSongs(
+      searchQuery(),
+      !DEV ? 20 : 3 /* limit */,
+      0 /* bpm */,
+      '' /* key */,
+      genres(),
+      [] /* songs to omit */,
+      []  /* playlists */,
+      0 /* energy */,
+      false /* mv mode */,
+      OrderBy.DATE_ADDED,
+      undefined /* callback */
+    );
+    setSongs(songResults);
   });
 
   return (
