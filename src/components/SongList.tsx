@@ -44,7 +44,6 @@ const SongList: Component = () => {
       [] /* songs to omit */,
       []  /* playlists */,
       0 /* energy */,
-      false /* mv mode */,
       OrderBy.DATE_ADDED,
       undefined /* callback */
     );
