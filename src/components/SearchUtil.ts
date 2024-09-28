@@ -241,10 +241,10 @@ function buildEqualityOperator(
 function buildQueryPredicate(
     builder: PostgrestFilterBuilder<any, any, any[], 'songs', any>,
     query: string,
-    limit?: number,
-    energy?: number,
-    orderBy?: number
-): PostgrestFilterBuilder<any, any, any[], 'songs', any> {
+    limit: number,
+    orderBy: number,
+    energy?: number
+): [PostgrestFilterBuilder<any, any, any[], 'songs', any>, number /* limit */, number /* OrderBy */] {
   // Split query into fragments
   const fragments = query.split(" ");
 
@@ -295,84 +295,93 @@ function buildQueryPredicate(
       case Type.S_TRASHED:
         if (negated) builder = builder.not('is', 'trashed', atom.value);
         else builder = builder.is('trashed', atom.value);
+        break;
       case Type.S_LOW_QUALITY:
         if (negated) builder = builder.not('is', 'lowQuality', atom.value);
         else builder = builder.is('lowQuality', atom.value);
         break;
-      // case Type.A_ID:
-      //   predicate += `a.id ${buildEqualityOperator(atom.props)} ${atom.value}`;
-      //   break;
-      // case Type.A_NAME:
-      //   predicate += `ifnull(a.name, '') like '%${atom.value}%'`;
-      //   break;
-      // case Type.A_MIXED:
-      //   predicate += `a.mixed = ${atom.value}`;
-      //   break;
-      // case Type.A_LABEL:
-      //   predicate += `ifnull(a.label, '') like '%${atom.value}%'`;
-      //   break;
-      // case Type.A_YEAR:
-      // case Type.A_MONTH:
-      // case Type.A_DAY:
-      //   const key = atom.type === Type.A_YEAR ? 'releaseDateYear' : (atom.type === Type.A_MONTH ? 'releaseDateMonth' : 'releaseDateDay');
-      //   predicate += `a.${key} ${buildEqualityOperator(atom.props)} ${atom.value}`;
-      //   break;
-      // case Type.CUSTOM_QUERY_PREDICATE:
-      //   predicate += atom.value;
-      //   break;
-      //   case Type.S_BPM:
-      //     // Handle BPM range
-      //     let minBpm = 0, maxBpm = 0;
-      //     const parts = atom.value.split("-");
-      //     if (parts.length === 2) {
-      //       minBpm = parseInt(parts[0], 10);
-      //       maxBpm = parseInt(parts[1], 10);
-      //     } else if (buildEqualityOperator(atom.props, "").length > 0) {
-      //       predicate += `s.bpm ${buildEqualityOperator(atom.props)} ${atom.value}`;
-      //     } else {
-      //       minBpm = parseInt(atom.value, 10);
-      //       maxBpm = minBpm + 1;
-      //     }
-      //     if (minBpm > 0 && maxBpm > 0) {
-      //       predicate += "(s.bpm between " + minBpm + " and " + maxBpm;
-      //       if (maxBpm > 120) predicate += " or s.bpm between " + (minBpm / 2) + " and " + (maxBpm / 2);
-      //       if (minBpm <= 100) predicate += " or s.bpm between " + (minBpm * 2) + " and " + (maxBpm * 2);
-      //       predicate += ")";
-      //     }
-      //     break;
-      //   case Type.LIMIT:
-      //     limit = parseInt(atom.value, 10);
-      //     predicate += "true";
-      //     break;
-      //   case Type.S_ENERGY:
-      //     // If an operator property is specified, it will overwrite what is used in the options build. Otherwise, we default to it.
-      //     if (atom.props === 0) {
-      //       energy = parseInt(atom.value, 10);
-      //       predicate += "true";
-      //     } else {
-      //       predicate += `s.energy ${buildEqualityOperator(atom.props)} ${atom.value}`;
-      //     }
-      //     break;
-      //   case Type.ORDER_BY:
-      //     if (!atom.value.localeCompare("rand") || !atom.value.localeCompare("random")) {
-      //       orderBy = OrderBy.RANDOM;
-      //     } else if (!atom.value.localeCompare("release_date") || !atom.value.localeCompare("rdate") || !atom.value.localeCompare("date_released") || !atom.value.localeCompare("released")) {
-      //       orderBy = OrderBy.RELEASE_DATE;
-      //     } else if (!atom.value.localeCompare("added_date") || !atom.value.localeCompare("adate") || !atom.value.localeCompare("date_added") || !atom.value.localeCompare("added")) {
-      //       orderBy = OrderBy.DATE_ADDED;
-      //     } else if (!atom.value.localeCompare("bpm")) {
-      //       orderBy = OrderBy.BPM;
-      //     } else if (!atom.value.localeCompare("album")) {
-      //       orderBy = OrderBy.ALBUM;
-      //     } else if (!atom.value.localeCompare("playlist")) {
-      //       orderBy = OrderBy.PLAYLIST;
-      //     }
-      //     predicate += "true";
-      //     break;
+      case Type.A_ID:
+        builder = buildEqualityOperator(builder, 'albums.id', atom.props, atom.value);
+        break;
+      case Type.A_NAME:
+        if (negated) builder = builder.not('ilike', 'albums.name', `%${atom.value}%`);
+        else builder = builder.ilike('albums.name', `%${atom.value}%`);
+        break;
+      case Type.A_MIXED:
+        if (negated) builder = builder.not('is', 'mixed', atom.value);
+        else builder = builder.is('mixed', atom.value);
+        break;
+      case Type.A_LABEL:
+        if (negated) builder = builder.not('ilike', 'albums.label', `%${atom.value}%`);
+        else builder = builder.ilike('albums.label', `%${atom.value}%`);
+        break;
+      case Type.A_YEAR:
+        builder = buildEqualityOperator(builder, 'albums.releaseDateYear', atom.props, atom.value);
+        break;
+      case Type.A_MONTH:
+        builder = buildEqualityOperator(builder, 'albums.releaseDateDayMonth', atom.props, atom.value);
+        break;
+      case Type.A_DAY:
+        builder = buildEqualityOperator(builder, 'albums.releaseDateDay', atom.props, atom.value);
+        break;
+      case Type.CUSTOM_QUERY_PREDICATE:
+        console.warn(`Custom query "{atom.value}" is unsupported.`);
+        break;
+      case Type.S_BPM:
+        // Handle BPM range
+        let minBpm = 0, maxBpm = 0;
+        const parts = atom.value.split("-");
+        if (parts.length === 2) {
+          minBpm = parseInt(parts[0], 10);
+          maxBpm = parseInt(parts[1], 10);
+        } else if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) {
+          builder = buildEqualityOperator(builder, 'bpm', atom.props, atom.value);
+        } else {
+          minBpm = parseInt(atom.value, 10);
+          maxBpm = minBpm + 1;
+        }
+        if (minBpm > 0 && maxBpm > 0) {
+          if (negated) builder = builder.not('gte', 'bpm', atom.value);
+          else builder = builder.gte('bpm', atom.value);
+          if (negated) builder = builder.not('lt', 'bpm', atom.value);
+          else builder = builder.lt('bpm', atom.value);
+          // if (maxBpm > 120) predicate += " or s.bpm between " + (minBpm / 2) + " and " + (maxBpm / 2);
+          // if (minBpm <= 100) predicate += " or s.bpm between " + (minBpm * 2) + " and " + (maxBpm * 2);
+        }
+        break;
+      case Type.LIMIT:
+        limit = parseInt(atom.value, 10);
+        break;
+      case Type.S_ENERGY:
+        // If an operator property is specified, it will overwrite what is used in the options build. Otherwise, we default to it.
+        if (atom.props === 0) {
+          energy = parseInt(atom.value, 10);
+          const diff = 1;
+          builder = builder.gte('energy', energy - diff);
+          builder = builder.lte('energy', energy + diff);
+        } else {
+          builder = buildEqualityOperator(builder, 'energy', atom.props, atom.value);
+        }
+        break;
+      case Type.ORDER_BY:
+        if (atom.value === 'rand' || atom.value === "random") {
+          orderBy = OrderBy.RANDOM;
+        } else if (atom.value === "release_date" || atom.value === "rdate" || atom.value === "date_released" || atom.value === "released") {
+          orderBy = OrderBy.RELEASE_DATE;
+        } else if (atom.value === "added_date" || atom.value === "adate" || atom.value === "date_added" || atom.value === "added") {
+          orderBy = OrderBy.DATE_ADDED;
+        } else if (atom.value === "bpm") {
+          orderBy = OrderBy.BPM;
+        } else if (atom.value === "album") {
+          orderBy = OrderBy.ALBUM;
+        } else if (atom.value === "playlist") {
+          orderBy = OrderBy.PLAYLIST;
+        }
+        break;
       }
     }
 
-    return builder;
+    return [builder, limit, orderBy];
   }
 
   // function buildOptionPredicate(bpm, key, styles, songsToOmit, playlists, limit, energy, orderBy) {
@@ -460,10 +469,6 @@ function buildQueryPredicate(
   //     }
   //   }
 
-  //   if (energy > 0) {
-  //     const diff = /* How to access settings in your JS code */; // Replace with logic to get "search.energyGap"
-  //     ss.push(" AND (energy BETWEEN " + (energy - diff) + " AND " + (energy + diff) + ")");
-  //   }
 
   //   if (styles.length > 0) {
   //     ss.push(" AND EXISTS (SELECT 1 FROM SongStyles g WHERE s.id = g.songId AND g.styleId IN (" + styles.map(s => s.getId()).join(",") + "))");
@@ -528,12 +533,12 @@ async function searchSongs(
   let songList: Tables<'songs'>[] = []
 
   let builder: PostgrestQueryBuilder<any, any, 'songs', any> | PostgrestFilterBuilder<any, any, any[], 'songs', any>  = supabase.from('songs');
-  if (playlists.length) builder = builder.select('*, playlistentries!inner(*)').in('playlistentries.playlistId', playlists);
-  else if (styles.length) builder = builder.select('*, songstyles!inner(*)').in('songstyles.styleId', styles);
-  else builder = builder.select();
+  if (playlists.length) builder = builder.select('*, albums!inner(*), playlistentries!inner(*)').in('playlistentries.playlistId', playlists);
+  else if (styles.length) builder = builder.select('*, albums!inner(*), songstyles!inner(*)').in('songstyles.styleId', styles);
+  else builder = builder.select('*, albums!inner(*)');
 
-  builder = buildQueryPredicate(builder, query, limit, energy, orderBy);
-  //   sql += await buildOptionPredicate(bpm, key, styles, songsToOmit, playlists, limit, energy, orderBy);
+  [builder, limit, orderBy] = buildQueryPredicate(builder, query, limit, orderBy, energy);
+  //   sql += await buildOptionPredicate(bpm, key, styles, songsToOmit, playlists, limit, orderBy);
   const { data, error } = await builder.limit(limit);
   if (error) {
     console.log(error);
