@@ -1,7 +1,7 @@
 import { type Component, createEffect, Index, DEV, Show } from 'solid-js';
 import SongListItem from './SongListItem';
 import { supabase } from '../App';
-import { searchField, searchQuery } from './SearchToolbar';
+import { searchQuery } from './SearchToolbar';
 import { selectedPlaylist, setSelectedPlaylist } from './PlaylistList';
 import { useGenres } from './GenresContext';
 import { useSongs } from './SongsContext';
@@ -14,27 +14,6 @@ const SongList: Component = () => {
   const {songs, setSongs} = useSongs();
   createEffect(async () => {
     console.log("is dev: ", DEV);
-    // let q = undefined;
-    // if (!!searchQuery()) {
-    //   q = query(collection(db, 'songs').withConverter(songConverter), where(searchField(), '>=', searchQuery()), where(searchField(), '<=', searchQuery()+'\uf8ff'), limit(max));
-    // } else if (!!selectedGenres().length) {
-    //   q = query(collection(db, 'songs').withConverter(songConverter), where(`genres.${selectedGenres()[0].id.toString()}`, '!=', null), limit(max));
-    // } else if (!!selectedPlaylist()) {
-    //   let playlist = selectedPlaylist() as Playlist;
-    //   if (!!playlist.query) return;
-    //   if (!playlist.entries.length) {
-    //     let eq = query(collection(doc(db, 'playlists', playlist.id.toString()), 'entries').withConverter(playlistEntryConverter));
-    //     const esnapshot = await getDocs(eq);
-    //     esnapshot.forEach((doc) => {
-    //       playlist.entries.push(doc.data());
-    //     });
-    //     playlist.entries.sort((a, b) => a.position - b.position);
-    //   }
-    //   q = query(collection(db, 'songs').withConverter(songConverter), where("__name__", "in", playlist.entries.map(e => e.id.toString())), limit(max))
-    // } else {
-    //   q = query(collection(db, 'songs').withConverter(songConverter), limit(max));
-    // }
-
     let songResults = await searchSongs(
       searchQuery(),
       !DEV ? 20 : 3 /* limit */,
