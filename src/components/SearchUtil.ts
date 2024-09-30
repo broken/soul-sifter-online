@@ -87,7 +87,7 @@ function parse(queryFragment: string): Atom | undefined {
 
   // Replace boost::regex with JavaScript regular expression
   const regex = /^(-)?((id|a|artist|t|title|remixer|r|rating|comments|c|curator|e|energy|bpm|trashed|lowq|aid|n|album|m|mixed|l|label|y|year|month|day|q|query|limit|o|order|orderby|orderBy):)?(<|>)?(=)?(.+)$/;
-  const match = queryFragment.match(regex);
+  const match = queryFragment.toLowerCase().match(regex);
   if (!match) {
     return undefined;
   }
