@@ -103,6 +103,33 @@ export type Database = {
         }
         Relationships: []
       }
+      changes: {
+        Row: {
+          createdAt: string
+          field: string | null
+          id: number
+          key: number | null
+          table: string | null
+          value: string | null
+        }
+        Insert: {
+          createdAt?: string
+          field?: string | null
+          id?: number
+          key?: number | null
+          table?: string | null
+          value?: string | null
+        }
+        Update: {
+          createdAt?: string
+          field?: string | null
+          id?: number
+          key?: number | null
+          table?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       mixes: {
         Row: {
           addon: boolean
