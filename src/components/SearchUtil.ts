@@ -284,7 +284,7 @@ function buildQueryPredicate(
         else builder = builder.ilike('title', `%${atom.value}%`);
         break;
       case Type.S_RATING:
-        builder = buildEqualityOperator(builder, 'rating', atom.props, atom.value);
+        builder = buildEqualityOperator(builder, 'rating', atom.props, atom.value, Property.EQUAL & Property.GREATER_THAN);
         break;
       case Type.S_COMMENTS:
         if (negated) builder = builder.not('ilike', 'comments', `%${atom.value}%`);
