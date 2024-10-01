@@ -1,0 +1,22 @@
+{
+  "name": "soulsifter-cli",
+  "version": "0.0.0",
+  "description": "CLI for syncing local and remote databases.",
+  "type": "module",
+  "bin": {
+    "ss": "./bin/run.js"
+  },
+  "oclif": {
+    "bin": "ss",
+    "commands": "./dist/commands",
+    "dirname": "ss",
+    "topicSeparator": " "
+  },
+  "dependencies": {
+    "@oclif/core": "^4.0.23"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.54",
+    "ts-node": "^10.9.2"
+  }
+}
