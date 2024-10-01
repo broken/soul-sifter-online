@@ -37,3 +37,11 @@ May need to reauth: `firebase login --reauth`
 ### Synchronize with DB
 
 `python sync.py push`
+
+## CLI
+
+Everything from cli subdir.
+
+### Test
+
+`npm exec tsc && ./bin/run.js pull`
