@@ -1,4 +1,7 @@
+import process from 'node:process';
+
 import {Args, Command, Flags} from '@oclif/core'
+
 
 export default class Pull extends Command {
   static override args = {
@@ -22,7 +25,7 @@ export default class Pull extends Command {
     const {args, flags} = await this.parse(Pull)
 
     const name = flags.name ?? 'world'
-    this.log(`hello ${name} from /Users/dogatech/Development/src/soul-sifter-online/cli/src/commands/pull.ts`)
+    this.log(`hello ${name} from ${process.env.VITE_FIREBASE_MEASUREMENT_ID}`)
     if (args.file && flags.force) {
       this.log(`you input --force and --file: ${args.file}`)
     }
