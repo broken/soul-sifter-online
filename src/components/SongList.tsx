@@ -14,6 +14,11 @@ const SongList: Component = () => {
   const {songs, setSongs} = useSongs();
   createEffect(async () => {
     console.log("is dev: ", DEV);
+    const playlist = selectedPlaylist();
+    let playlists: number[] = [];
+    if (playlist && playlist.id) {
+      playlists = [playlist.id];
+    }
     let songResults = await searchSongs(
       searchQuery(),
       !DEV ? 20 : 3 /* limit */,
@@ -21,7 +26,7 @@ const SongList: Component = () => {
       '' /* key */,
       genres(),
       [] /* songs to omit */,
-      []  /* playlists */,
+      playlists  /* playlists */,
       0 /* energy */,
       OrderBy.DATE_ADDED,
       undefined /* callback */
