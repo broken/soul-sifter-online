@@ -43,10 +43,10 @@ const GenreList: Component = () => {
       }
       if (data) {
         if (DEV) console.log(data);
-        data.forEach((x) => {
-          if (!children[x.parentId]) children[x.parentId] = [];
-          children[x.parentId].push(x.childId);
-          childIds[x.childId] = true;
+        data.forEach((x: Tables<'stylechildren'>) => {
+          if (!children[x.parentid]) children[x.parentid] = [];
+          children[x.parentid].push(x.childid);
+          childIds[x.childid] = true;
         })
       }
     }

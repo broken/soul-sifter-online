@@ -65,7 +65,7 @@ const PlaylistList: Component = () => {
           <Index each={playlists()}>
             {playlist => (
               <tr onclick={() => setSelectedPlaylist(playlist())}>
-                <td class={`px-0 py-0 ${styles["swipe-container"]}`} ontouchend={[handleSwipe, playlist().youtubeId]}>
+                <td class={`px-0 py-0 ${styles["swipe-container"]}`} ontouchend={[handleSwipe, playlist().youtubeid]}>
                   <div class={`flex flex-row justify-between px-7 py-4 ${styles["swipe-element"]}`}>
                     <span class="flex flex-row">
                       <span>{playlist().name}</span>
@@ -76,7 +76,7 @@ const PlaylistList: Component = () => {
                       </Show>
                     </span>
                     <span class="flex flex-row">
-                      <Show when={!!playlist().youtubeId}>
+                      <Show when={!!playlist().youtubeid}>
                         <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                           <path fill-rule="evenodd" d="M21.7 8c0-.7-.4-1.3-.8-2-.5-.5-1.2-.8-2-.8C16.2 5 12 5 12 5s-4.2 0-7 .2c-.7 0-1.4.3-2 .9-.3.6-.6 1.2-.7 2l-.2 3.1v1.5c0 1.1 0 2.2.2 3.3 0 .7.4 1.3.8 2 .6.5 1.4.8 2.2.8l6.7.2s4.2 0 7-.2c.7 0 1.4-.3 2-.9.3-.5.6-1.2.7-2l.2-3.1v-1.6c0-1 0-2.1-.2-3.2ZM10 14.6V9l5.4 2.8-5.4 2.8Z" clip-rule="evenodd"/>
                         </svg>

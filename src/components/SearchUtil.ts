@@ -280,8 +280,8 @@ function buildQueryPredicate(
         else builder = builder.ilike('title', `%${atom.value}%`);
         break;
       case Type.S_REMIXER:
-        if (negated) builder = builder.not('ilike', 'title', `%${atom.value}%`);
-        else builder = builder.ilike('title', `%${atom.value}%`);
+        if (negated) builder = builder.not('ilike', 'remixer', `%${atom.value}%`);
+        else builder = builder.ilike('remixer', `%${atom.value}%`);
         break;
       case Type.S_RATING:
         builder = buildEqualityOperator(builder, 'rating', atom.props, atom.value, Property.EQUAL & Property.GREATER_THAN);
@@ -299,8 +299,8 @@ function buildQueryPredicate(
         else builder = builder.is('trashed', atom.value);
         break;
       case Type.S_LOW_QUALITY:
-        if (negated) builder = builder.not('is', 'lowQuality', atom.value);
-        else builder = builder.is('lowQuality', atom.value);
+        if (negated) builder = builder.not('is', 'lowquality', atom.value);
+        else builder = builder.is('lowquality', atom.value);
         break;
       case Type.A_ID:
         builder = buildEqualityOperator(builder, 'albums.id', atom.props, atom.value);
@@ -318,13 +318,13 @@ function buildQueryPredicate(
         else builder = builder.ilike('albums.label', `%${atom.value}%`);
         break;
       case Type.A_YEAR:
-        builder = buildEqualityOperator(builder, 'albums.releaseDateYear', atom.props, atom.value);
+        builder = buildEqualityOperator(builder, 'albums.releasedateyear', atom.props, atom.value);
         break;
       case Type.A_MONTH:
-        builder = buildEqualityOperator(builder, 'albums.releaseDateDayMonth', atom.props, atom.value);
+        builder = buildEqualityOperator(builder, 'albums.releasedatemonth', atom.props, atom.value);
         break;
       case Type.A_DAY:
-        builder = buildEqualityOperator(builder, 'albums.releaseDateDay', atom.props, atom.value);
+        builder = buildEqualityOperator(builder, 'albums.releasedateday', atom.props, atom.value);
         break;
       case Type.CUSTOM_QUERY_PREDICATE:
         console.warn(`Custom query "{atom.value}" is unsupported.`);
@@ -403,17 +403,17 @@ async function searchSongs(
   let songList: Tables<'songs'>[] = []
 
   let builder: PostgrestQueryBuilder<any, any, 'songs', any> | PostgrestFilterBuilder<any, any, any[], 'songs', any>  = supabase.from('songs');
-  if (playlists.length) builder = builder.select('*, albums!inner(*), playlistentries!inner(*)').in('playlistentries.playlistId', playlists);
-  else if (styles.length) builder = builder.select('*, albums!inner(*), songstyles!inner(*)').in('songstyles.styleId', styles);
+  if (playlists.length) builder = builder.select('*, albums!inner(*), playlistentries!inner(*)').in('playlistentries.playlistid', playlists);
+  else if (styles.length) builder = builder.select('*, albums!inner(*), songstyles!inner(*)').in('songstyles.styleid', styles);
   else builder = builder.select('*, albums!inner(*)');
 
   [builder, limit, orderBy] = buildQueryPredicate(builder, query, limit, orderBy, energy);
 
   switch (orderBy) {
     case OrderBy.RELEASE_DATE:
-      builder = builder.order('albums.releaseDateYear', { ascending: false });
-      builder = builder.order('albums.releaseDateMonth', { ascending: false });
-      builder = builder.order('albums.releaseDateDay', { ascending: false });
+      builder = builder.order('albums.releasedateyear', { ascending: false });
+      builder = builder.order('albums.releasedatemonth', { ascending: false });
+      builder = builder.order('albums.releasedateday', { ascending: false });
       break;
     case OrderBy.RANDOM:
       console.warn('Random order not supported (though it is possible).')
@@ -422,11 +422,11 @@ async function searchSongs(
       builder = builder.order('bpm', { ascending: true });
       break;
     case OrderBy.PLAYLIST:
-      builder = builder.order('playlistentries.playlistId', { ascending: false });
+      builder = builder.order('playlistentries.playlistid', { ascending: false });
       builder = builder.order('playlistentries.position', { ascending: true });
       break;
     case OrderBy.ALBUM:
-      builder = builder.order('albumId', { ascending: false });
+      builder = builder.order('albumid', { ascending: false });
       builder = builder.order('track', { ascending: true });
       break;
     default:
