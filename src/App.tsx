@@ -7,6 +7,7 @@ import { Database } from './database.types'
 import GenreList from './components/GenreList';
 import GenresContext from './components/GenresContext';
 import NavBar from './components/NavBar';
+import ActivePlaylistContext from './components/PlaylistContext';
 import PlaylistList from './components/PlaylistList';
 import SongList from './components/SongList';
 import SearchToolbar from './components/SearchToolbar';
@@ -25,7 +26,7 @@ const App: Component = () => {
   const [tab, setTab] = createSignal(0);
   const [pending, start] = useTransition();
   return (
-    <GenresContext><SongContext><SongsContext>
+    <GenresContext><ActivePlaylistContext><SongContext><SongsContext>
       <div class="flex flex-col h-screen w-screen overflow-hidden">
         <SearchToolbar />
         <div class="tab px-0" classList={{ pending: pending() }}>
@@ -49,7 +50,7 @@ const App: Component = () => {
         <SongInfo />
         <NavBar start={start} setTab={setTab}/>
       </div>
-    </SongsContext></SongContext></GenresContext>
+    </SongsContext></SongContext></ActivePlaylistContext></GenresContext>
   );
 };
 
