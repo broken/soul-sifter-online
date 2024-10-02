@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "sync": "cd cli && npm exec tsc && ./bin/run.js pull && ./bin/run.js push /Users/dogatech/Drive/music/db"
+    "sync": "cd cli && npm exec tsc && ./bin/run.js pull && ./bin/run.js push /Users/dogatech/Drive/music/db",
+    "datatypes": "npx supabase gen types --lang=typescript --project-id $(grep '^SUPABASE_PROJECT_ID' .env | cut -d '=' -f2) --schema public > src/database.types.ts"
   },
   "license": "MIT",
   "devDependencies": {
