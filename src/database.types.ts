@@ -11,19 +11,19 @@ export type Database = {
     Tables: {
       albumparts: {
         Row: {
-          albumId: number
+          albumid: number
           id: number
           name: string | null
           pos: string
         }
         Insert: {
-          albumId: number
+          albumid: number
           id?: number
           name?: string | null
           pos: string
         }
         Update: {
-          albumId?: number
+          albumid?: number
           id?: number
           name?: string | null
           pos?: string
@@ -31,7 +31,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "AlbumParts_albumId_fkey"
-            columns: ["albumId"]
+            columns: ["albumid"]
             isOneToOne: false
             referencedRelation: "albums"
             referencedColumns: ["id"]
@@ -41,47 +41,47 @@ export type Database = {
       albums: {
         Row: {
           artist: string | null
-          basicGenreId: number | null
-          catalogId: string | null
-          coverFilepath: string | null
+          basicgenreid: number | null
+          catalogid: string | null
+          coverfilepath: string | null
           id: number
           label: string | null
           mixed: boolean
           name: string | null
-          releaseDateDay: number | null
-          releaseDateMonth: number | null
-          releaseDateYear: number | null
+          releasedateday: number | null
+          releasedatemonth: number | null
+          releasedateyear: number | null
         }
         Insert: {
           artist?: string | null
-          basicGenreId?: number | null
-          catalogId?: string | null
-          coverFilepath?: string | null
+          basicgenreid?: number | null
+          catalogid?: string | null
+          coverfilepath?: string | null
           id?: number
           label?: string | null
           mixed?: boolean
           name?: string | null
-          releaseDateDay?: number | null
-          releaseDateMonth?: number | null
-          releaseDateYear?: number | null
+          releasedateday?: number | null
+          releasedatemonth?: number | null
+          releasedateyear?: number | null
         }
         Update: {
           artist?: string | null
-          basicGenreId?: number | null
-          catalogId?: string | null
-          coverFilepath?: string | null
+          basicgenreid?: number | null
+          catalogid?: string | null
+          coverfilepath?: string | null
           id?: number
           label?: string | null
           mixed?: boolean
           name?: string | null
-          releaseDateDay?: number | null
-          releaseDateMonth?: number | null
-          releaseDateYear?: number | null
+          releasedateday?: number | null
+          releasedatemonth?: number | null
+          releasedateyear?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "Albums_basicGenreId_fkey"
-            columns: ["basicGenreId"]
+            columns: ["basicgenreid"]
             isOneToOne: false
             referencedRelation: "basicgenres"
             referencedColumns: ["id"]
@@ -105,7 +105,7 @@ export type Database = {
       }
       changes: {
         Row: {
-          createdAt: string
+          createdat: string
           field: string | null
           id: number
           key: number | null
@@ -113,7 +113,7 @@ export type Database = {
           value: string | null
         }
         Insert: {
-          createdAt?: string
+          createdat?: string
           field?: string | null
           id?: number
           key?: number | null
@@ -121,7 +121,7 @@ export type Database = {
           value?: string | null
         }
         Update: {
-          createdAt?: string
+          createdat?: string
           field?: string | null
           id?: number
           key?: number | null
@@ -133,42 +133,42 @@ export type Database = {
       mixes: {
         Row: {
           addon: boolean
-          bpmDiff: number | null
+          bpmdiff: number | null
           comments: string | null
           id: number
-          inSongId: number
-          outSongId: number
+          insongid: number
+          outsongid: number
           rating: number | null
         }
         Insert: {
           addon?: boolean
-          bpmDiff?: number | null
+          bpmdiff?: number | null
           comments?: string | null
           id?: number
-          inSongId: number
-          outSongId: number
+          insongid: number
+          outsongid: number
           rating?: number | null
         }
         Update: {
           addon?: boolean
-          bpmDiff?: number | null
+          bpmdiff?: number | null
           comments?: string | null
           id?: number
-          inSongId?: number
-          outSongId?: number
+          insongid?: number
+          outsongid?: number
           rating?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "Mixes_inSongId_fkey"
-            columns: ["inSongId"]
+            foreignKeyName: "mixes_insongid_fkey"
+            columns: ["insongid"]
             isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Mixes_outSongId_fkey"
-            columns: ["outSongId"]
+            foreignKeyName: "mixes_outsongid_fkey"
+            columns: ["outsongid"]
             isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
@@ -177,52 +177,52 @@ export type Database = {
       }
       musicvideos: {
         Row: {
-          filePath: string | null
+          filepath: string | null
           id: number
-          thumbnailFilePath: string | null
+          thumbnailfilepath: string | null
         }
         Insert: {
-          filePath?: string | null
+          filepath?: string | null
           id?: number
-          thumbnailFilePath?: string | null
+          thumbnailfilepath?: string | null
         }
         Update: {
-          filePath?: string | null
+          filepath?: string | null
           id?: number
-          thumbnailFilePath?: string | null
+          thumbnailfilepath?: string | null
         }
         Relationships: []
       }
       playlistentries: {
         Row: {
           id: number
-          playlistId: number
+          playlistid: number
           position: number | null
-          songId: number
+          songid: number
         }
         Insert: {
           id?: number
-          playlistId: number
+          playlistid: number
           position?: number | null
-          songId: number
+          songid: number
         }
         Update: {
           id?: number
-          playlistId?: number
+          playlistid?: number
           position?: number | null
-          songId?: number
+          songid?: number
         }
         Relationships: [
           {
-            foreignKeyName: "PlaylistEntries_playlistId_fkey"
-            columns: ["playlistId"]
+            foreignKeyName: "playlistentries_playlistid_fkey"
+            columns: ["playlistid"]
             isOneToOne: false
             referencedRelation: "playlists"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "PlaylistEntries_songId_fkey"
-            columns: ["songId"]
+            foreignKeyName: "playlistentries_songid_fkey"
+            columns: ["songid"]
             isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
@@ -231,55 +231,55 @@ export type Database = {
       }
       playlists: {
         Row: {
-          gmusicId: string | null
+          gmusicid: string | null
           id: number
           name: string | null
           query: string | null
-          spotifyId: string | null
-          youtubeId: string | null
+          spotifyid: string | null
+          youtubeid: string | null
         }
         Insert: {
-          gmusicId?: string | null
+          gmusicid?: string | null
           id?: number
           name?: string | null
           query?: string | null
-          spotifyId?: string | null
-          youtubeId?: string | null
+          spotifyid?: string | null
+          youtubeid?: string | null
         }
         Update: {
-          gmusicId?: string | null
+          gmusicid?: string | null
           id?: number
           name?: string | null
           query?: string | null
-          spotifyId?: string | null
-          youtubeId?: string | null
+          spotifyid?: string | null
+          youtubeid?: string | null
         }
         Relationships: []
       }
       playliststyles: {
         Row: {
-          playlistId: number
-          styleId: number
+          playlistid: number
+          styleid: number
         }
         Insert: {
-          playlistId: number
-          styleId: number
+          playlistid: number
+          styleid: number
         }
         Update: {
-          playlistId?: number
-          styleId?: number
+          playlistid?: number
+          styleid?: number
         }
         Relationships: [
           {
-            foreignKeyName: "PlaylistStyles_playlistId_fkey"
-            columns: ["playlistId"]
+            foreignKeyName: "playliststyles_playlistid_fkey"
+            columns: ["playlistid"]
             isOneToOne: false
             referencedRelation: "playlists"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "PlaylistStyles_styleId_fkey"
-            columns: ["styleId"]
+            foreignKeyName: "playliststyles_styleid_fkey"
+            columns: ["styleid"]
             isOneToOne: false
             referencedRelation: "styles"
             referencedColumns: ["id"]
@@ -288,120 +288,120 @@ export type Database = {
       }
       songs: {
         Row: {
-          albumId: number | null
-          albumPartId: number | null
+          albumid: number | null
+          albumpartid: number | null
           artist: string | null
           bpm: number | null
-          bpmLock: boolean
+          bpmlock: boolean
           comments: string | null
           curator: string | null
-          dateAdded: string
-          dupeId: number | null
-          durationInMs: number | null
+          dateadded: string
+          dupeid: number | null
+          durationinms: number | null
           energy: number | null
           featuring: string | null
           filepath: string | null
-          googleSongId: string | null
+          googlesongid: string | null
           id: number
-          lowQuality: boolean
-          musicVideoId: number | null
+          lowquality: boolean
+          musicvideoid: number | null
           rating: number | null
           remixer: string | null
-          reSongId: number | null
+          resongid: number | null
           search_text: string | null
-          spotifyId: string | null
+          spotifyid: string | null
           title: string | null
-          tonicKey: string | null
-          tonicKeyLock: boolean
+          tonickey: string | null
+          tonickeylock: boolean
           track: string | null
           trashed: boolean
-          youtubeId: string | null
+          youtubeid: string | null
         }
         Insert: {
-          albumId?: number | null
-          albumPartId?: number | null
+          albumid?: number | null
+          albumpartid?: number | null
           artist?: string | null
           bpm?: number | null
-          bpmLock?: boolean
+          bpmlock?: boolean
           comments?: string | null
           curator?: string | null
-          dateAdded: string
-          dupeId?: number | null
-          durationInMs?: number | null
+          dateadded: string
+          dupeid?: number | null
+          durationinms?: number | null
           energy?: number | null
           featuring?: string | null
           filepath?: string | null
-          googleSongId?: string | null
+          googlesongid?: string | null
           id?: number
-          lowQuality?: boolean
-          musicVideoId?: number | null
+          lowquality?: boolean
+          musicvideoid?: number | null
           rating?: number | null
           remixer?: string | null
-          reSongId?: number | null
+          resongid?: number | null
           search_text?: string | null
-          spotifyId?: string | null
+          spotifyid?: string | null
           title?: string | null
-          tonicKey?: string | null
-          tonicKeyLock?: boolean
+          tonickey?: string | null
+          tonickeylock?: boolean
           track?: string | null
           trashed?: boolean
-          youtubeId?: string | null
+          youtubeid?: string | null
         }
         Update: {
-          albumId?: number | null
-          albumPartId?: number | null
+          albumid?: number | null
+          albumpartid?: number | null
           artist?: string | null
           bpm?: number | null
-          bpmLock?: boolean
+          bpmlock?: boolean
           comments?: string | null
           curator?: string | null
-          dateAdded?: string
-          dupeId?: number | null
-          durationInMs?: number | null
+          dateadded?: string
+          dupeid?: number | null
+          durationinms?: number | null
           energy?: number | null
           featuring?: string | null
           filepath?: string | null
-          googleSongId?: string | null
+          googlesongid?: string | null
           id?: number
-          lowQuality?: boolean
-          musicVideoId?: number | null
+          lowquality?: boolean
+          musicvideoid?: number | null
           rating?: number | null
           remixer?: string | null
-          reSongId?: number | null
+          resongid?: number | null
           search_text?: string | null
-          spotifyId?: string | null
+          spotifyid?: string | null
           title?: string | null
-          tonicKey?: string | null
-          tonicKeyLock?: boolean
+          tonickey?: string | null
+          tonickeylock?: boolean
           track?: string | null
           trashed?: boolean
-          youtubeId?: string | null
+          youtubeid?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "Songs_albumId_fkey"
-            columns: ["albumId"]
+            foreignKeyName: "songs_albumid_fkey"
+            columns: ["albumid"]
             isOneToOne: false
             referencedRelation: "albums"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Songs_albumPartId_fkey"
-            columns: ["albumPartId"]
+            foreignKeyName: "songs_albumpartid_fkey"
+            columns: ["albumpartid"]
             isOneToOne: false
             referencedRelation: "albumparts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Songs_dupeId_fkey"
-            columns: ["dupeId"]
+            foreignKeyName: "songs_dupeid_fkey"
+            columns: ["dupeid"]
             isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Songs_musicVideoId_fkey"
-            columns: ["musicVideoId"]
+            foreignKeyName: "songs_musicvideoid_fkey"
+            columns: ["musicvideoid"]
             isOneToOne: false
             referencedRelation: "musicvideos"
             referencedColumns: ["id"]
@@ -410,28 +410,28 @@ export type Database = {
       }
       songstyles: {
         Row: {
-          songId: number
-          styleId: number
+          songid: number
+          styleid: number
         }
         Insert: {
-          songId: number
-          styleId: number
+          songid: number
+          styleid: number
         }
         Update: {
-          songId?: number
-          styleId?: number
+          songid?: number
+          styleid?: number
         }
         Relationships: [
           {
-            foreignKeyName: "SongStyles_songId_fkey"
-            columns: ["songId"]
+            foreignKeyName: "songstyles_songid_fkey"
+            columns: ["songid"]
             isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "SongStyles_styleId_fkey"
-            columns: ["styleId"]
+            foreignKeyName: "songstyles_styleid_fkey"
+            columns: ["styleid"]
             isOneToOne: false
             referencedRelation: "styles"
             referencedColumns: ["id"]
@@ -440,28 +440,28 @@ export type Database = {
       }
       stylechildren: {
         Row: {
-          childId: number
-          parentId: number
+          childid: number
+          parentid: number
         }
         Insert: {
-          childId: number
-          parentId: number
+          childid: number
+          parentid: number
         }
         Update: {
-          childId?: number
-          parentId?: number
+          childid?: number
+          parentid?: number
         }
         Relationships: [
           {
-            foreignKeyName: "StyleChildren_childId_fkey"
-            columns: ["childId"]
+            foreignKeyName: "stylechildren_childid_fkey"
+            columns: ["childid"]
             isOneToOne: false
             referencedRelation: "styles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "StyleChildren_parentId_fkey"
-            columns: ["parentId"]
+            foreignKeyName: "stylechildren_parentid_fkey"
+            columns: ["parentid"]
             isOneToOne: false
             referencedRelation: "styles"
             referencedColumns: ["id"]
@@ -472,20 +472,20 @@ export type Database = {
         Row: {
           id: number
           name: string | null
-          reId: number | null
-          reLabel: string | null
+          reid: number | null
+          relabel: string | null
         }
         Insert: {
           id?: number
           name?: string | null
-          reId?: number | null
-          reLabel?: string | null
+          reid?: number | null
+          relabel?: string | null
         }
         Update: {
           id?: number
           name?: string | null
-          reId?: number | null
-          reLabel?: string | null
+          reid?: number | null
+          relabel?: string | null
         }
         Relationships: []
       }
