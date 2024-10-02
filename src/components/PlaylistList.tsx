@@ -1,12 +1,28 @@
-import { type Component, createEffect, Index, createSignal, DEV, Show } from 'solid-js';
+import { type Component, createEffect, createResource, Index, createSignal, DEV, Show } from 'solid-js';
 import { supabase } from '../App';
 import { Tables } from '../database.types';
 import styles from './PlaylistList.module.css';
 
 
 const [selectedPlaylist, setSelectedPlaylist] = createSignal<Tables<'playlists'> | undefined>(undefined);
+
 const PlaylistList: Component = () => {
-  const [playlists, setPlaylists] = createSignal<Tables<'playlists'>[]>([]);
+  const [playlists] = createResource<Tables<'playlists'>[]>(async () => {
+    let playlistsList: Tables<'playlists'>[] = []
+    const { data, error } = await supabase.from('playlists').select();
+    if (error) {
+      console.error(error);
+    }
+    if (data) {
+      if (DEV) console.log(data);
+      data.forEach((x) => {
+        playlistsList.push(x);
+      });
+    }
+    playlistsList.sort((a, b) => a.name!.localeCompare(b.name!));
+    return playlistsList;
+  });
+
   const openPlaylist = (playlistId: string | undefined) =>  {
     if (!playlistId) {
       console.log('Playlist is undefined.');
@@ -32,32 +48,6 @@ const PlaylistList: Component = () => {
       console.log(`did not swipe ${minDistance}px`);
     }
   }
-  createEffect(async () => {
-    let playlistsList: Tables<'playlists'>[] = []
-    const { data, error } = await supabase.from('playlists').select();
-    if (error) {
-      console.log(error);
-    }
-    if (data) {
-      if (DEV) console.log(data);
-      data.forEach((x) => {
-        playlistsList.push(x);
-      });
-    }
-    playlistsList.sort((a, b) => a.name!.localeCompare(b.name!));
-    setPlaylists(playlistsList);
-    // const q = query(collection(db, 'playlists').withConverter(playlistConverter));
-    // const snapshot = await getDocs(q);
-    // let playlistList: Tables<'playlists'>[] = []
-    // snapshot.forEach((doc) => {
-    //   // doc.data() is never undefined for query doc snapshots
-    //   playlistList.push(doc.data());
-    //   // if (!!DEV) console.log(doc.id, ' => ', doc.data());
-    // });
-    // playlistList.sort((a, b) => a.name.localeCompare(b.name));
-    // setPlaylists(playlistList);
-    // if (!!DEV) console.log(playlistList);
-  });
   return (
     <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
       <table class="table">

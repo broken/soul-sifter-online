@@ -26,7 +26,7 @@ const SongList: Component = () => {
       '' /* key */,
       genres(),
       [] /* songs to omit */,
-      playlists  /* playlists */,
+      playlists /* playlists */,
       0 /* energy */,
       OrderBy.DATE_ADDED,
       undefined /* callback */
