@@ -45,3 +45,5 @@ Everything from cli subdir.
 ### Test
 
 `npm exec tsc && ./bin/run.js pull`
+
+`npm exec tsc && ./bin/run.js push /Users/dogatech/Drive/music/db`
