@@ -1,22 +1,24 @@
-import { Accessor, createContext, createSignal, ParentComponent, Setter, useContext } from "solid-js";
+import { Accessor, createContext, createSignal, ParentComponent, Setter, useContext } from "solid-js"
+
+import { Style } from "../model.types.js"
 
 
-const [genres, setGenres] = createSignal<number[]>([]);
-const Genres = createContext<{genres: Accessor<number[]>, setGenres: Setter<number[]>}>({genres, setGenres});
+const [activeGenres, setActiveGenres] = createSignal<Style[]>([])
+const Genres = createContext<{activeGenres: Accessor<Style[]>, setActiveGenres: Setter<Style[]>}>({activeGenres, setActiveGenres})
 
 const GenresContext: ParentComponent = (props) => {
+  const contextData = {activeGenres, setActiveGenres}
 
-  const contextData = {genres, setGenres};
   return (
     <Genres.Provider value={contextData}>
       {props.children}
     </Genres.Provider>
   )
-}
+};
 
 const useGenres = () => {
-  return useContext(Genres);
-}
+  return useContext(Genres)
+};
 
-export default GenresContext;
-export {useGenres};
+export default GenresContext
+export {useGenres}
