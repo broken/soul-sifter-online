@@ -1,5 +1,5 @@
 /* scroll snap takes care of restoring scroll position */
-.swipe-container {
+.swipe_container {
   display: flex;
   overflow: auto;
   overflow-x: scroll;
@@ -7,7 +7,7 @@
   white-space: nowrap;
 }
 /* scrollbar should be hidden */
-.swipe-container::-webkit-scrollbar {
+.swipe_container::-webkit-scrollbar {
   display: none;
 }
 /* main element should always snap into view */
