@@ -34,7 +34,7 @@ const SearchToolbar: Component = () => {
               <span class="badge">New</span>
             </a>
           </li>
-          <li><a>Settings</a></li>
+          <li><a>{import.meta.env.VITE_APP_VERSION}</a></li>
           <li><a>Logout</a></li>
         </ul>
       </div>
