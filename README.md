@@ -9,6 +9,10 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.<br>
 
+### `npm run bump:patch || npm run bump:minor`
+
+Bumps patch & minor versions. Should do before deploy.
+
 ### `npm run deploy`
 
 Builds the app for production to the `dist` folder.<br>
