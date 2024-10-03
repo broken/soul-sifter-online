@@ -12,6 +12,7 @@ import SongContext from './SongContext'
 import SongInfo from './SongInfo'
 import SongList from './SongList'
 import SongsContext from './SongsContext'
+import ThemeContext from './ThemeContext'
 
 
 // Initialize supabase
@@ -24,7 +25,7 @@ const App: Component = () => {
   const [tab, setTab] = createSignal(0)
   const [pending, start] = useTransition()
   return (
-    <GenresContext><ActivePlaylistContext><SongContext><SongsContext>
+    <GenresContext><ActivePlaylistContext><SongContext><SongsContext><ThemeContext>
       <div class="flex flex-col h-screen w-screen overflow-hidden">
         <SearchToolbar />
         <div class="tab px-0" classList={{ pending: pending() }}>
@@ -48,7 +49,7 @@ const App: Component = () => {
         <SongInfo />
         <NavBar start={start} setTab={setTab}/>
       </div>
-    </SongsContext></SongContext></ActivePlaylistContext></GenresContext>
+    </ThemeContext></SongsContext></SongContext></ActivePlaylistContext></GenresContext>
   )
 }
 

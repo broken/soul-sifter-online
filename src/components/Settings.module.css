@@ -1,0 +1,4 @@
+.active {
+  color: oklch(var(--p));
+  background: oklch(var(--pc));
+}
