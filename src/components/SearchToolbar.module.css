@@ -2,7 +2,6 @@
   animation: logo-spin infinite 10s linear;
   height: 12vmin;
   pointer-events: none;
-  padding: 0 4px;
 }
 
 @keyframes logo-spin {
