@@ -39,7 +39,7 @@ const PlaylistListItem: Component<{playlist: Playlist}> = (props) => {
   }
 
   return (
-    <tr onclick={() => setActivePlaylist(props.playlist)}  classList={{ 'bg-slate-50': isActive() }}>
+    <tr onclick={() => setActivePlaylist(props.playlist)}  classList={{ [styles.active]: isActive() }}>
       <td class={`px-0 py-0 ${styles["swipe-container"]}`} ontouchend={[handleSwipe, props.playlist.youtubeid]}>
         <div class={`flex flex-row justify-between px-7 py-4 ${styles["swipe-element"]}`}>
           <span class="flex flex-row">

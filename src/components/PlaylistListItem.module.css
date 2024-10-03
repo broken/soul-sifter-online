@@ -37,3 +37,7 @@ svg {
   justify-content: flex-end;
   background-color: rgb(180, 65, 65);
 }
+.active {
+  color: oklch(var(--p));
+  background: oklch(var(--pc));
+}
