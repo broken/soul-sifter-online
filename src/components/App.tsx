@@ -1,17 +1,17 @@
 import { Suspense, type Component, Switch, Match, createSignal, useTransition } from 'solid-js'
 import { createClient } from '@supabase/supabase-js'
 
-import GenresContext from './components/GenresContext'
-import GenreList from './components/GenreList'
-import NavBar from './components/NavBar'
-import ActivePlaylistContext from './components/PlaylistContext'
-import PlaylistList from './components/PlaylistList'
-import SearchToolbar from './components/SearchToolbar'
-import Settings from './components/Settings'
-import SongContext from './components/SongContext'
-import SongInfo from './components/SongInfo'
-import SongList from './components/SongList'
-import SongsContext from './components/SongsContext'
+import GenresContext from './GenresContext'
+import GenreList from './GenreList'
+import NavBar from './NavBar'
+import ActivePlaylistContext from './PlaylistContext'
+import PlaylistList from './PlaylistList'
+import SearchToolbar from './SearchToolbar'
+import Settings from './Settings'
+import SongContext from './SongContext'
+import SongInfo from './SongInfo'
+import SongList from './SongList'
+import SongsContext from './SongsContext'
 
 
 // Initialize supabase

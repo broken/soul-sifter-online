@@ -1,6 +1,6 @@
 import { type Component, createResource, Index, DEV } from 'solid-js'
 
-import { supabase } from '../App'
+import { supabase } from './App'
 import { Playlist } from '../model.types'
 import PlaylistListItem from './PlaylistListItem'
 

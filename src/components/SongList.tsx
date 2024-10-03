@@ -3,7 +3,7 @@ import { type Component, createEffect, Index, DEV, Show } from 'solid-js'
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
 import { searchQuery } from './SearchToolbar'
-import { searchSongs, OrderBy } from './SearchUtil'
+import { searchSongs, OrderBy } from '../SearchUtil'
 import SongListItem from './SongListItem'
 import { useSongs } from './SongsContext'
 

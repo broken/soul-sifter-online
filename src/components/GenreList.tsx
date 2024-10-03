@@ -1,6 +1,6 @@
 import { type Component, createEffect, Index, createSignal, DEV } from 'solid-js'
 
-import { supabase } from '../App'
+import { supabase } from './App'
 import { Style, StyleChildren } from '../model.types'
 import GenreListItem, { GenreWrapper } from './GenreListItem'
 

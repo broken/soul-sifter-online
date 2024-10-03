@@ -1,7 +1,7 @@
 import { PostgrestQueryBuilder, PostgrestFilterBuilder } from '@supabase/postgrest-js'
 
-import { supabase } from '../App'
-import { Song } from '../model.types'
+import { supabase } from './components/App'
+import { Song } from './model.types'
 
 
 enum OrderBy {

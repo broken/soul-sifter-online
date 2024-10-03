@@ -2,7 +2,7 @@ import { ImStarEmpty, ImStarFull } from 'solid-icons/im'
 import { For, type Component, Show, mergeProps } from "solid-js"
 import { produce } from "solid-js/store"
 
-import { supabase } from "../App"
+import { supabase } from "./App"
 import { Song } from '../model.types'
 import { SongConsumer } from "./SongContext"
 import { useSongs } from './SongsContext'
