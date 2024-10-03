@@ -14,15 +14,19 @@ const SongListItem: Component<{song: Song}> = (props) => {
       console.log('Youtube ID is undefined.')
       return
     }
-    const appLink = `youtube://video?id=${youtubeId}`
+    const appLink = `intent://youtube.com/watch?v=${youtubeId}#Intent;scheme=https;package=com.google.android.youtube;end`
     window.open(appLink)
   }
 
   const handleSwipe = (youtubeId: string | undefined, event: TouchEvent) => {
     // define the minimum distance to trigger the action
-    const minDistance = 80
-    const target = event.target as Element
-    const container = target.parentElement
+    const minDistance = 75
+    let target = event.target as Element
+    let container = target.parentElement
+    while (container && container?.tagName != 'TD') {
+      target = container
+      container = target.parentElement
+    }
     if (container == null) return
     // get the distance the user swiped
     const swipeDistance = container.scrollLeft
