@@ -1,10 +1,10 @@
 {
   "name": "Soul Sifter Online",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "",
   "scripts": {
     "start": "vite",
-    "deploy": "npm run build && firebase deploy",
+    "deploy": "npm run build && firebase deploy --only hosting",
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",

@@ -9,7 +9,7 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.<br>
 
-### `npm run build`
+### `npm run deploy`
 
 Builds the app for production to the `dist` folder.<br>
 It correctly bundles Solid in production mode and optimizes the build for the best performance.
@@ -17,9 +17,7 @@ It correctly bundles Solid in production mode and optimizes the build for the be
 The build is minified and the filenames include the hashes.<br>
 Your app is ready to be deployed!
 
-## Deployment `firebase deploy --only hosting`
-
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.).
+It then deploys the `dist` folder to Firebase.<br>
 May need to reauth: `firebase login --reauth`
 
 ### `npm run sync`
