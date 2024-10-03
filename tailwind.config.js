@@ -42,7 +42,8 @@ module.exports = {
       "winter",
       {
         soul: {
-          "primary": "#641ae6",
+          "primary": "#841ae6",
+          "primary-content": "#1a1a1f",
           "secondary": "#d926a9",
           "accent": "#bef264",
           "neutral": "#2a323c",

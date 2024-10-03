@@ -18,9 +18,11 @@ const useTheme = () => {
   return useContext(Theme)!
 }
 
-const themes: string[] = ['default', 'light', 'dark', 'soul', 'sifter', 'acid', 'aqua', 'autumn', 'black', 'bumblebee', 'business',
-  'cmyk', 'coffee', 'corporate', 'cupcake', 'cyberpunk', 'dracula', 'emerald', 'fantasy', 'forest', 'garden',
-  'halloween', 'lemonade', 'lofi', 'luxury', 'night', 'pastel', 'retro', 'synthwave', 'winter', 'wireframe']
+const darkThemes: string[] = ['default', 'dark', 'soul', 'sifter', 'black', 'business', 'coffee', 'dracula', 'forest',
+    'halloween', 'luxury', 'night', 'synthwave']
+
+const lightThemes: string[] = ['light', 'acid', 'aqua', 'autumn', 'bumblebee', 'cmyk', 'corporate', 'cupcake',
+    'cyberpunk', 'emerald', 'fantasy', 'garden', 'lemonade', 'lofi', 'pastel', 'retro', 'winter', 'wireframe']
 
 export default ThemeContext
-export {useTheme, themes}
+export {useTheme, darkThemes, lightThemes}
