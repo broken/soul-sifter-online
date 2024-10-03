@@ -1,12 +1,12 @@
-import { createContext, ParentComponent, useContext } from "solid-js";
-import { createStore, SetStoreFunction } from "solid-js/store";
-import { Tables } from '../database.types';
+import { createContext, ParentComponent, useContext } from "solid-js"
+import { createStore, SetStoreFunction } from "solid-js/store"
+import { Tables } from '../database.types'
 
 
-const Songs = createContext<{songs: Tables<'songs'>[], setSongs: SetStoreFunction<Tables<'songs'>[]>}>();
+const Songs = createContext<{songs: Tables<'songs'>[], setSongs: SetStoreFunction<Tables<'songs'>[]>}>()
 
 const SongsContext: ParentComponent = (props) => {
-  const [songs, setSongs] = createStore<Tables<'songs'>[]>([]);
+  const [songs, setSongs] = createStore<Tables<'songs'>[]>([])
 
   const contextData = {songs, setSongs}
   return (
@@ -17,8 +17,8 @@ const SongsContext: ParentComponent = (props) => {
 }
 
 const useSongs = () => {
-  return useContext(Songs)!;
+  return useContext(Songs)!
 }
 
-export default SongsContext;
-export {useSongs};
+export default SongsContext
+export {useSongs}

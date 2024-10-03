@@ -1,10 +1,10 @@
-import { type Component } from 'solid-js';
-import Rating from './Rating';
-import { Tables } from '../database.types';
-import { SongConsumer } from './SongContext';
+import { type Component } from 'solid-js'
+import Rating from './Rating'
+import { Tables } from '../database.types'
+import { SongConsumer } from './SongContext'
 
 const SongListItem: Component<{song: Tables<'songs'>}> = (props) => {
-  const {setSong} = SongConsumer();
+  const {setSong} = SongConsumer()
   return (
     <tr onclick={() => setSong?.(props.song)}>
       <td class="flex flex-row justify-between px-6 py-3">
@@ -16,7 +16,7 @@ const SongListItem: Component<{song: Tables<'songs'>}> = (props) => {
         <Rating song={props.song} mutable={false} />
       </td>
     </tr>
-  );
-};
+  )
+}
 
-export default SongListItem;
+export default SongListItem

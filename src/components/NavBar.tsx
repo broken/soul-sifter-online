@@ -1,17 +1,17 @@
-import { Setter, type Component } from 'solid-js';
+import { Setter, type Component } from 'solid-js'
 
 
 const NavBar: Component<{start: (fn: () => void, cb?: () => void) => void, setTab: Setter<number>}> = (props) => {
   const updateTab = (index: number) => () => {
-    props.start(() => props.setTab(index));
-    const botNavBarElements = document.querySelectorAll('.bot-nav-bar');
+    props.start(() => props.setTab(index))
+    const botNavBarElements = document.querySelectorAll('.bot-nav-bar')
     for (const element of botNavBarElements) {
       if (element.classList.contains('active')) {
-        element.classList.remove('active');
+        element.classList.remove('active')
       }
     }
-    botNavBarElements[index].classList.add('active');
-  };
+    botNavBarElements[index].classList.add('active')
+  }
   return (
     <div class="btm-nav bg-base-300">
       <button class="bot-nav-bar text-primary active" onClick={updateTab(0)}>
@@ -39,7 +39,7 @@ const NavBar: Component<{start: (fn: () => void, cb?: () => void) => void, setTa
         <span class="btm-nav-label">Settings</span>
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default NavBar;
+export default NavBar

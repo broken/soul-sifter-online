@@ -1,41 +1,41 @@
-import { type Component, createResource, Index, createSignal, DEV, Show, createMemo } from 'solid-js';
-import Rating from './Rating';
-import { Tables } from '../database.types';
-import { SongConsumer } from './SongContext';
-import styles from './PlaylistListItem.module.css';
-import { useActivePlaylist } from './PlaylistContext';
+import { type Component, createResource, Index, createSignal, DEV, Show, createMemo } from 'solid-js'
+import Rating from './Rating'
+import { Tables } from '../database.types'
+import { SongConsumer } from './SongContext'
+import styles from './PlaylistListItem.module.css'
+import { useActivePlaylist } from './PlaylistContext'
 
 const PlaylistListItem: Component<{playlist: Tables<'playlists'>}> = (props) => {
-  const {activePlaylist, setActivePlaylist} = useActivePlaylist();
+  const {activePlaylist, setActivePlaylist} = useActivePlaylist()
   const isActive = createMemo(() => {
-    const ap = activePlaylist();
-    return ap && ap['id'] === props.playlist['id'];
-  });
+    const ap = activePlaylist()
+    return ap && ap['id'] === props.playlist['id']
+  })
 
   const openPlaylist = (playlistId: string | undefined) =>  {
     if (!playlistId) {
-      console.log('Playlist is undefined.');
-      return;
+      console.log('Playlist is undefined.')
+      return
     }
-    const appLink = `https://music.youtube.com/playlist?list=${playlistId}`;
-    window.open(appLink);
+    const appLink = `https://music.youtube.com/playlist?list=${playlistId}`
+    window.open(appLink)
   }
 
   const handleSwipe = (playlistId: string | undefined, event: TouchEvent) => {
-    console.log('swiped');
-    console.log(event);
+    console.log('swiped')
+    console.log(event)
     // define the minimum distance to trigger the action
-    const minDistance = 80;
-    const target = event.target as Element;
-    const container = target.parentElement;
-    if (container == null) return;
+    const minDistance = 80
+    const target = event.target as Element
+    const container = target.parentElement
+    if (container == null) return
     // get the distance the user swiped
-    const swipeDistance = container.scrollLeft;
-    console.log(`swiped distance of ${swipeDistance} = ${container.scrollLeft} - ${target.clientWidth}`);
+    const swipeDistance = container.scrollLeft
+    console.log(`swiped distance of ${swipeDistance} = ${container.scrollLeft} - ${target.clientWidth}`)
     if (swipeDistance > minDistance) {
-      openPlaylist(playlistId);
+      openPlaylist(playlistId)
     } else {
-      console.log(`did not swipe ${minDistance}px`);
+      console.log(`did not swipe ${minDistance}px`)
     }
   }
 
@@ -66,7 +66,7 @@ const PlaylistListItem: Component<{playlist: Tables<'playlists'>}> = (props) => 
         </div>
       </td>
     </tr>
-  );
-};
+  )
+}
 
-export default PlaylistListItem;
+export default PlaylistListItem

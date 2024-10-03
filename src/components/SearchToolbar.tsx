@@ -1,12 +1,12 @@
-import { createSignal, type Component } from 'solid-js';
+import { createSignal, type Component } from 'solid-js'
 
-import logo from '../assets/hires_candidate_2.png';
-import styles from './SearchToolbar.module.css';
+import logo from '../assets/hires_candidate_2.png'
+import styles from './SearchToolbar.module.css'
 
-const [searchQuery, setSearchQuery] = createSignal<string>('');
+const [searchQuery, setSearchQuery] = createSignal<string>('')
 
 const SearchToolbar: Component = () => {
-  const [inputFocused, setInputFocused] = createSignal<boolean>(false);
+  const [inputFocused, setInputFocused] = createSignal<boolean>(false)
   return (
     <div class="navbar bg-base-300">
       <div class="flex-1">
@@ -40,8 +40,8 @@ const SearchToolbar: Component = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SearchToolbar;
-export {searchQuery};
+export default SearchToolbar
+export {searchQuery}

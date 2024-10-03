@@ -1,25 +1,25 @@
-import { type Component, createEffect, Index, DEV, Show } from 'solid-js';
-import SongListItem from './SongListItem';
-import { supabase } from '../App';
-import { searchQuery } from './SearchToolbar';
-import { useGenres } from './GenresContext';
-import { useActivePlaylist } from './PlaylistContext';
-import { useSongs } from './SongsContext';
-import { Tables } from '../database.types';
-import { searchSongs, OrderBy } from './SearchUtil';
+import { type Component, createEffect, Index, DEV, Show } from 'solid-js'
+import SongListItem from './SongListItem'
+import { supabase } from '../App'
+import { searchQuery } from './SearchToolbar'
+import { useGenres } from './GenresContext'
+import { useActivePlaylist } from './PlaylistContext'
+import { useSongs } from './SongsContext'
+import { Tables } from '../database.types'
+import { searchSongs, OrderBy } from './SearchUtil'
 import { Style } from "../model.types.js"
 
 
 const SongList: Component = () => {
-  const {activeGenres, setActiveGenres} = useGenres();
-  const {activePlaylist, setActivePlaylist} = useActivePlaylist();
-  const {songs, setSongs} = useSongs();
+  const {activeGenres, setActiveGenres} = useGenres()
+  const {activePlaylist, setActivePlaylist} = useActivePlaylist()
+  const {songs, setSongs} = useSongs()
   createEffect(async () => {
-    console.log("is dev: ", DEV);
-    const playlist = activePlaylist();
-    let playlists: number[] = [];
+    console.log("is dev: ", DEV)
+    const playlist = activePlaylist()
+    let playlists: number[] = []
     if (playlist && playlist.id) {
-      playlists = [playlist.id];
+      playlists = [playlist.id]
     }
     let songResults = await searchSongs(
       searchQuery(),
@@ -32,9 +32,9 @@ const SongList: Component = () => {
       0 /* energy */,
       OrderBy.DATE_ADDED,
       undefined /* callback */
-    );
-    setSongs(songResults);
-  });
+    )
+    setSongs(songResults)
+  })
 
   return (
     <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
@@ -68,7 +68,7 @@ const SongList: Component = () => {
         </tbody>
       </table>
     </div>
-  );
-};
+  )
+}
 
-export default SongList;
+export default SongList

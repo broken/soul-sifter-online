@@ -1,20 +1,20 @@
-import { Suspense, type Component, Switch, Match, createSignal, useTransition } from 'solid-js';
+import { Suspense, type Component, Switch, Match, createSignal, useTransition } from 'solid-js'
 
 import { createClient } from '@supabase/supabase-js'
 
 import { Database } from './database.types'
 
-import GenreList from './components/GenreList';
-import GenresContext from './components/GenresContext';
-import NavBar from './components/NavBar';
-import ActivePlaylistContext from './components/PlaylistContext';
-import PlaylistList from './components/PlaylistList';
-import SongList from './components/SongList';
-import SearchToolbar from './components/SearchToolbar';
-import SongInfo from './components/SongInfo';
-import SongsContext from './components/SongsContext';
-import SongContext from './components/SongContext';
-import Settings from './components/Settings';
+import GenreList from './components/GenreList'
+import GenresContext from './components/GenresContext'
+import NavBar from './components/NavBar'
+import ActivePlaylistContext from './components/PlaylistContext'
+import PlaylistList from './components/PlaylistList'
+import SongList from './components/SongList'
+import SearchToolbar from './components/SearchToolbar'
+import SongInfo from './components/SongInfo'
+import SongsContext from './components/SongsContext'
+import SongContext from './components/SongContext'
+import Settings from './components/Settings'
 
 // Initialize supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -23,8 +23,8 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 
 const App: Component = () => {
-  const [tab, setTab] = createSignal(0);
-  const [pending, start] = useTransition();
+  const [tab, setTab] = createSignal(0)
+  const [pending, start] = useTransition()
   return (
     <GenresContext><ActivePlaylistContext><SongContext><SongsContext>
       <div class="flex flex-col h-screen w-screen overflow-hidden">
@@ -51,8 +51,8 @@ const App: Component = () => {
         <NavBar start={start} setTab={setTab}/>
       </div>
     </SongsContext></SongContext></ActivePlaylistContext></GenresContext>
-  );
-};
+  )
+}
 
-export default App;
-export {supabase};
+export default App
+export {supabase}

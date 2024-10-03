@@ -1,13 +1,13 @@
-import { Show, type Component, createSignal, createEffect, Index } from "solid-js";
+import { Show, type Component, createSignal, createEffect, Index } from "solid-js"
 
 const Settings: Component = () => {
-  const [theme, setTheme] = createSignal('soul');
+  const [theme, setTheme] = createSignal('soul')
   createEffect(() => {
-    document.querySelector('html')!.setAttribute('data-theme', theme());
-  });
+    document.querySelector('html')!.setAttribute('data-theme', theme())
+  })
   const themes: string[] = ['default', 'light', 'dark', 'soul', 'sifter', 'acid', 'aqua', 'autumn', 'black', 'bumblebee', 'business',
                             'cmyk', 'coffee', 'corporate', 'cupcake', 'cyberpunk', 'dracula', 'emerald', 'fantasy', 'forest', 'garden',
-                            'halloween', 'lemonade', 'lofi', 'luxury', 'night', 'pastel', 'retro', 'synthwave', 'winter', 'wireframe'];
+                            'halloween', 'lemonade', 'lofi', 'luxury', 'night', 'pastel', 'retro', 'synthwave', 'winter', 'wireframe']
 
   return (
     <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
@@ -27,7 +27,7 @@ const Settings: Component = () => {
         </tbody>
       </table>
     </div>
-  );
-};
+  )
+}
 
-export default Settings;
+export default Settings

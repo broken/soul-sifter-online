@@ -14,11 +14,11 @@ const GenresContext: ParentComponent = (props) => {
       {props.children}
     </Genres.Provider>
   )
-};
+}
 
 const useGenres = () => {
   return useContext(Genres)
-};
+}
 
 export default GenresContext
 export {useGenres}

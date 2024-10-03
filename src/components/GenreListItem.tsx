@@ -43,7 +43,7 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
       g.push(props.genre.genre)
       setActiveGenres(g)
     }
-  };
+  }
 
   return (
     <>
@@ -82,8 +82,8 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
         </td>
       </tr>
     </>
-  );
-};
+  )
+}
 
 export default GenreListItem
 export {GenreWrapper}
