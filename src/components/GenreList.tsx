@@ -1,10 +1,11 @@
 import { type Component, createEffect, Index, createSignal, DEV } from 'solid-js'
+
 import { supabase } from '../App'
+import { Style, StyleChildren } from '../model.types'
 import GenreListItem, { GenreWrapper } from './GenreListItem'
-import { Tables } from '../database.types'
 
 
-const addChildren = (genre: GenreWrapper, genres: Tables<'styles'>[], children: Record<number, number[]>) => {
+const addChildren = (genre: GenreWrapper, genres: Style[], children: Record<number, number[]>) => {
   for (let g of genres) {
     if (children[genre.genre.id] && children[genre.genre.id].includes(g.id)) {
       let wrapper = new GenreWrapper(g)
@@ -19,7 +20,7 @@ const addChildren = (genre: GenreWrapper, genres: Tables<'styles'>[], children: 
 const GenreList: Component = () => {
   const [genres, setGenres] = createSignal<GenreWrapper[]>([])
   createEffect(async () => {
-    let genreList: Tables<'styles'>[] = []
+    let genreList: Style[] = []
     {
       const { data, error } = await supabase.from('styles').select()
       if (error) {
@@ -43,7 +44,7 @@ const GenreList: Component = () => {
       }
       if (data) {
         if (DEV) console.log(data)
-        data.forEach((x: Tables<'stylechildren'>) => {
+        data.forEach((x: StyleChildren) => {
           if (!children[x.parentid]) children[x.parentid] = []
           children[x.parentid].push(x.childid)
           childIds[x.childid] = true

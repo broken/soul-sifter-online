@@ -1,5 +1,6 @@
 import { Tables } from './database.types'
 
+
 type Album = Tables<'albums'>
 type AlbumPart = Tables<'albumparts'>
 type BasicGenre = Tables<'basicgenres'>

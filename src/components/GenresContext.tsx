@@ -1,6 +1,6 @@
 import { Accessor, createContext, createSignal, ParentComponent, Setter, useContext } from "solid-js"
 
-import { Style } from "../model.types.js"
+import { Style } from "../model.types"
 
 
 const [activeGenres, setActiveGenres] = createSignal<Style[]>([])

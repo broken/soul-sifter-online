@@ -1,12 +1,13 @@
-import { type Component, createEffect, createResource, Index, createSignal, DEV, Show, createMemo } from 'solid-js'
+import { type Component, createResource, Index, DEV } from 'solid-js'
+
 import { supabase } from '../App'
-import { Tables } from '../database.types'
+import { Playlist } from '../model.types'
 import PlaylistListItem from './PlaylistListItem'
 
 
 const PlaylistList: Component = () => {
-  const [playlists] = createResource<Tables<'playlists'>[]>(async () => {
-    let playlistsList: Tables<'playlists'>[] = []
+  const [playlists] = createResource<Playlist[]>(async () => {
+    let playlistsList: Playlist[] = []
     const { data, error } = await supabase.from('playlists').select()
     if (error) {
       console.error(error)

@@ -1,13 +1,11 @@
 import { type Component, createEffect, Index, DEV, Show } from 'solid-js'
-import SongListItem from './SongListItem'
-import { supabase } from '../App'
-import { searchQuery } from './SearchToolbar'
+
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
-import { useSongs } from './SongsContext'
-import { Tables } from '../database.types'
+import { searchQuery } from './SearchToolbar'
 import { searchSongs, OrderBy } from './SearchUtil'
-import { Style } from "../model.types.js"
+import SongListItem from './SongListItem'
+import { useSongs } from './SongsContext'
 
 
 const SongList: Component = () => {

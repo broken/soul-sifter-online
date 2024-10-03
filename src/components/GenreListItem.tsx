@@ -1,7 +1,7 @@
 import { Index, type Component, createSignal, Show, mergeProps } from 'solid-js'
 import { createMutable } from 'solid-js/store'
 
-import { Style } from "../model.types.js"
+import { Style } from "../model.types"
 import { useGenres } from './GenresContext'
 import styles from './GenreListItem.module.css'
 

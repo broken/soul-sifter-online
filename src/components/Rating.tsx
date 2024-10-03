@@ -1,12 +1,13 @@
+import { ImStarEmpty, ImStarFull } from 'solid-icons/im'
 import { For, type Component, Show, mergeProps } from "solid-js"
 import { produce } from "solid-js/store"
-import { ImStarEmpty, ImStarFull } from 'solid-icons/im'
+
 import { supabase } from "../App"
-import { Tables } from '../database.types'
+import { Song } from '../model.types'
 import { SongConsumer } from "./SongContext"
 import { useSongs } from './SongsContext'
 
-const Rating: Component<{song: Tables<'songs'> | undefined, mutable: boolean}> = (props) => {
+const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) => {
   props = mergeProps({ mutable: false }, props)
   const {setSong} = SongConsumer()
   const {songs, setSongs} = useSongs()
@@ -20,8 +21,8 @@ const Rating: Component<{song: Tables<'songs'> | undefined, mutable: boolean}> =
     song.rating = rating
     setSong(song)
     setSongs(
-        (s: Tables<'songs'>) => s.id ===  song?.id,
-        produce((s: Tables<'songs'>) => s.rating = rating)
+        (s: Song) => s.id ===  song?.id,
+        produce((s: Song) => s.rating = rating)
     )
     let updateSongPromise = supabase.from('songs').update({ rating: rating }).eq('id', song.id)
     let insertChangePromise = supabase.from('changes').insert({

@@ -1,11 +1,10 @@
-import { type Component, createResource, Index, createSignal, DEV, Show, createMemo } from 'solid-js'
-import Rating from './Rating'
-import { Tables } from '../database.types'
-import { SongConsumer } from './SongContext'
-import styles from './PlaylistListItem.module.css'
-import { useActivePlaylist } from './PlaylistContext'
+import { type Component, Show, createMemo } from 'solid-js'
 
-const PlaylistListItem: Component<{playlist: Tables<'playlists'>}> = (props) => {
+import { Playlist } from '../model.types'
+import { useActivePlaylist } from './PlaylistContext'
+import styles from './PlaylistListItem.module.css'
+
+const PlaylistListItem: Component<{playlist: Playlist}> = (props) => {
   const {activePlaylist, setActivePlaylist} = useActivePlaylist()
   const isActive = createMemo(() => {
     const ap = activePlaylist()

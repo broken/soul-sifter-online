@@ -1,4 +1,4 @@
-import { Show, type Component, createSignal, createEffect, Index } from "solid-js"
+import { type Component, createSignal, createEffect, Index } from "solid-js"
 
 const Settings: Component = () => {
   const [theme, setTheme] = createSignal('soul')

@@ -1,6 +1,7 @@
 import { PostgrestQueryBuilder, PostgrestFilterBuilder } from '@supabase/postgrest-js'
+
 import { supabase } from '../App'
-import { Tables } from '../database.types'
+import { Song } from '../model.types'
 
 
 enum OrderBy {
@@ -393,14 +394,14 @@ async function searchSongs(
     bpm: number = 0,
     key: string = '',
     styles: number[] = [],
-    songsToOmit: Tables<'songs'>[] = [],
+    songsToOmit: Song[] = [],
     playlists: number[] =  [],
     energy: number = 0,
     orderBy: number = OrderBy.DATE_ADDED,
-    errorCallback: undefined): Promise<Tables<'songs'>[]> {
+    errorCallback: undefined): Promise<Song[]> {
   console.log("q:", query, ", bpm:", bpm, ", key:", key, ", styles:", styles, ", playlists:", playlists, ", limit:", limit)
 
-  let songList: Tables<'songs'>[] = []
+  let songList: Song[] = []
 
   let builder: PostgrestQueryBuilder<any, any, 'songs', any> | PostgrestFilterBuilder<any, any, any[], 'songs', any>  = supabase.from('songs')
   if (playlists.length) builder = builder.select('*, albums!inner(*), playlistentries!inner(*)').in('playlistentries.playlistid', playlists)
@@ -438,7 +439,7 @@ async function searchSongs(
     console.log(error)
   }
   if (data) {
-    data.forEach((song: Tables<'songs'>) => {
+    data.forEach((song: Song) => {
       songList.push(song)
     })
   }

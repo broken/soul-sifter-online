@@ -1,9 +1,10 @@
 import { Accessor, createContext, createSignal, ParentComponent, Setter, useContext } from "solid-js"
-import { Tables } from '../database.types'
+
+import { Song } from '../model.types'
 
 
-const [song, setSong] = createSignal<Tables<'songs'> | undefined>(undefined, { equals: false })
-const ActiveSong = createContext<{song: Accessor<Tables<'songs'> | undefined>, setSong: Setter<Tables<'songs'> | undefined>}>({song, setSong})
+const [song, setSong] = createSignal<Song | undefined>(undefined, { equals: false })
+const ActiveSong = createContext<{song: Accessor<Song | undefined>, setSong: Setter<Song | undefined>}>({song, setSong})
 
 const SongContext: ParentComponent = (props) => {
 

@@ -3,6 +3,7 @@ import { createSignal, type Component } from 'solid-js'
 import logo from '../assets/hires_candidate_2.png'
 import styles from './SearchToolbar.module.css'
 
+
 const [searchQuery, setSearchQuery] = createSignal<string>('')
 
 const SearchToolbar: Component = () => {

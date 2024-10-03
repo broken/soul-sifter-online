@@ -1,7 +1,9 @@
-import { Show, type Component } from "solid-js";
 import { IoChevronBack } from 'solid-icons/io'
+import { Show, type Component } from "solid-js";
+
 import Rating from "./Rating";
 import { SongConsumer } from "./SongContext";
+
 
 const SongInfo: Component = () => {
   const {song, setSong} = SongConsumer();
