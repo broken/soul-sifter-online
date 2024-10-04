@@ -14,7 +14,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
       console.log('Youtube ID is undefined.')
       return
     }
-    const appLink = `youtube://watch?v=${youtubeId}`
+    const appLink = `intent://www.youtube.com/watch?v=${youtubeId}#Intent;scheme=https;package=com.google.android.youtube;end;`
     window.open(appLink)
   }
 

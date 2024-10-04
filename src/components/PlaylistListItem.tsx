@@ -16,7 +16,7 @@ const PlaylistListItem: Component<{playlist: Playlist}> = (props) => {
       console.log('Playlist is undefined.')
       return
     }
-    const appLink = `youtubemusic://playlist?id=${youtubeid}`
+    const appLink = `intent://music.youtube.com/playlist?list=${youtubeid}#Intent;scheme=https;package=com.google.android.apps.youtube.music;end;`
     window.open(appLink)
   }
 
