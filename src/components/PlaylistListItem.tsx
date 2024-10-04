@@ -11,16 +11,16 @@ const PlaylistListItem: Component<{playlist: Playlist}> = (props) => {
     return ap && ap['id'] === props.playlist['id']
   })
 
-  const openPlaylist = (playlistId: string | undefined) =>  {
-    if (!playlistId) {
+  const openPlaylist = (youtubeid: string | undefined) =>  {
+    if (!youtubeid) {
       console.log('Playlist is undefined.')
       return
     }
-    const appLink = `intent://music.youtube.com/playlist?list=${playlistId}#Intent;scheme=https;package=com.google.android.apps.youtube.music;end`
+    const appLink = `youtubemusic://playlist?id=${youtubeid}`
     window.open(appLink)
   }
 
-  const handleSwipe = (playlistId: string | undefined, event: TouchEvent) => {
+  const handleSwipe = (youtubeid: string | undefined, event: TouchEvent) => {
     // define the minimum distance to trigger the action
     const minDistance = 75
     let target = event.target as Element
@@ -34,7 +34,7 @@ const PlaylistListItem: Component<{playlist: Playlist}> = (props) => {
     const swipeDistance = container.scrollLeft
     console.log(`swiped distance of ${swipeDistance} = ${container.scrollLeft} - ${target.clientWidth}`)
     if (swipeDistance > minDistance) {
-      openPlaylist(playlistId)
+      openPlaylist(youtubeid)
     } else {
       console.log(`did not swipe ${minDistance}px`)
     }
