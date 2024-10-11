@@ -22,18 +22,18 @@ const tables: string[] = [
 ]
 
 const fields: Record<string, string[]> = {
-  'BasicGenres': ['name'],
-  'Albums': ['name', 'artist', 'coverfilepath', 'mixed', 'label', 'catalogid', 'releasedateyear', 'releasedatemonth', 'releasedateday', 'basicgenreid'],
-  'AlbumParts': ['pos', 'name', 'albumid'],
-  'Styles': ['name', 'relabel', 'reid'],
-  'StyleChildren': [],
-  'MusicVideos': ['filepath', 'thumbnailfilepath'],
-  'Songs': ['artist', 'track', 'title', 'remixer', 'featuring', 'filepath', 'resongid', 'albumid', 'rating', 'dateadded', 'comments', 'trashed', 'albumpartid', 'bpm', 'lowquality', 'tonickey', 'energy', 'googlesongid', 'durationinms', 'curator', 'musicvideoid', 'youtubeid', 'bpmlock', 'tonickeylock', 'spotifyid', 'dupeid'],
-  'Mixes': ['outsongid', 'insongid', 'bpmdiff', 'rating', 'comments', 'addon'],
-  'SongStyles': [],
-  'Playlists': ['name', 'query', 'gmusicid', 'youtubeid', 'spotifyid'],
-  'PlaylistEntries': ['playlistid', 'songid', 'position'],
-  'PlaylistStyles': []
+  'BasicGenres': ['id', 'name'],
+  'Albums': ['id', 'name', 'artist', 'coverfilepath', 'mixed', 'label', 'catalogid', 'releasedateyear', 'releasedatemonth', 'releasedateday', 'basicgenreid'],
+  'AlbumParts': ['id', 'pos', 'name', 'albumid'],
+  'Styles': ['id', 'name', 'relabel', 'reid'],
+  'StyleChildren': ['parentId', 'childId'],
+  'MusicVideos': ['id', 'filepath', 'thumbnailfilepath'],
+  'Songs': ['id', 'artist', 'track', 'title', 'remixer', 'featuring', 'filepath', 'resongid', 'albumid', 'rating', 'dateadded', 'comments', 'trashed', 'albumpartid', 'bpm', 'lowquality', 'tonickey', 'energy', 'googlesongid', 'durationinms', 'curator', 'musicvideoid', 'youtubeid', 'bpmlock', 'tonickeylock', 'spotifyid', 'dupeid'],
+  'Mixes': ['id', 'outsongid', 'insongid', 'bpmdiff', 'rating', 'comments', 'addon'],
+  'SongStyles': ['songId', 'styleId'],
+  'Playlists': ['id', 'name', 'query', 'gmusicid', 'youtubeid', 'spotifyid'],
+  'PlaylistEntries': ['id', 'playlistid', 'songid', 'position'],
+  'PlaylistStyles': ['playlistId', 'styleId']
 }
 
 const getChangesFromGit = async (baseDir: string, table: string): Promise<[number[], number[]]> => {
@@ -203,16 +203,16 @@ export default class Push extends Command {
         // pipe update to new file
         await filterUpdates(t, added, args.dir);
         // execute upsert
-        if (fields[t].length == 0) {
-          await executePsql(`\\COPY ${t} FROM '/tmp/${t}.txt' WITH DELIMITER E'\\t'`);
+        // create temporary table first
+        await executePsql(`CREATE TEMP TABLE staging_${t.toLowerCase()} AS SELECT ${fields[t].join(', ')} FROM ${t.toLowerCase()} LIMIT 0`);
+        await executePsql(`\\COPY staging_${t.toLowerCase()} FROM '/tmp/${t}.txt' WITH DELIMITER E'\\t'`);
+        if (fields[t][0] === 'id') {
+          const fieldUpdates = fields[t].filter(x => x !== 'id').map(f => `${f}=excluded.${f}`);
+          await executePsql(`INSERT INTO ${t.toLowerCase()} (${fields[t].join(', ')}) SELECT ${fields[t].join(', ')} FROM staging_${t.toLowerCase()} ON CONFLICT(id) DO UPDATE SET ${fieldUpdates.join(', ')}`);
         } else {
-          // create temporary table first
-          await executePsql(`CREATE TEMP TABLE staging_${t.toLowerCase()} AS SELECT id, ${fields[t].join(', ')} FROM ${t.toLowerCase()} LIMIT 0`);
-          const fieldUpdates = fields[t].map(f => `${f}=excluded.${f}`);
-          await executePsql(`\\COPY staging_${t.toLowerCase()} FROM '/tmp/${t}.txt' WITH DELIMITER E'\\t'`);
-          await executePsql(`INSERT INTO ${t.toLowerCase()} (id, ${fields[t].join(', ')}) SELECT id, ${fields[t].join(', ')} FROM staging_${t.toLowerCase()} ON CONFLICT(id) DO UPDATE SET ${fieldUpdates.join(', ')}`);
-          await executePsql(`DROP TABLE staging_${t.toLowerCase()}`);
+          await executePsql(`INSERT INTO ${t.toLowerCase()} (${fields[t].join(', ')}) SELECT ${fields[t].join(', ')} FROM staging_${t.toLowerCase()} ON CONFLICT(${fields[t].join(', ')}) DO NOTHING`);
         }
+        await executePsql(`DROP TABLE staging_${t.toLowerCase()}`);
       }
     }
     writeHeadCommitToFile(args.dir)
