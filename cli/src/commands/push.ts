@@ -25,7 +25,7 @@ const fields: Record<string, string[]> = {
   'BasicGenres': ['id', 'name'],
   'Albums': ['id', 'name', 'artist', 'coverfilepath', 'mixed', 'label', 'catalogid', 'releasedateyear', 'releasedatemonth', 'releasedateday', 'basicgenreid'],
   'AlbumParts': ['id', 'pos', 'name', 'albumid'],
-  'Styles': ['id', 'name', 'relabel', 'reid'],
+  'Styles': ['id', 'name', 'relabel', 'reid', 'description'],
   'StyleChildren': ['parentId', 'childId'],
   'MusicVideos': ['id', 'filepath', 'thumbnailfilepath'],
   'Songs': ['id', 'artist', 'track', 'title', 'remixer', 'featuring', 'filepath', 'resongid', 'albumid', 'rating', 'dateadded', 'comments', 'trashed', 'albumpartid', 'bpm', 'lowquality', 'tonickey', 'energy', 'googlesongid', 'durationinms', 'curator', 'musicvideoid', 'youtubeid', 'bpmlock', 'tonickeylock', 'spotifyid', 'dupeid'],
