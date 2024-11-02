@@ -27,6 +27,9 @@ class GenreWrapper {
 }
 
 
+const [genreToEdit, setGenreToEdit] = createSignal<Style|undefined>(undefined)
+
+
 const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props) => {
   const {activeGenres, setActiveGenres} = useGenres()
   const [collapsed, setCollapsed] = createSignal<boolean>(true)
@@ -42,6 +45,7 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
       let g = [...activeGenres()]
       g.push(props.genre.genre)
       setActiveGenres(g)
+      setGenreToEdit(props.genre.genre)
     }
   }
 
@@ -86,4 +90,4 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
 }
 
 export default GenreListItem
-export {GenreWrapper}
+export {GenreWrapper, genreToEdit, setGenreToEdit}

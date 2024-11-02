@@ -2,6 +2,7 @@ import { Suspense, type Component, Switch, Match, createSignal, useTransition } 
 import { createClient } from '@supabase/supabase-js'
 
 import GenresContext from './GenresContext'
+import GenreInfo from './GenreInfo'
 import GenreList from './GenreList'
 import NavBar from './NavBar'
 import ActivePlaylistContext from './PlaylistContext'
@@ -47,6 +48,7 @@ const App: Component = () => {
           </Suspense>
         </div>
         <SongInfo />
+        <GenreInfo />
         <NavBar start={start} setTab={setTab}/>
       </div>
     </ThemeContext></SongsContext></SongContext></ActivePlaylistContext></GenresContext>
