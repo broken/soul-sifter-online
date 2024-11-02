@@ -33,3 +33,8 @@ From the cli subdirectory, testing can be done with the following:
 `npm exec tsc && ./bin/run.js pull`
 
 `npm exec tsc && ./bin/run.js push /Users/dogatech/Drive/music/db`
+
+### Update DB
+
+1. Update tables/fields in cli/push.ts
+2. npm run datatypes
