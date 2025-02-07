@@ -44,8 +44,11 @@ const getChangesFromGit = async (baseDir: string, table: string): Promise<[numbe
     const oldHash = readCommitHashFromFile();
     const diff = await git.diff([`${oldHash}..HEAD`, '--', `${table}.txt`]);
 
+    // force multi-line strings into a single line
+    const cleaned = diff.replace(/\\\n/g, '  ')
+
     // split the diff into individual lines
-    const lines = diff.split('\n');
+    const lines = cleaned.split('\n');
 
     // filter to only show lines that are changed (starting with + or - but not "+++" or "---")
     const changedLines = lines.filter((line) =>
@@ -138,7 +141,7 @@ const filterUpdates = (table: string, added: number[], dir: string) => {
   return new Promise((resolve, reject) => {
     let stdout = '';
     let stderr = '';
-    const childProcess = spawn('grep', ['-E', `^(${added.join('|')})`, `${table}.txt`], {cwd: dir});
+    const childProcess = spawn('sh', ['-c', `perl -p -e 's/\\\\\\R/  /g;' ${table}.txt | grep -E '^(${added.join('|')})'`], {cwd: dir});
 
     childProcess.stdout.pipe(fs.createWriteStream(`/tmp/${table}.txt`));
 
