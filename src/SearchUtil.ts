@@ -424,8 +424,7 @@ async function searchSongs(
       builder = builder.order('bpm', { ascending: true })
       break
     case OrderBy.PLAYLIST:
-      builder = builder.order('playlistentries(playlistid)', { ascending: false })
-      builder = builder.order('playlistentries(position)', { ascending: true })
+      builder = builder.order('position', { referencedTable: 'playlistentries', ascending: true })
       break
     case OrderBy.ALBUM:
       builder = builder.order('albumid', { ascending: false })
