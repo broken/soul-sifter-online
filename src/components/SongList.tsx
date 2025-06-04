@@ -15,7 +15,7 @@ const SongList: Component = () => {
   const [currentPage, setCurrentPage] = createSignal(0) // Page to fetch
   const [loading, setLoading] = createSignal(false)
   const [hasMoreSongs, setHasMoreSongs] = createSignal(true)
-  const [pendingIntersectionAction, setPendingIntersectionAction] = createSignal(false);
+  // const [pendingIntersectionAction, setPendingIntersectionAction] = createSignal(false); // REMOVED
   let disposeHasMoreSongsEffect: (() => void) | null = null;
   let sentinel: HTMLDivElement | undefined;
   let scrollContainerRef: HTMLDivElement | undefined; // Ref for the scrollable container
@@ -51,7 +51,7 @@ const SongList: Component = () => {
     setLoading(true)
     // console.log(`Fetching page: ${page}, query: ${query}, genres: ${genres.map(g => g.name)}, playlist: ${activeList?.name}`) // Replaced by more detailed log
 
-    const limit = !DEV ? 20 : 3
+    const limit = 16; // CHANGED to fixed limit
     const offset = page * limit
 
     let playlistIds: number[] = []
@@ -100,13 +100,7 @@ const SongList: Component = () => {
     } finally {
       console.log("[FetchEffect] Finally block. Setting loading to false.");
       setLoading(false)
-      if (pendingIntersectionAction() && hasMoreSongs() && !loading()) {
-        console.log("[FetchEffect] Finally: Processing pendingIntersectionAction. Calling setCurrentPage. Current page before inc:", currentPage());
-        setCurrentPage(currentPage() + 1);
-        setPendingIntersectionAction(false);
-      } else if (pendingIntersectionAction()) {
-          console.log("[FetchEffect] Finally: pendingIntersectionAction is true, but other conditions not met (hasMoreSongs:", hasMoreSongs(), "loading:", loading(), ")");
-      }
+      // Removed pendingIntersectionAction logic
     }
   }))
 
@@ -146,17 +140,15 @@ const SongList: Component = () => {
         console.log("[handleIntersect] loading():", loading());
         console.log("[handleIntersect] hasMoreSongs():", hasMoreSongs());
 
-        if (entry.isIntersecting && hasMoreSongs()) {
-          if (!loading()) {
-            console.log("[handleIntersect] Condition MET (NOT loading). Calling setCurrentPage. Current page before inc:", currentPage());
-            setCurrentPage(currentPage() + 1);
-            setPendingIntersectionAction(false); // Clear any pending action
-          } else {
-            console.log("[handleIntersect] Condition MET (BUT loading). Setting pendingIntersectionAction = true.");
-            setPendingIntersectionAction(true);
-          }
+        // Main condition for action
+        const conditionMet = entry.isIntersecting && !loading() && hasMoreSongs();
+        console.log("[handleIntersect] Condition (isIntersecting && !loading && hasMoreSongs):", conditionMet);
+
+        if (conditionMet) {
+          console.log("[handleIntersect] Condition MET. Calling setCurrentPage. Current page before inc:", currentPage());
+          setCurrentPage(currentPage() + 1);
         } else {
-          console.log("[handleIntersect] Condition (isIntersecting && hasMoreSongs) NOT MET.");
+          console.log("[handleIntersect] Condition NOT MET or still loading/no more songs.");
         }
       };
 
