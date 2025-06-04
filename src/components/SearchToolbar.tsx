@@ -1,4 +1,4 @@
-import { createSignal, type Component, createEffect, onCleanup } from 'solid-js'
+import { createSignal, type Component, createEffect, onCleanup, on } from 'solid-js'
 
 import logo from '../assets/hires_candidate_2.png'
 import styles from './SearchToolbar.module.css'
@@ -10,14 +10,17 @@ const [debouncedSearchQuery, setDebouncedSearchQuery] = createSignal<string>('')
 const SearchToolbar: Component = () => {
   const [inputFocused, setInputFocused] = createSignal<boolean>(false)
 
-  createEffect(() => {
-    let timerId: number
-    onCleanup(() => clearTimeout(timerId))
+  createEffect(on(internalSearchQuery, (currentQuery) => {
+    let timerId: number;
+
+    onCleanup(() => {
+      clearTimeout(timerId);
+    });
 
     timerId = setTimeout(() => {
-      setDebouncedSearchQuery(internalSearchQuery())
-    }, 3000)
-  })
+      setDebouncedSearchQuery(currentQuery);
+    }, 3000);
+  }, { defer: true }));
 
   return (
     <div class="navbar bg-base-200 gap-2">
