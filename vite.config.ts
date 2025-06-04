@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa'
 import type { ManifestOptions, VitePWAOptions } from 'vite-plugin-pwa'
@@ -70,4 +71,26 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    // setupFiles: './setupTests.ts', // If needed later for global test setup
+    transformMode: {
+      web: [/\.[jt]sx?$/],
+    },
+    deps: {
+      // Ensure solid-js and its submodules are transformed in the test environment
+      inline: [/solid-js/, /@solidjs\/testing-library/],
+    },
+    // To fix "Cannot find module 'solid-js/web'":
+    // alias: [
+    //   {
+    //     find: /^(solid-js|solid-js\/web|solid-js\/store|solid-js\/html|solid-js\/h)$/,
+    //     replacement: 'solid-js/dist/solid.js', // This might point to prod build
+    //   },
+    // ],
+  },
+  resolve: {
+    conditions: ['development', 'solid'],
+  }
 });
