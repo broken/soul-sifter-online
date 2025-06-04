@@ -45,7 +45,6 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
       let g = [...activeGenres()]
       g.push(props.genre.genre)
       setActiveGenres(g)
-      setGenreToEdit(props.genre.genre)
     }
   }
 
@@ -53,22 +52,36 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
     <>
       <tr>
         <td class="px-0 py-0">
-          <div classList={{ [styles.active]: activeGenres().some(g => g.id === props.genre.genre.id) }} class={`flex flex-row justify-between px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
-            <span onclick={toggleGenre}>{props.genre.genre.name}</span>
-            <Show when={!!props.genre.children.length}>
-              <span onclick={() => setCollapsed(!collapsed())}>
-                <Show when={collapsed()}>
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
-                  </svg>
-                </Show>
-                <Show when={!collapsed()}>
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/>
-                  </svg>
-                </Show>
+          <div classList={{ [styles.active]: activeGenres().some(g => g.id === props.genre.genre.id) }} class={`flex flex-row justify-between items-center px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
+            {/* Genre Name - always on the left */}
+            <span onclick={toggleGenre} class="cursor-pointer">{props.genre.genre.name}</span>
+
+            {/* Icons Group - always on the right */}
+            <div class="flex items-center">
+              <span
+                onclick={() => setGenreToEdit(props.genre.genre)}
+                class="cursor-pointer hover:opacity-70"
+                classList={{ "mr-2": !!props.genre.children.length && props.genre.children.length > 0 }} // Margin right if expand arrow is present
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
               </span>
-            </Show>
+              <Show when={!!props.genre.children.length && props.genre.children.length > 0}>
+                <span onclick={() => setCollapsed(!collapsed())} class="cursor-pointer">
+                  <Show when={collapsed()}>
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
+                    </svg>
+                  </Show>
+                  <Show when={!collapsed()}>
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/>
+                    </svg>
+                  </Show>
+                </span>
+              </Show>
+            </div>
           </div>
         </td>
       </tr>
