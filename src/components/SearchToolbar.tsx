@@ -1,10 +1,20 @@
-import { createSignal, type Component } from 'solid-js'
+import { createSignal, type Component, createEffect, onCleanup } from 'solid-js'
 
 import logo from '../assets/hires_candidate_2.png'
 import styles from './SearchToolbar.module.css'
 
 
-const [searchQuery, setSearchQuery] = createSignal<string>('')
+const [internalSearchQuery, setInternalSearchQuery] = createSignal<string>('')
+const [debouncedSearchQuery, setDebouncedSearchQuery] = createSignal<string>('')
+
+createEffect(() => {
+  let timerId: number
+  onCleanup(() => clearTimeout(timerId))
+
+  timerId = setTimeout(() => {
+    setDebouncedSearchQuery(internalSearchQuery())
+  }, 3000)
+})
 
 const SearchToolbar: Component = () => {
   const [inputFocused, setInputFocused] = createSignal<boolean>(false)
@@ -16,7 +26,7 @@ const SearchToolbar: Component = () => {
       <div class="flex-1">
         <input type="text"
             placeholder="Search"
-            onInput={(e) => setSearchQuery(e.target.value)}
+            onInput={(e) => setInternalSearchQuery(e.target.value)}
             class="input input-bordered md:w-auto flex-1"
             classList={{["input-primary"]:inputFocused()}}
             onfocusin={() => setInputFocused(true)} onfocusout={() => setInputFocused(false)}></input>
@@ -43,4 +53,4 @@ const SearchToolbar: Component = () => {
 }
 
 export default SearchToolbar
-export {searchQuery}
+export {debouncedSearchQuery}
