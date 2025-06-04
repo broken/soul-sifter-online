@@ -1,4 +1,4 @@
-import { type Component, createEffect, Index, DEV, Show } from 'solid-js'
+import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup } from 'solid-js'
 
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
@@ -12,30 +12,122 @@ const SongList: Component = () => {
   const {activeGenres, setActiveGenres} = useGenres()
   const {activePlaylist, setActivePlaylist} = useActivePlaylist()
   const {songs, setSongs} = useSongs()
-  createEffect(async () => {
-    console.log("is dev: ", DEV)
-    const playlist = activePlaylist()
-    let playlists: number[] = []
-    if (playlist && playlist.id) {
-      playlists = [playlist.id]
+  const [currentPage, setCurrentPage] = createSignal(0) // Page to fetch
+  const [loading, setLoading] = createSignal(false)
+  const [hasMoreSongs, setHasMoreSongs] = createSignal(true)
+  let sentinel: HTMLDivElement | undefined;
+  let scrollContainerRef: HTMLDivElement | undefined; // Ref for the scrollable container
+  let observer: IntersectionObserver | undefined;
+
+  // Effect to reset current page and clear songs when search/filter criteria change
+  createEffect(on([searchQuery, activeGenres, activePlaylist], () => {
+    setSongs([])
+    setCurrentPage(0)
+    setHasMoreSongs(true) // Reset hasMoreSongs when filters change
+    // We don't fetch here, the effect below will trigger due to currentPage changing to 0
+    // (or the fetch effect runs due to filter changes directly if currentPage was already 0)
+    if (observer && sentinel) { // Re-observe sentinel if filters change and it was previously unobserved
+      observer.observe(sentinel);
     }
-    let songResults = await searchSongs(
-      searchQuery(),
-      !DEV ? 20 : 3 /* limit */,
-      0 /* bpm */,
-      '' /* key */,
-      activeGenres().map(g => g.id),
-      [] /* songs to omit */,
-      playlists /* playlists */,
-      0 /* energy */,
-      OrderBy.DATE_ADDED,
-      undefined /* callback */
-    )
-    setSongs(songResults)
-  })
+  }))
+
+  // Effect to fetch songs when currentPage changes or search/filter criteria change
+  createEffect(on([currentPage, searchQuery, activeGenres, activePlaylist], async ([page, query, genres, activeList]) => {
+    if (page < 0 || !hasMoreSongs()) { // Do not fetch if page is negative or no more songs
+      if (!hasMoreSongs() && observer && sentinel) {
+        observer.unobserve(sentinel); // Stop observing if no more songs
+      }
+      return
+    }
+    setLoading(true)
+    console.log(`Fetching page: ${page}, query: ${query}, genres: ${genres.map(g => g.name)}, playlist: ${activeList?.name}`)
+
+    const limit = !DEV ? 20 : 3
+    const offset = page * limit
+
+    let playlistIds: number[] = []
+    if (activeList && activeList.id) {
+      playlistIds = [activeList.id]
+    }
+
+    try {
+      const songResults = await searchSongs(
+        query,
+        limit,
+        0 /* bpm */,
+        '' /* key */,
+        genres.map(g => g.id),
+        [] /* songs to omit */,
+        playlistIds,
+        offset,
+        OrderBy.DATE_ADDED,
+        undefined /* callback */
+      )
+
+      if (songResults.length === 0) {
+        setHasMoreSongs(false);
+      } else {
+        // Songs were found. Assume there are more unless proven otherwise by results < limit.
+        setHasMoreSongs(true);
+        if (page === 0) {
+          setSongs(songResults);
+        } else {
+          setSongs(prevSongs => [...prevSongs, ...songResults]);
+        }
+        // If the number of songs returned is less than the limit, it means we've reached the end.
+        if (songResults.length < limit) {
+          setHasMoreSongs(false);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch songs:", error)
+      setHasMoreSongs(false) // Stop trying if there's an error
+    } finally {
+      setLoading(false)
+    }
+  }))
+
+  onMount(() => {
+    if (!sentinel) return;
+
+    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && !loading() && hasMoreSongs()) {
+        console.log("Sentinel intersecting, loading more songs...");
+        setCurrentPage(currentPage() + 1);
+      }
+    };
+
+    observer = new IntersectionObserver(handleIntersect, {
+      root: scrollContainerRef, // Use the scrollable div as the root
+      threshold: 0.1 // Trigger when 10% of the sentinel is visible
+    });
+
+    observer.observe(sentinel);
+
+    // Also, if hasMoreSongs becomes false, disconnect the observer
+    createEffect(() => {
+      if (!hasMoreSongs() && observer && sentinel) {
+        console.log("No more songs, unobserving sentinel.");
+        observer.unobserve(sentinel);
+      } else if (hasMoreSongs() && observer && sentinel) {
+        // If it was unobserved and now we have more songs (e.g. filter change), observe again
+        observer.observe(sentinel);
+      }
+    });
+  });
+
+  onCleanup(() => {
+    if (observer && sentinel) {
+      observer.unobserve(sentinel); // Clean up specific element
+      observer.disconnect(); // General cleanup
+      console.log("Observer disconnected on component cleanup.");
+    }
+  });
 
   return (
-    <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
+    <div ref={scrollContainerRef} class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
+      {/* ... existing Show components for activeGenres and activePlaylist ... */}
       <Show when={activeGenres().length}>
         <div role="alert" class="alert border-info">
         <div class="grid-flow-col justify-items-start text-start grid w-full content-start items-center gap-4" style="grid-template-columns: auto minmax(auto,1fr);">
@@ -65,6 +157,13 @@ const SongList: Component = () => {
           </Index>
         </tbody>
       </table>
+      <div ref={sentinel} style="height: 1px;"></div> {/* Sentinel element */}
+      <Show when={loading()}>
+        <div>Loading more songs...</div>
+      </Show>
+      <Show when={!hasMoreSongs() && !loading() && songs().length > 0}>
+        <div>No more songs to load.</div>
+      </Show>
     </div>
   )
 }
