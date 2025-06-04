@@ -161,7 +161,7 @@ const SongList: Component = () => {
       <Show when={loading()}>
         <div>Loading more songs...</div>
       </Show>
-      <Show when={!hasMoreSongs() && !loading() && songs().length > 0}>
+      <Show when={!hasMoreSongs() && !loading() && songs.length > 0}>
         <div>No more songs to load.</div>
       </Show>
     </div>
