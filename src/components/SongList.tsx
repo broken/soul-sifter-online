@@ -1,4 +1,4 @@
-import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup, on, createRoot } from 'solid-js'
+import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup, on, createRoot, createResource } from 'solid-js'
 
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
@@ -13,7 +13,7 @@ const SongList: Component = () => {
   const {activePlaylist, setActivePlaylist} = useActivePlaylist()
   const {songs, setSongs} = useSongs()
   const [currentPage, setCurrentPage] = createSignal(0) // Page to fetch
-  const [loading, setLoading] = createSignal(false)
+  // const [loading, setLoading] = createSignal(false) // Will be replaced by resource's loading state
   const [hasMoreSongs, setHasMoreSongs] = createSignal(true)
 
   let disposeHasMoreSongsEffect: (() => void) | null = null;
@@ -21,88 +21,99 @@ const SongList: Component = () => {
   let scrollContainerRef: HTMLDivElement | undefined; // Ref for the scrollable container
   let observer: IntersectionObserver | undefined;
 
+  const fetcher = async (
+    params: { page: number; query: string; genres: any[]; playlist?: any }
+  ): Promise<{ songs: any[], hasMore: boolean, page: number }> => {
+    const { page, query, genres, playlist } = params;
+    console.log("[ResourceFetcher] Entered. Page:", page, "Query:", query, "Genres:", genres.map(g=>g.id), "Playlist:", playlist?.id);
+
+    if (page < 0) { // Do not fetch if page is negative. hasMoreSongs is handled by resource source
+      console.log("[ResourceFetcher] Page < 0, returning empty results.");
+      return { songs: [], hasMore: false, page };
+    }
+
+    const limit = !DEV ? 20 : 3;
+    const offset = page * limit;
+    let playlistIds: number[] = [];
+    if (playlist && playlist.id) {
+      playlistIds = [playlist.id];
+    }
+
+    try {
+      console.log("[ResourceFetcher] Calling searchSongs with offset:", offset, "limit:", limit);
+      const songResults = await searchSongs(
+        query,
+        limit,
+        0, // bpm
+        '', // key
+        genres.map(g => g.id), // styles
+        [], // songsToOmit
+        playlistIds, // playlists
+        0, // energy
+        offset, // offset
+        OrderBy.DATE_ADDED, // orderBy
+        undefined // errorCallback
+      );
+      console.log("[ResourceFetcher] searchSongs returned. songResults.length:", songResults.length);
+      const hasMore = songResults.length === limit;
+      console.log("[ResourceFetcher] Calculated hasMore:", hasMore);
+      return { songs: songResults, hasMore, page };
+    } catch (error) {
+      console.error("[ResourceFetcher] Failed to fetch songs:", error);
+      return { songs: [], hasMore: false, page }; // Return empty on error, resource handles error state
+    }
+  };
+
+  const [songData, { mutate, refetch }] = createResource(
+    () => ({ page: currentPage(), query: searchQuery(), genres: activeGenres(), playlist: activePlaylist() }),
+    fetcher
+  );
+
   // Effect to reset current page and clear songs when search/filter criteria change
   createEffect(on([searchQuery, activeGenres, activePlaylist], () => {
     console.log("[FilterResetEffect] Entered. searchQuery:", searchQuery(), "activeGenres:", activeGenres().map(g=>g.id), "activePlaylist:", activePlaylist()?.id);
     console.log("[FilterResetEffect] Clearing songs, resetting page and hasMoreSongs.");
     setSongs([])
-    setCurrentPage(0)
-    setHasMoreSongs(true) // Reset hasMoreSongs when filters change
-    // We don't fetch here, the effect below will trigger due to currentPage changing to 0
-    // (or the fetch effect runs due to filter changes directly if currentPage was already 0)
-    if (observer && sentinel) { // Re-observe sentinel if filters change and it was previously unobserved
+    setCurrentPage(0) // This will trigger the resource to fetch due to source signal change
+    setHasMoreSongs(true) // Reset hasMoreSongs
+    if (observer && sentinel) {
       console.log("[FilterResetEffect] Calling observe(sentinel).");
       observer.observe(sentinel);
     }
-  }))
+  }));
 
-  // Effect to fetch songs when currentPage changes or search/filter criteria change
-  createEffect(on([currentPage, searchQuery, activeGenres, activePlaylist], async ([page, query, genres, activeList]) => {
-    console.log("[FetchEffect] Entered. CurrentPage:", currentPage(), "SearchQuery:", query, "ActiveGenres:", genres.map(g=>g.id), "ActivePlaylist:", activeList?.id);
-    if (page < 0 || !hasMoreSongs()) { // Do not fetch if page is negative or no more songs
-      if (!hasMoreSongs() && observer && sentinel) { // This specific log might be redundant if HasMoreSongsEffect handles it
-        // console.log("[FetchEffect] Condition (page < 0 || !hasMoreSongs()) met, unobserving sentinel.");
-        observer.unobserve(sentinel); // Stop observing if no more songs
-      }
-      return
-    }
-    console.log("[FetchEffect] Guards passed. CurrentPage (page var):", page, "hasMoreSongs():", hasMoreSongs());
-    console.log("[FetchEffect] Setting loading to true.");
-    setLoading(true)
-    // console.log(`Fetching page: ${page}, query: ${query}, genres: ${genres.map(g => g.name)}, playlist: ${activeList?.name}`) // Replaced by more detailed log
+  // Effect to update songs list and hasMoreSongs signal from resource data
+  createEffect(() => {
+    const currentResourceState = songData; // Access the resource signal
 
-    const limit = !DEV ? 20 : 3;
-    const offset = page * limit
-
-    let playlistIds: number[] = []
-    if (activeList && activeList.id) {
-      playlistIds = [activeList.id]
+    if (currentResourceState.error) {
+      console.error("[SongDataEffect] Error from resource:", currentResourceState.error);
+      setHasMoreSongs(false); // Stop pagination on error
+      // setSongs([]); // Optional: Clear songs on error, or display an error message
+      return;
     }
 
-    try {
-      console.log("[FetchEffect] Calling searchSongs with offset:", offset, "limit:", limit);
-      const songResults = await searchSongs(
-        query,
-        limit,
-        0 /* bpm */,
-        '' /* key */,
-        genres.map(g => g.id),            // styles
-        [],                               // songsToOmit
-        playlistIds,                      // playlists
-        0,                                // energy (hardcoded to 0)
-        offset,                           // offset (for pagination)
-        OrderBy.DATE_ADDED,               // orderBy
-        undefined                         // errorCallback
-      )
-      console.log("[FetchEffect] searchSongs returned. songResults.length:", songResults.length);
+    const data = currentResourceState(); // Get the actual data from the resource
+    if (data) {
+      console.log("[SongDataEffect] songData updated. Page:", data.page, "Songs count:", data.songs.length, "HasMore:", data.hasMore);
 
-      if (songResults.length === 0) {
-        console.log("[FetchEffect] Setting hasMoreSongs to false. (songResults.length === 0)");
-        setHasMoreSongs(false);
+      if (data.page === 0) {
+        console.log("[SongDataEffect] Page 0 detected, replacing songs list.");
+        setSongs(data.songs);
       } else {
-        console.log("[FetchEffect] Setting hasMoreSongs to true. (songResults.length > 0)");
-        setHasMoreSongs(true);
-        if (page === 0) {
-          setSongs(songResults);
+        // Only append if there are new songs and it's not page 0
+        if (data.songs && data.songs.length > 0) {
+          console.log("[SongDataEffect] Page > 0 and songs available, appending to list.");
+          setSongs(prevSongs => [...prevSongs, ...data.songs]);
         } else {
-          setSongs(prevSongs => [...prevSongs, ...songResults]);
-        }
-        // If the number of songs returned is less than the limit, it means we've reached the end.
-        if (songResults.length < limit) {
-          console.log("[FetchEffect] Setting hasMoreSongs to false. (songResults.length < limit)");
-          setHasMoreSongs(false);
+          // This condition implies page > 0 but no new songs were returned.
+          // The hasMore flag from the fetcher should correctly indicate this.
+          console.log("[SongDataEffect] Page > 0 and no new songs returned or songs array is empty.");
         }
       }
-    } catch (error) {
-      console.error("Failed to fetch songs:", error)
-      console.log("[FetchEffect] Setting hasMoreSongs to false due to error.");
-      setHasMoreSongs(false) // Stop trying if there's an error
-    } finally {
-      console.log("[FetchEffect] Finally block. Setting loading to false.");
-      setLoading(false)
-      // Removed pendingIntersectionAction logic
+      setHasMoreSongs(data.hasMore);
     }
-  }))
+  });
 
   onMount(() => {
     console.log("[onMount] Entered.");
@@ -137,16 +148,22 @@ const SongList: Component = () => {
 
         console.log("[handleIntersect] entry[0]:", entry);
         console.log("[handleIntersect] isIntersecting:", entry.isIntersecting);
-        console.log("[handleIntersect] loading():", loading());
+        console.log("[handleIntersect] songData.loading:", songData.loading);
         console.log("[handleIntersect] hasMoreSongs():", hasMoreSongs());
 
         // Main condition for action
-        const conditionMet = entry.isIntersecting && !loading() && hasMoreSongs();
-        console.log("[handleIntersect] Condition (isIntersecting && !loading && hasMoreSongs):", conditionMet);
+        const conditionMet = entry.isIntersecting && !songData.loading && hasMoreSongs();
+        console.log("[handleIntersect] Condition (isIntersecting && !songData.loading && hasMoreSongs):", conditionMet);
 
         if (conditionMet) {
           console.log("[handleIntersect] Condition MET. Calling setCurrentPage. Current page before inc:", currentPage());
-          setCurrentPage(currentPage() + 1);
+          // Only increment page if hasMoreSongs is true, to prevent unnecessary fetches if resource already determined no more.
+          // The resource itself will also guard against page < 0 or other invalid states.
+          if (hasMoreSongs()) {
+            setCurrentPage(currentPage() + 1);
+          } else {
+            console.log("[handleIntersect] Condition MET, but hasMoreSongs() is false. Not incrementing page.");
+          }
         } else {
           console.log("[handleIntersect] Condition NOT MET or still loading/no more songs.");
         }
@@ -229,10 +246,10 @@ const SongList: Component = () => {
         </tbody>
       </table>
       <div ref={sentinel} style="height: 1px;"></div> {/* Sentinel element */}
-      <Show when={loading()}>
+      <Show when={songData.loading}>
         <div>Loading more songs...</div>
       </Show>
-      <Show when={!hasMoreSongs() && !loading() && songs.length > 0}>
+      <Show when={!hasMoreSongs() && !songData.loading && songs.length > 0}>
         <div>No more songs to load.</div>
       </Show>
     </div>
