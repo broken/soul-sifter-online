@@ -450,8 +450,19 @@ async function searchSongs(
   if (error) {
     console.error(error)
   }
-  if (data) {
-    data.forEach((song: Song) => {
+
+  let transformedData = data
+  if (playlists.length > 0 && data) {
+    transformedData = data.reduce((acc: Song[], item: any) => {
+      if (item && item.songs) {
+        acc.push(item.songs as Song)
+      }
+      return acc
+    }, [])
+  }
+
+  if (transformedData) {
+    transformedData.forEach((song: Song) => {
       songList.push(song)
     })
   }
