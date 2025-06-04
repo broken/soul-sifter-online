@@ -53,28 +53,35 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
       <tr>
         <td class="px-0 py-0">
           <div classList={{ [styles.active]: activeGenres().some(g => g.id === props.genre.genre.id) }} class={`flex flex-row justify-between items-center px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
+            {/* Genre Name - always on the left */}
+            <span onclick={toggleGenre} class="cursor-pointer">{props.genre.genre.name}</span>
+
+            {/* Icons Group - always on the right */}
             <div class="flex items-center">
-              <span onclick={toggleGenre}>{props.genre.genre.name}</span>
-              <span onclick={() => setGenreToEdit(props.genre.genre)} class="ml-2 cursor-pointer hover:opacity-70">
+              <span
+                onclick={() => setGenreToEdit(props.genre.genre)}
+                class="cursor-pointer hover:opacity-70"
+                classList={{ "mr-2": !!props.genre.children.length && props.genre.children.length > 0 }} // Margin right if expand arrow is present
+              >
                 <svg class="w-5 h-5 inline" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828zM5 13L3 17l4-2L5 13z" />
                 </svg>
               </span>
+              <Show when={!!props.genre.children.length && props.genre.children.length > 0}>
+                <span onclick={() => setCollapsed(!collapsed())} class="cursor-pointer">
+                  <Show when={collapsed()}>
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
+                    </svg>
+                  </Show>
+                  <Show when={!collapsed()}>
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/>
+                    </svg>
+                  </Show>
+                </span>
+              </Show>
             </div>
-            <Show when={!!props.genre.children.length}>
-              <span onclick={() => setCollapsed(!collapsed())} class="cursor-pointer">
-                <Show when={collapsed()}>
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
-                  </svg>
-                </Show>
-                <Show when={!collapsed()}>
-                  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/>
-                  </svg>
-                </Show>
-              </span>
-            </Show>
           </div>
         </td>
       </tr>
