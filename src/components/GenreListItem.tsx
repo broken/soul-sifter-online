@@ -37,16 +37,39 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
   props = mergeProps({ padding: 0 }, props)
 
   const toggleGenre = () => {
-    if (activeGenres().some(g => g.id === props.genre.genre.id)) {
-      console.log('deselected')
-      setActiveGenres(activeGenres().filter(g => g.id !== props.genre.genre.id))
+    const isCurrentlyActive = activeGenres().some(g => g.id === props.genre.genre.id);
+    const parentGenre = props.genre.genre;
+    const childGenres = props.genre.children.map(childWrapper => childWrapper.genre);
+
+    if (isCurrentlyActive) {
+      // Deselecting the genre (parent or child)
+      // For now, keep the existing deselection logic: only deselect the clicked genre.
+      // Children will remain selected if their parent is deselected.
+      console.log('deselected', parentGenre.name);
+      setActiveGenres(activeGenres().filter(g => g.id !== parentGenre.id));
     } else {
-      console.log('selected')
-      let g = [...activeGenres()]
-      g.push(props.genre.genre)
-      setActiveGenres(g)
+      // Selecting the genre
+      console.log('selected', parentGenre.name);
+      setCollapsed(false); // Expand the parent genre
+
+      let newActiveGenres = [...activeGenres()];
+
+      // Add parent genre
+      if (!newActiveGenres.some(g => g.id === parentGenre.id)) {
+        newActiveGenres.push(parentGenre);
+      }
+
+      // Add all child genres
+      if (props.genre.children.length > 0) {
+        childGenres.forEach(child => {
+          if (!newActiveGenres.some(g => g.id === child.id)) {
+            newActiveGenres.push(child);
+          }
+        });
+      }
+      setActiveGenres(newActiveGenres);
     }
-  }
+  };
 
   return (
     <>
