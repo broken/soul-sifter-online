@@ -52,9 +52,9 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
     <>
       <tr>
         <td class="px-0 py-0">
-          <div classList={{ [styles.active]: activeGenres().some(g => g.id === props.genre.genre.id) }} class={`flex flex-row justify-between items-center px-7 py-4`} style={`margin-left: ${props.padding}px;`}>
+          <div onclick={toggleGenre} classList={{ [styles.active]: activeGenres().some(g => g.id === props.genre.genre.id) }} class={`flex flex-row justify-between items-center px-7 py-4 cursor-pointer`} style={`margin-left: ${props.padding}px;`}>
             {/* Genre Name - always on the left */}
-            <span onclick={toggleGenre} class="cursor-pointer">{props.genre.genre.name}</span>
+            <span>{props.genre.genre.name}</span>
 
             {/* Icons Group - always on the right */}
             <div class="flex items-center">
