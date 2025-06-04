@@ -437,7 +437,7 @@ async function searchSongs(
 
   const { data, error } = await builder.range(offset, offset + limit - 1)
   if (error) {
-    console.log(error)
+    console.error(error)
   }
   if (data) {
     data.forEach((song: Song) => {
