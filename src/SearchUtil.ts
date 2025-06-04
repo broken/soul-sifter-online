@@ -400,7 +400,6 @@ async function searchSongs(
     offset: number = 0,
     orderBy: OrderBy = OrderBy.DATE_ADDED,
     errorCallback?: any): Promise<Song[]> {
-  // Updated console.log to match new parameter order and names for clarity
   console.log("q:", query, ", limit:", limit, ", bpm:", bpm, ", key:", key, ", styles:", styles, ", songsToOmit:", songsToOmit.length, ", playlists:", playlists, ", energy:", energy, ", offset:", offset, ", orderBy:", orderBy);
 
   let songList: Song[] = []

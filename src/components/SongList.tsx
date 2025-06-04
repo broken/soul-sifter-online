@@ -15,7 +15,7 @@ const SongList: Component = () => {
   const [currentPage, setCurrentPage] = createSignal(0) // Page to fetch
   const [loading, setLoading] = createSignal(false)
   const [hasMoreSongs, setHasMoreSongs] = createSignal(true)
-  // const [pendingIntersectionAction, setPendingIntersectionAction] = createSignal(false); // REMOVED
+
   let disposeHasMoreSongsEffect: (() => void) | null = null;
   let sentinel: HTMLDivElement | undefined;
   let scrollContainerRef: HTMLDivElement | undefined; // Ref for the scrollable container
@@ -51,7 +51,7 @@ const SongList: Component = () => {
     setLoading(true)
     // console.log(`Fetching page: ${page}, query: ${query}, genres: ${genres.map(g => g.name)}, playlist: ${activeList?.name}`) // Replaced by more detailed log
 
-    const limit = 16; // CHANGED to fixed limit
+    const limit = !DEV ? 20 : 3;
     const offset = page * limit
 
     let playlistIds: number[] = []
