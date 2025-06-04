@@ -1,4 +1,4 @@
-import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup } from 'solid-js'
+import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup, on } from 'solid-js'
 
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
