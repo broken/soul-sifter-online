@@ -413,9 +413,9 @@ async function searchSongs(
 
   switch (orderBy) {
     case OrderBy.RELEASE_DATE:
-      builder = builder.order('albums.releasedateyear', { ascending: false })
-      builder = builder.order('albums.releasedatemonth', { ascending: false })
-      builder = builder.order('albums.releasedateday', { ascending: false })
+      builder = builder.order('albums(releasedateyear)', { ascending: false })
+      builder = builder.order('albums(releasedatemonth)', { ascending: false })
+      builder = builder.order('albums(releasedateday)', { ascending: false })
       break
     case OrderBy.RANDOM:
       console.warn('Random order not supported (though it is possible).')
@@ -424,8 +424,8 @@ async function searchSongs(
       builder = builder.order('bpm', { ascending: true })
       break
     case OrderBy.PLAYLIST:
-      builder = builder.order('playlistentries.playlistid', { ascending: false })
-      builder = builder.order('playlistentries.position', { ascending: true })
+      builder = builder.order('playlistentries(playlistid)', { ascending: false })
+      builder = builder.order('playlistentries(position)', { ascending: true })
       break
     case OrderBy.ALBUM:
       builder = builder.order('albumid', { ascending: false })
