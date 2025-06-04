@@ -24,14 +24,14 @@ const SongInfo: Component = () => {
         onClick={cardClickHandler} // Add click handler to the card
       >
         <div class="card-body">
-          <h2 class="card-title">Song Info</h2> {/* Changed title for clarity */}
-          <span>Artist: {song()?.artist}</span>
-          <span>Title: {song()?.title}</span>
+          {/* Removed h2 title "Song Info" */}
+          {/* Display artist in bold, without a label */}
+          <p style={{ "font-weight": "bold" }}>{song()?.artist}</p>
+          {/* Display title directly, without a label */}
+          <p>{song()?.title}</p>
           <div class="card-actions justify-end">
             <Rating song={song()} mutable={true} />
           </div>
-          {/* Removed the back button as backdrop click handles closing */}
-          {/* <IoChevronBack onclick={() => setSong(undefined)}/> */}
         </div>
       </div>
     </Show>
