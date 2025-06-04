@@ -1,4 +1,4 @@
-import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup, on } from 'solid-js'
+import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup, on, createRoot } from 'solid-js'
 
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
@@ -15,32 +15,41 @@ const SongList: Component = () => {
   const [currentPage, setCurrentPage] = createSignal(0) // Page to fetch
   const [loading, setLoading] = createSignal(false)
   const [hasMoreSongs, setHasMoreSongs] = createSignal(true)
+  const [pendingIntersectionAction, setPendingIntersectionAction] = createSignal(false);
+  let disposeHasMoreSongsEffect: (() => void) | null = null;
   let sentinel: HTMLDivElement | undefined;
   let scrollContainerRef: HTMLDivElement | undefined; // Ref for the scrollable container
   let observer: IntersectionObserver | undefined;
 
   // Effect to reset current page and clear songs when search/filter criteria change
   createEffect(on([searchQuery, activeGenres, activePlaylist], () => {
+    console.log("[FilterResetEffect] Entered. searchQuery:", searchQuery(), "activeGenres:", activeGenres().map(g=>g.id), "activePlaylist:", activePlaylist()?.id);
+    console.log("[FilterResetEffect] Clearing songs, resetting page and hasMoreSongs.");
     setSongs([])
     setCurrentPage(0)
     setHasMoreSongs(true) // Reset hasMoreSongs when filters change
     // We don't fetch here, the effect below will trigger due to currentPage changing to 0
     // (or the fetch effect runs due to filter changes directly if currentPage was already 0)
     if (observer && sentinel) { // Re-observe sentinel if filters change and it was previously unobserved
+      console.log("[FilterResetEffect] Calling observe(sentinel).");
       observer.observe(sentinel);
     }
   }))
 
   // Effect to fetch songs when currentPage changes or search/filter criteria change
   createEffect(on([currentPage, searchQuery, activeGenres, activePlaylist], async ([page, query, genres, activeList]) => {
+    console.log("[FetchEffect] Entered. CurrentPage:", currentPage(), "SearchQuery:", query, "ActiveGenres:", genres.map(g=>g.id), "ActivePlaylist:", activeList?.id);
     if (page < 0 || !hasMoreSongs()) { // Do not fetch if page is negative or no more songs
-      if (!hasMoreSongs() && observer && sentinel) {
+      if (!hasMoreSongs() && observer && sentinel) { // This specific log might be redundant if HasMoreSongsEffect handles it
+        // console.log("[FetchEffect] Condition (page < 0 || !hasMoreSongs()) met, unobserving sentinel.");
         observer.unobserve(sentinel); // Stop observing if no more songs
       }
       return
     }
+    console.log("[FetchEffect] Guards passed. CurrentPage (page var):", page, "hasMoreSongs():", hasMoreSongs());
+    console.log("[FetchEffect] Setting loading to true.");
     setLoading(true)
-    console.log(`Fetching page: ${page}, query: ${query}, genres: ${genres.map(g => g.name)}, playlist: ${activeList?.name}`)
+    // console.log(`Fetching page: ${page}, query: ${query}, genres: ${genres.map(g => g.name)}, playlist: ${activeList?.name}`) // Replaced by more detailed log
 
     const limit = !DEV ? 20 : 3
     const offset = page * limit
@@ -51,6 +60,7 @@ const SongList: Component = () => {
     }
 
     try {
+      console.log("[FetchEffect] Calling searchSongs with offset:", offset, "limit:", limit);
       const songResults = await searchSongs(
         query,
         limit,
@@ -64,11 +74,13 @@ const SongList: Component = () => {
         OrderBy.DATE_ADDED,               // orderBy
         undefined                         // errorCallback
       )
+      console.log("[FetchEffect] searchSongs returned. songResults.length:", songResults.length);
 
       if (songResults.length === 0) {
+        console.log("[FetchEffect] Setting hasMoreSongs to false. (songResults.length === 0)");
         setHasMoreSongs(false);
       } else {
-        // Songs were found. Assume there are more unless proven otherwise by results < limit.
+        console.log("[FetchEffect] Setting hasMoreSongs to true. (songResults.length > 0)");
         setHasMoreSongs(true);
         if (page === 0) {
           setSongs(songResults);
@@ -77,24 +89,36 @@ const SongList: Component = () => {
         }
         // If the number of songs returned is less than the limit, it means we've reached the end.
         if (songResults.length < limit) {
+          console.log("[FetchEffect] Setting hasMoreSongs to false. (songResults.length < limit)");
           setHasMoreSongs(false);
         }
       }
     } catch (error) {
       console.error("Failed to fetch songs:", error)
+      console.log("[FetchEffect] Setting hasMoreSongs to false due to error.");
       setHasMoreSongs(false) // Stop trying if there's an error
     } finally {
+      console.log("[FetchEffect] Finally block. Setting loading to false.");
       setLoading(false)
+      if (pendingIntersectionAction() && hasMoreSongs() && !loading()) {
+        console.log("[FetchEffect] Finally: Processing pendingIntersectionAction. Calling setCurrentPage. Current page before inc:", currentPage());
+        setCurrentPage(currentPage() + 1);
+        setPendingIntersectionAction(false);
+      } else if (pendingIntersectionAction()) {
+          console.log("[FetchEffect] Finally: pendingIntersectionAction is true, but other conditions not met (hasMoreSongs:", hasMoreSongs(), "loading:", loading(), ")");
+      }
     }
   }))
 
   onMount(() => {
+    console.log("[onMount] Entered.");
     if (!sentinel || !scrollContainerRef) {
       console.warn("Sentinel or ScrollContainerRef not defined onMount, IntersectionObserver not set up.");
       return;
     }
 
     Promise.resolve().then(() => {
+      console.log("[onMount] Deferred logic started.");
       // Ensure refs are still valid in the async callback, though they should be.
       if (!sentinel || !scrollContainerRef) {
         console.warn("Sentinel or ScrollContainerRef became undefined before deferred IntersectionObserver setup.");
@@ -113,10 +137,26 @@ const SongList: Component = () => {
       }
 
       const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+        console.log("[handleIntersect] Entered.");
         const entry = entries[0];
-        if (entry.isIntersecting && !loading() && hasMoreSongs()) {
-          console.log("Sentinel intersecting, loading more songs...");
-          setCurrentPage(currentPage() + 1);
+        if (!entry) return;
+
+        console.log("[handleIntersect] entry[0]:", entry);
+        console.log("[handleIntersect] isIntersecting:", entry.isIntersecting);
+        console.log("[handleIntersect] loading():", loading());
+        console.log("[handleIntersect] hasMoreSongs():", hasMoreSongs());
+
+        if (entry.isIntersecting && hasMoreSongs()) {
+          if (!loading()) {
+            console.log("[handleIntersect] Condition MET (NOT loading). Calling setCurrentPage. Current page before inc:", currentPage());
+            setCurrentPage(currentPage() + 1);
+            setPendingIntersectionAction(false); // Clear any pending action
+          } else {
+            console.log("[handleIntersect] Condition MET (BUT loading). Setting pendingIntersectionAction = true.");
+            setPendingIntersectionAction(true);
+          }
+        } else {
+          console.log("[handleIntersect] Condition (isIntersecting && hasMoreSongs) NOT MET.");
         }
       };
 
@@ -125,29 +165,42 @@ const SongList: Component = () => {
         threshold: 0.1 // Trigger when 10% of the sentinel is visible
       });
 
+      console.log("[onMount] Initial observe(sentinel) called.");
       observer.observe(sentinel); // Initial observation
 
       // Effect to manage observing/unobserving based on hasMoreSongs changes
-      createEffect(on(hasMoreSongs, (currentHasMoreSongs) => {
-        if (!observer || !sentinel) return; // Defensive check
-
-        if (!currentHasMoreSongs) {
-          console.log("No more songs (hasMoreSongs changed to false), unobserving sentinel.");
-          observer.unobserve(sentinel);
-        } else {
-          // This branch will run if hasMoreSongs becomes true (e.g., after filter reset)
-          console.log("hasMoreSongs is true, ensuring sentinel is observed.");
-          observer.observe(sentinel);
-        }
-      }, { defer: true })); // defer: true ensures it runs only on changes to hasMoreSongs
+      if (disposeHasMoreSongsEffect) {
+          disposeHasMoreSongsEffect();
+      }
+      disposeHasMoreSongsEffect = createRoot(dispose => {
+        console.log("[onMount] Creating createEffect for hasMoreSongs with createRoot.");
+        createEffect(on(hasMoreSongs, (currentHasMoreSongs) => {
+          if (!observer || !sentinel) return;
+          console.log("[HasMoreSongsEffect] Entered. currentHasMoreSongs:", currentHasMoreSongs);
+          if (!currentHasMoreSongs) {
+            console.log("[HasMoreSongsEffect] Unobserving sentinel.");
+            observer.unobserve(sentinel);
+          } else {
+            console.log("[HasMoreSongsEffect] Observing sentinel.");
+            observer.observe(sentinel);
+          }
+        }, { defer: true }));
+        return dispose;
+      });
     });
   });
 
   onCleanup(() => {
+    console.log("[onCleanup] Entered.");
     if (observer && sentinel) {
       observer.unobserve(sentinel); // Clean up specific element
       observer.disconnect(); // General cleanup
-      console.log("Observer disconnected on component cleanup.");
+      console.log("[onCleanup] Observer disconnected.");
+    }
+    if (disposeHasMoreSongsEffect) {
+      console.log("[onCleanup] Disposing hasMoreSongsEffect.");
+      disposeHasMoreSongsEffect();
+      disposeHasMoreSongsEffect = null; // Clear it
     }
   });
 
