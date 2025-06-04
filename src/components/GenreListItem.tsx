@@ -59,7 +59,7 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
             {/* Icons Group - always on the right */}
             <div class="flex items-center">
               <span
-                onclick={() => setGenreToEdit(props.genre.genre)}
+                onclick={(event) => { event.stopPropagation(); setGenreToEdit(props.genre.genre); }}
                 class="cursor-pointer hover:opacity-70"
                 classList={{ "mr-2": !!props.genre.children.length && props.genre.children.length > 0 }} // Margin right if expand arrow is present
               >
@@ -68,7 +68,7 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
                 </svg>
               </span>
               <Show when={!!props.genre.children.length && props.genre.children.length > 0}>
-                <span onclick={() => setCollapsed(!collapsed())} class="cursor-pointer">
+                <span onclick={(event) => { event.stopPropagation(); setCollapsed(!collapsed()); }} class="cursor-pointer">
                   <Show when={collapsed()}>
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
