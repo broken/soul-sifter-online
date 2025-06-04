@@ -45,14 +45,15 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
     const parentGenre = props.genre.genre;
     const childGenres = props.genre.children.map(childWrapper => childWrapper.genre);
 
-    if (isCurrentlyActive) { // or if (isActive())
-      // Deselecting the genre (parent or child)
-      // For now, keep the existing deselection logic: only deselect the clicked genre.
-      // Children will remain selected if their parent is deselected.
+    if (isCurrentlyActive) {
       console.log('deselected', parentGenre.name);
-      setActiveGenres(activeGenres().filter(g => g.id !== parentGenre.id));
+      const genresToDeselect = [parentGenre.id];
+      if (props.genre.children.length > 0) {
+        childGenres.forEach(child => genresToDeselect.push(child.id));
+      }
+      setActiveGenres(activeGenres().filter(g => !genresToDeselect.includes(g.id)));
     } else {
-      // Selecting the genre
+      // Selecting the genre - this part remains unchanged
       console.log('selected', parentGenre.name);
       setCollapsed(false); // Expand the parent genre
 
