@@ -34,9 +34,13 @@ const SongList: Component = () => {
 
     const limit = !DEV ? 20 : 3;
     const offset = page * limit;
+    let order_by = OrderBy.DATE_ADDED
     let playlistIds: number[] = [];
     if (playlist && playlist.id) {
       playlistIds = [playlist.id];
+      if (!playlist.query) {
+        order_by = OrderBy.PLAYLIST;
+      }
     }
 
     try {
@@ -51,7 +55,7 @@ const SongList: Component = () => {
         playlistIds, // playlists
         0, // energy
         offset, // offset
-        OrderBy.DATE_ADDED, // orderBy
+        order_by, // orderBy
         undefined // errorCallback
       );
       console.log("[ResourceFetcher] searchSongs returned. songResults.length:", songResults.length);
