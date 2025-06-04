@@ -1,4 +1,4 @@
-import { type Component, createEffect, Index, DEV, Show } from 'solid-js'
+import { type Component, createEffect, Index, DEV, Show, createResource } from 'solid-js'
 
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
@@ -12,30 +12,45 @@ const SongList: Component = () => {
   const {activeGenres, setActiveGenres} = useGenres()
   const {activePlaylist, setActivePlaylist} = useActivePlaylist()
   const {songs, setSongs} = useSongs()
-  createEffect(async () => {
+
+  const sourceAccessor = () => ({
+    query: searchQuery(),
+    genreIds: activeGenres().map(g => g.id),
+    playlist: activePlaylist()
+  })
+
+  const fetchSongs = async (source: ReturnType<typeof sourceAccessor>) => {
     console.log("is dev: ", DEV)
-    const playlist = activePlaylist()
     let playlists: number[] = []
-    if (playlist && playlist.id) {
-      playlists = [playlist.id]
+    if (source.playlist && source.playlist.id) {
+      playlists = [source.playlist.id]
     }
-    let songResults = await searchSongs(
-      searchQuery(),
+    return await searchSongs(
+      source.query,
       !DEV ? 20 : 3 /* limit */,
       0 /* bpm */,
       '' /* key */,
-      activeGenres().map(g => g.id),
+      source.genreIds,
       [] /* songs to omit */,
       playlists /* playlists */,
       0 /* energy */,
       OrderBy.DATE_ADDED,
       undefined /* callback */
     )
-    setSongs(songResults)
+  }
+
+  const [songData] = createResource(sourceAccessor, fetchSongs)
+
+  createEffect(() => {
+    const data = songData()
+    if (data && !songData.loading) {
+      setSongs(data)
+    }
   })
 
   return (
     <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
+      {songData.loading && <div>Loading songs...</div>}
       <Show when={activeGenres().length}>
         <div role="alert" class="alert border-info">
         <div class="grid-flow-col justify-items-start text-start grid w-full content-start items-center gap-4" style="grid-template-columns: auto minmax(auto,1fr);">
