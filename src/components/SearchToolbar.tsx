@@ -7,17 +7,18 @@ import styles from './SearchToolbar.module.css'
 const [internalSearchQuery, setInternalSearchQuery] = createSignal<string>('')
 const [debouncedSearchQuery, setDebouncedSearchQuery] = createSignal<string>('')
 
-createEffect(() => {
-  let timerId: number
-  onCleanup(() => clearTimeout(timerId))
-
-  timerId = setTimeout(() => {
-    setDebouncedSearchQuery(internalSearchQuery())
-  }, 3000)
-})
-
 const SearchToolbar: Component = () => {
   const [inputFocused, setInputFocused] = createSignal<boolean>(false)
+
+  createEffect(() => {
+    let timerId: number
+    onCleanup(() => clearTimeout(timerId))
+
+    timerId = setTimeout(() => {
+      setDebouncedSearchQuery(internalSearchQuery())
+    }, 3000)
+  })
+
   return (
     <div class="navbar bg-base-200 gap-2">
       <div class="flex-none justify-between">
