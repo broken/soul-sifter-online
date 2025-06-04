@@ -94,34 +94,53 @@ const SongList: Component = () => {
       return;
     }
 
-    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
-      const entry = entries[0];
-      if (entry.isIntersecting && !loading() && hasMoreSongs()) {
-        console.log("Sentinel intersecting, loading more songs...");
-        setCurrentPage(currentPage() + 1);
+    Promise.resolve().then(() => {
+      // Ensure refs are still valid in the async callback, though they should be.
+      if (!sentinel || !scrollContainerRef) {
+        console.warn("Sentinel or ScrollContainerRef became undefined before deferred IntersectionObserver setup.");
+        return;
       }
-    };
 
-    observer = new IntersectionObserver(handleIntersect, {
-      root: scrollContainerRef, // Use the scrollable div as the root
-      threshold: 0.1 // Trigger when 10% of the sentinel is visible
+      console.log("Setting up IntersectionObserver. Diagnostics:");
+      if (scrollContainerRef) {
+        console.log("scrollContainerRef.clientHeight:", scrollContainerRef.clientHeight);
+        console.log("scrollContainerRef.scrollHeight:", scrollContainerRef.scrollHeight);
+        console.log("scrollContainerRef.getBoundingClientRect():", scrollContainerRef.getBoundingClientRect());
+      }
+      if (sentinel) {
+        console.log("sentinel.offsetTop:", sentinel.offsetTop);
+        console.log("sentinel.getBoundingClientRect():", sentinel.getBoundingClientRect());
+      }
+
+      const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && !loading() && hasMoreSongs()) {
+          console.log("Sentinel intersecting, loading more songs...");
+          setCurrentPage(currentPage() + 1);
+        }
+      };
+
+      observer = new IntersectionObserver(handleIntersect, {
+        root: scrollContainerRef, // Use the scrollable div as the root
+        threshold: 0.1 // Trigger when 10% of the sentinel is visible
+      });
+
+      observer.observe(sentinel); // Initial observation
+
+      // Effect to manage observing/unobserving based on hasMoreSongs changes
+      createEffect(on(hasMoreSongs, (currentHasMoreSongs) => {
+        if (!observer || !sentinel) return; // Defensive check
+
+        if (!currentHasMoreSongs) {
+          console.log("No more songs (hasMoreSongs changed to false), unobserving sentinel.");
+          observer.unobserve(sentinel);
+        } else {
+          // This branch will run if hasMoreSongs becomes true (e.g., after filter reset)
+          console.log("hasMoreSongs is true, ensuring sentinel is observed.");
+          observer.observe(sentinel);
+        }
+      }, { defer: true })); // defer: true ensures it runs only on changes to hasMoreSongs
     });
-
-    observer.observe(sentinel); // Initial observation
-
-    // Effect to manage observing/unobserving based on hasMoreSongs changes
-    createEffect(on(hasMoreSongs, (currentHasMoreSongs) => {
-      if (!observer || !sentinel) return; // Defensive check, should not be needed if outer check passed
-
-      if (!currentHasMoreSongs) {
-        console.log("No more songs (hasMoreSongs changed to false), unobserving sentinel.");
-        observer.unobserve(sentinel);
-      } else {
-        // This branch will run if hasMoreSongs becomes true (e.g., after filter reset)
-        console.log("hasMoreSongs is true, ensuring sentinel is observed.");
-        observer.observe(sentinel);
-      }
-    }, { defer: true })); // defer: true ensures it runs only on changes to hasMoreSongs
   });
 
   onCleanup(() => {
