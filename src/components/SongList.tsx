@@ -56,12 +56,13 @@ const SongList: Component = () => {
         limit,
         0 /* bpm */,
         '' /* key */,
-        genres.map(g => g.id),
-        [] /* songs to omit */,
-        playlistIds,
-        offset,
-        OrderBy.DATE_ADDED,
-        undefined /* callback */
+        genres.map(g => g.id),            // styles
+        [],                               // songsToOmit
+        playlistIds,                      // playlists
+        0,                                // energy (hardcoded to 0)
+        offset,                           // offset (for pagination)
+        OrderBy.DATE_ADDED,               // orderBy
+        undefined                         // errorCallback
       )
 
       if (songResults.length === 0) {

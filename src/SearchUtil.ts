@@ -396,12 +396,12 @@ async function searchSongs(
     styles: number[] = [],
     songsToOmit: Song[] = [],
     playlists: number[] =  [],
-    energy: number = 0, // Note: This parameter was named 'offset' in SongList.tsx for a while, but it's 'energy' here.
-                        // The new 'offset' for pagination is being added.
-    orderBy: number = OrderBy.DATE_ADDED,
-    errorCallback: undefined,
-    offset: number = 0): Promise<Song[]> {
-  console.log("q:", query, ", bpm:", bpm, ", key:", key, ", styles:", styles, ", playlists:", playlists, ", limit:", limit, ", offset:", offset, ", energy:", energy)
+    energy: number = 0,
+    offset: number = 0,
+    orderBy: OrderBy = OrderBy.DATE_ADDED,
+    errorCallback?: any): Promise<Song[]> {
+  // Updated console.log to match new parameter order and names for clarity
+  console.log("q:", query, ", limit:", limit, ", bpm:", bpm, ", key:", key, ", styles:", styles, ", songsToOmit:", songsToOmit.length, ", playlists:", playlists, ", energy:", energy, ", offset:", offset, ", orderBy:", orderBy);
 
   let songList: Song[] = []
 
