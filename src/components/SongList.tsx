@@ -2,7 +2,7 @@ import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, 
 
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
-import { searchQuery } from './SearchToolbar'
+import { debouncedSearchQuery } from './SearchToolbar'
 import { searchSongs, OrderBy } from '../SearchUtil'
 import SongListItem from './SongListItem'
 import { useSongs } from './SongsContext'
@@ -69,13 +69,13 @@ const SongList: Component = () => {
   };
 
   const [songData, { mutate, refetch }] = createResource(
-    () => ({ page: currentPage(), query: searchQuery(), genres: activeGenres(), playlist: activePlaylist() }),
+    () => ({ page: currentPage(), query: debouncedSearchQuery(), genres: activeGenres(), playlist: activePlaylist() }),
     fetcher
   );
 
   // Effect to reset current page and clear songs when search/filter criteria change
-  createEffect(on([searchQuery, activeGenres, activePlaylist], () => {
-    console.log("[FilterResetEffect] Entered. searchQuery:", searchQuery(), "activeGenres:", activeGenres().map(g=>g.id), "activePlaylist:", activePlaylist()?.id);
+  createEffect(on([debouncedSearchQuery, activeGenres, activePlaylist], () => {
+    console.log("[FilterResetEffect] Entered. searchQuery:", debouncedSearchQuery(), "activeGenres:", activeGenres().map(g=>g.id), "activePlaylist:", activePlaylist()?.id);
     console.log("[FilterResetEffect] Clearing songs, resetting page and hasMoreSongs.");
     setSongs([])
     setCurrentPage(0) // This will trigger the resource to fetch due to source signal change
