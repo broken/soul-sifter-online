@@ -89,7 +89,10 @@ const SongList: Component = () => {
   }))
 
   onMount(() => {
-    if (!sentinel) return;
+    if (!sentinel || !scrollContainerRef) {
+      console.warn("Sentinel or ScrollContainerRef not defined onMount, IntersectionObserver not set up.");
+      return;
+    }
 
     const handleIntersect = (entries: IntersectionObserverEntry[]) => {
       const entry = entries[0];
@@ -104,18 +107,21 @@ const SongList: Component = () => {
       threshold: 0.1 // Trigger when 10% of the sentinel is visible
     });
 
-    observer.observe(sentinel);
+    observer.observe(sentinel); // Initial observation
 
-    // Also, if hasMoreSongs becomes false, disconnect the observer
-    createEffect(() => {
-      if (!hasMoreSongs() && observer && sentinel) {
-        console.log("No more songs, unobserving sentinel.");
+    // Effect to manage observing/unobserving based on hasMoreSongs changes
+    createEffect(on(hasMoreSongs, (currentHasMoreSongs) => {
+      if (!observer || !sentinel) return; // Defensive check, should not be needed if outer check passed
+
+      if (!currentHasMoreSongs) {
+        console.log("No more songs (hasMoreSongs changed to false), unobserving sentinel.");
         observer.unobserve(sentinel);
-      } else if (hasMoreSongs() && observer && sentinel) {
-        // If it was unobserved and now we have more songs (e.g. filter change), observe again
+      } else {
+        // This branch will run if hasMoreSongs becomes true (e.g., after filter reset)
+        console.log("hasMoreSongs is true, ensuring sentinel is observed.");
         observer.observe(sentinel);
       }
-    });
+    }, { defer: true })); // defer: true ensures it runs only on changes to hasMoreSongs
   });
 
   onCleanup(() => {
