@@ -21,10 +21,10 @@ const GenreInfo: Component = () => {
         onClick={cardClickHandler} // Add click handler to the card
       >
         <div class="card-body">
-          <h2 class="card-title">Genre Info</h2> {/* Changed title for clarity */}
-          <span>Name: {genreToEdit()?.name}</span>
-          <span>Description: {genreToEdit()?.description}</span>
-          {/* Removed the back button as backdrop click handles closing */}
+          {/* Display genre name as the title */}
+          <h2 class="card-title">{genreToEdit()?.name}</h2>
+          {/* Display description directly, without a label */}
+          <p>{genreToEdit()?.description}</p>
         </div>
       </div>
     </Show>
