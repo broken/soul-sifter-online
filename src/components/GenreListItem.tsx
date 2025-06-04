@@ -9,11 +9,31 @@ import styles from './GenreListItem.module.css'
 class GenreWrapper {
   genre: Style
   children: GenreWrapper[]
+  collapsed: boolean
 
   constructor(genre: Style, children: GenreWrapper[] = []) {
     this.genre = genre
     this.children = children
+    this.collapsed = true
     return createMutable(this)
+  }
+
+  getAllDescendants(): Style[] {
+    const descendants: Style[] = []
+    for (const child of this.children) {
+      descendants.push(child.genre)
+      descendants.push(...child.getAllDescendants())
+    }
+    return descendants
+  }
+
+  getAllDescendantWrappers(): GenreWrapper[] {
+    const descendantWrappers: GenreWrapper[] = []
+    for (const childWrapper of this.children) {
+      descendantWrappers.push(childWrapper)
+      descendantWrappers.push(...childWrapper.getAllDescendantWrappers())
+    }
+    return descendantWrappers
   }
 
   toString() {
@@ -32,7 +52,6 @@ const [genreToEdit, setGenreToEdit] = createSignal<Style|undefined>(undefined)
 
 const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props) => {
   const {activeGenres, setActiveGenres} = useGenres()
-  const [collapsed, setCollapsed] = createSignal<boolean>(true)
 
   // Create a derived signal for the active state
   const isActive = () => activeGenres().some(g => g.id === props.genre.genre.id);
@@ -41,21 +60,24 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
 
   // toggleGenre function remains the same as defined in the prompt (the one that correctly updates activeGenres and children)
   const toggleGenre = () => {
-    const isCurrentlyActive = isActive(); // Can also use isActive() here
+    const isCurrentlyActive = isActive();
     const parentGenre = props.genre.genre;
-    const childGenres = props.genre.children.map(childWrapper => childWrapper.genre);
+    const allDescendants = props.genre.getAllDescendants(); // Get all descendants
 
     if (isCurrentlyActive) {
       console.log('deselected', parentGenre.name);
-      const genresToDeselect = [parentGenre.id];
-      if (props.genre.children.length > 0) {
-        childGenres.forEach(child => genresToDeselect.push(child.id));
-      }
-      setActiveGenres(activeGenres().filter(g => !genresToDeselect.includes(g.id)));
+      const idsToDeselect = [parentGenre.id];
+      allDescendants.forEach(descendant => idsToDeselect.push(descendant.id));
+      setActiveGenres(activeGenres().filter(g => !idsToDeselect.includes(g.id)));
     } else {
-      // Selecting the genre - this part remains unchanged
       console.log('selected', parentGenre.name);
-      setCollapsed(false); // Expand the parent genre
+      props.genre.collapsed = false; // Expand the parent genre by setting its collapsed property
+
+      // Expand all descendant GenreWrappers
+      const descendantWrappers = props.genre.getAllDescendantWrappers(); // Returns GenreWrapper[]
+      descendantWrappers.forEach(wrapper => {
+        wrapper.collapsed = false;
+      });
 
       let newActiveGenres = [...activeGenres()];
 
@@ -64,14 +86,12 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
         newActiveGenres.push(parentGenre);
       }
 
-      // Add all child genres
-      if (props.genre.children.length > 0) {
-        childGenres.forEach(child => {
-          if (!newActiveGenres.some(g => g.id === child.id)) {
-            newActiveGenres.push(child);
-          }
-        });
-      }
+      // Add all descendant genres
+      allDescendants.forEach(descendant => {
+        if (!newActiveGenres.some(g => g.id === descendant.id)) {
+          newActiveGenres.push(descendant);
+        }
+      });
       setActiveGenres(newActiveGenres);
     }
   };
@@ -97,13 +117,13 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
                 </svg>
               </span>
               <Show when={!!props.genre.children.length && props.genre.children.length > 0}>
-                <span onclick={(event) => { event.stopPropagation(); setCollapsed(!collapsed()); }} class="cursor-pointer">
-                  <Show when={collapsed()}>
+                <span onclick={(event) => { event.stopPropagation(); props.genre.collapsed = !props.genre.collapsed; }} class="cursor-pointer">
+                  <Show when={props.genre.collapsed}>
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
                     </svg>
                   </Show>
-                  <Show when={!collapsed()}>
+                  <Show when={!props.genre.collapsed}>
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/>
                     </svg>
@@ -116,7 +136,7 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
       </tr>
       <tr>
         <td class="px-0 py-0">
-          <Show when={!collapsed()}>
+          <Show when={!props.genre.collapsed}>
             <table class="table">
               <tbody>
                 <Index each={props.genre.children}>
