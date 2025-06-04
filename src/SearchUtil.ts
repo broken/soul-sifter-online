@@ -404,10 +404,21 @@ async function searchSongs(
 
   let songList: Song[] = []
 
-  let builder: PostgrestQueryBuilder<any, any, 'songs', any> | PostgrestFilterBuilder<any, any, any[], 'songs', any>  = supabase.from('songs')
-  if (playlists.length) builder = builder.select('*, albums!inner(*), playlistentries!inner(*)').in('playlistentries.playlistid', playlists)
-  else if (styles.length) builder = builder.select('*, albums!inner(*), songstyles!inner(*)').in('songstyles.styleid', styles)
-  else { builder = builder.select('*, albums!inner(*)') }
+  let builder
+  if (playlists.length) {
+    builder = supabase.from('playlistentries')
+    builder = builder.select('*, songs!inner(*, albums!inner(*))')
+    builder = builder.in('playlistid', playlists)
+  }
+  else if (styles.length) {
+    builder = supabase.from('songs')
+    builder = builder.select('*, albums!inner(*), songstyles!inner(*)')
+    builder = builder.in('songstyles.styleid', styles)
+  }
+  else {
+    builder = supabase.from('songs')
+    builder = builder.select('*, albums!inner(*)')
+  }
 
   [builder, limit, orderBy] = buildQueryPredicate(builder, query, limit, orderBy, energy)
 
@@ -424,8 +435,8 @@ async function searchSongs(
       builder = builder.order('bpm', { ascending: true })
       break
     case OrderBy.PLAYLIST:
-      builder = builder.order('playlistentries(playlistid)', { ascending: false })
-      builder = builder.order('playlistentries(position)', { ascending: true })
+      builder = builder.order('playlistid', { ascending: false })
+      builder = builder.order('position', { ascending: true })
       break
     case OrderBy.ALBUM:
       builder = builder.order('albumid', { ascending: false })
