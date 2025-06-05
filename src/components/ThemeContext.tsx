@@ -7,9 +7,8 @@ const darkThemes: string[] = ['default', 'dark', 'soul', 'sifter', 'black', 'bus
 const lightThemes: string[] = ['light', 'acid', 'aqua', 'autumn', 'bumblebee', 'cmyk', 'corporate', 'cupcake',
     'cyberpunk', 'emerald', 'fantasy', 'garden', 'lemonade', 'lofi', 'pastel', 'retro', 'winter', 'wireframe']
 
-const allThemes = [...darkThemes, ...lightThemes];
-const randomTheme = allThemes[Math.floor(Math.random() * allThemes.length)];
-const [appTheme, setAppTheme] = createSignal<string>(randomTheme)
+const initialRandomTheme = darkThemes[Math.floor(Math.random() * darkThemes.length)];
+const [appTheme, setAppTheme] = createSignal<string>(initialRandomTheme)
 const Theme = createContext<{appTheme: Accessor<string>, setAppTheme: Setter<string>}>({appTheme, setAppTheme})
 
 const ThemeContext: ParentComponent = (props) => {
