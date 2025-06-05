@@ -214,12 +214,12 @@ function parse(queryFragment: string): Atom | undefined {
 
 
 function buildEqualityOperator(
-    builder: PostgrestFilterBuilder<any, any, any[], 'songs', any>,
+    builder: PostgrestFilterBuilder<any, any, any[], any, any>,
     field: string,
     props: Property,
     value: string,
     defaultProps: Property = Property.EQUAL
-): PostgrestFilterBuilder<any, any, any[], 'songs', any> {
+): PostgrestFilterBuilder<any, any, any[], any, any> {
   const p = props ? props : defaultProps
   const negated = p & Property.NEGATED
   if (p & Property.LESS_THAN && p & Property.EQUAL) {
@@ -242,12 +242,13 @@ function buildEqualityOperator(
 
 
 function buildQueryPredicate(
-    builder: PostgrestFilterBuilder<any, any, any[], 'songs', any>,
+    builder: PostgrestFilterBuilder<any, any, any[], any, any>,
     query: string,
     limit: number,
     orderBy: number,
-    energy?: number
-): [PostgrestFilterBuilder<any, any, any[], 'songs', any>, number /* limit */, number /* OrderBy */] {
+    energy: number | undefined,
+    isPlaylistQuery: boolean
+): [PostgrestFilterBuilder<any, any, any[], any, any>, number, number] {
   // Split query into fragments
   const fragments = splitString(query)
 
@@ -264,45 +265,53 @@ function buildQueryPredicate(
     // Handle different atom types
     switch (atom.type) {
       case Type.ANY:
-        if (negated) builder = builder.not('ilike', 'search_text', `%${atom.value}%`)
-        else builder = builder.ilike('search_text', `%${atom.value}%`)
-        break
+        const searchField = isPlaylistQuery ? 'songs.search_text' : 'search_text';
+        if (negated) builder = builder.not('ilike', searchField, `%${atom.value}%`);
+        else builder = builder.ilike(searchField, `%${atom.value}%`);
+        break;
       case Type.S_ID:
-        builder = buildEqualityOperator(builder, 'id', atom.props, atom.value)
-        break
+        builder = buildEqualityOperator(builder, isPlaylistQuery ? 'songs.id' : 'id', atom.props, atom.value);
+        break;
       case Type.S_ARTIST:
-        if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) builder = buildEqualityOperator(builder, 'artist', atom.props, atom.value)
-        else if (negated) builder = builder.not('ilike', 'artist', `%${atom.value}%`)
-        else builder = builder.ilike('artist', `%${atom.value}%`)
-        break
+        const artistField = isPlaylistQuery ? 'songs.artist' : 'artist';
+        if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) builder = buildEqualityOperator(builder, artistField, atom.props, atom.value);
+        else if (negated) builder = builder.not('ilike', artistField, `%${atom.value}%`);
+        else builder = builder.ilike(artistField, `%${atom.value}%`);
+        break;
       case Type.S_TITLE:
-        if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) builder = buildEqualityOperator(builder, 'title', atom.props, atom.value)
-        else if (negated) builder = builder.not('ilike', 'title', `%${atom.value}%`)
-        else builder = builder.ilike('title', `%${atom.value}%`)
-        break
+        const titleField = isPlaylistQuery ? 'songs.title' : 'title';
+        if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) builder = buildEqualityOperator(builder, titleField, atom.props, atom.value);
+        else if (negated) builder = builder.not('ilike', titleField, `%${atom.value}%`);
+        else builder = builder.ilike(titleField, `%${atom.value}%`);
+        break;
       case Type.S_REMIXER:
-        if (negated) builder = builder.not('ilike', 'remixer', `%${atom.value}%`)
-        else builder = builder.ilike('remixer', `%${atom.value}%`)
-        break
+        const remixerField = isPlaylistQuery ? 'songs.remixer' : 'remixer';
+        if (negated) builder = builder.not('ilike', remixerField, `%${atom.value}%`);
+        else builder = builder.ilike(remixerField, `%${atom.value}%`);
+        break;
       case Type.S_RATING:
-        builder = buildEqualityOperator(builder, 'rating', atom.props, atom.value, Property.EQUAL & Property.GREATER_THAN)
-        break
+        builder = buildEqualityOperator(builder, isPlaylistQuery ? 'songs.rating' : 'rating', atom.props, atom.value, Property.EQUAL & Property.GREATER_THAN);
+        break;
       case Type.S_COMMENTS:
-        if (negated) builder = builder.not('ilike', 'comments', `%${atom.value}%`)
-        else builder = builder.ilike('comments', `%${atom.value}%`)
-        break
+        const commentsField = isPlaylistQuery ? 'songs.comments' : 'comments';
+        if (negated) builder = builder.not('ilike', commentsField, `%${atom.value}%`);
+        else builder = builder.ilike(commentsField, `%${atom.value}%`);
+        break;
       case Type.S_CURATOR:
-        if (negated) builder = builder.not('ilike', 'curator', `%${atom.value}%`)
-        else builder = builder.ilike('curator', `%${atom.value}%`)
-        break
+        const curatorField = isPlaylistQuery ? 'songs.curator' : 'curator';
+        if (negated) builder = builder.not('ilike', curatorField, `%${atom.value}%`);
+        else builder = builder.ilike(curatorField, `%${atom.value}%`);
+        break;
       case Type.S_TRASHED:
-        if (negated) builder = builder.not('is', 'trashed', atom.value)
-        else builder = builder.is('trashed', atom.value)
-        break
+        const trashedField = isPlaylistQuery ? 'songs.trashed' : 'trashed';
+        if (negated) builder = builder.not('is', trashedField, atom.value);
+        else builder = builder.is(trashedField, atom.value);
+        break;
       case Type.S_LOW_QUALITY:
-        if (negated) builder = builder.not('is', 'lowquality', atom.value)
-        else builder = builder.is('lowquality', atom.value)
-        break
+        const lowQualityField = isPlaylistQuery ? 'songs.lowquality' : 'lowquality';
+        if (negated) builder = builder.not('is', lowQualityField, atom.value);
+        else builder = builder.is(lowQualityField, atom.value);
+        break;
       case Type.A_ID:
         builder = buildEqualityOperator(builder, 'albums.id', atom.props, atom.value)
         break
@@ -332,24 +341,25 @@ function buildQueryPredicate(
         break
       case Type.S_BPM:
         // Handle BPM range
-        let minBpm = 0, maxBpm = 0
-        const parts = atom.value.split("-")
+        let minBpm = 0, maxBpm = 0;
+        const bpmField = isPlaylistQuery ? 'songs.bpm' : 'bpm';
+        const parts = atom.value.split("-");
         if (parts.length === 2) {
-          minBpm = parseInt(parts[0], 10)
-          maxBpm = parseInt(parts[1], 10)
+          minBpm = parseInt(parts[0], 10);
+          maxBpm = parseInt(parts[1], 10);
         } else if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) {
-          builder = buildEqualityOperator(builder, 'bpm', atom.props, atom.value)
+          builder = buildEqualityOperator(builder, bpmField, atom.props, atom.value);
         } else {
-          minBpm = parseInt(atom.value, 10)
-          maxBpm = minBpm + 1
+          minBpm = parseInt(atom.value, 10);
+          maxBpm = minBpm + 1;
         }
         if (minBpm > 0 && maxBpm > 0) {
-          if (negated) builder = builder.not('gte', 'bpm', atom.value)
-          else builder = builder.gte('bpm', atom.value)
-          if (negated) builder = builder.not('lt', 'bpm', atom.value)
-          else builder = builder.lt('bpm', atom.value)
-          // if (maxBpm > 120) predicate += " or s.bpm between " + (minBpm / 2) + " and " + (maxBpm / 2)
-          // if (minBpm <= 100) predicate += " or s.bpm between " + (minBpm * 2) + " and " + (maxBpm * 2)
+          if (negated) builder = builder.not('gte', bpmField, atom.value);
+          else builder = builder.gte(bpmField, atom.value);
+          if (negated) builder = builder.not('lt', bpmField, atom.value);
+          else builder = builder.lt(bpmField, atom.value);
+          // if (maxBpm > 120) predicate += " or s.bpm between " + (minBpm / 2) + " and " + (maxBpm / 2);
+          // if (minBpm <= 100) predicate += " or s.bpm between " + (minBpm * 2) + " and " + (maxBpm * 2);
         }
         break
       case Type.LIMIT:
@@ -357,15 +367,16 @@ function buildQueryPredicate(
         break
       case Type.S_ENERGY:
         // If an operator property is specified, it will overwrite what is used in the options build. Otherwise, we default to it.
+        const energyField = isPlaylistQuery ? 'songs.energy' : 'energy';
         if (atom.props === 0) {
-          energy = parseInt(atom.value, 10)
-          const diff = 1
-          builder = builder.gte('energy', energy - diff)
-          builder = builder.lte('energy', energy + diff)
+          energy = parseInt(atom.value, 10);
+          const diff = 1;
+          builder = builder.gte(energyField, energy - diff);
+          builder = builder.lte(energyField, energy + diff);
         } else {
-          builder = buildEqualityOperator(builder, 'energy', atom.props, atom.value)
+          builder = buildEqualityOperator(builder, energyField, atom.props, atom.value);
         }
-        break
+        break;
       case Type.ORDER_BY:
         if (atom.value === 'rand' || atom.value === "random") {
           orderBy = OrderBy.RANDOM
@@ -404,48 +415,79 @@ async function searchSongs(
 
   let songList: Song[] = []
 
-  let builder: PostgrestQueryBuilder<any, any, 'songs', any> | PostgrestFilterBuilder<any, any, any[], 'songs', any>  = supabase.from('songs')
-  if (playlists.length) builder = builder.select('*, albums!inner(*), playlistentries!inner(*)').in('playlistentries.playlistid', playlists)
-  else if (styles.length) builder = builder.select('*, albums!inner(*), songstyles!inner(*)').in('songstyles.styleid', styles)
-  else { builder = builder.select('*, albums!inner(*)') }
+  let builder: PostgrestQueryBuilder<any, any, any, any> | PostgrestFilterBuilder<any, any, any[], any, any>;
+  const isPlaylistQuery = playlists.length > 0;
 
-  [builder, limit, orderBy] = buildQueryPredicate(builder, query, limit, orderBy, energy)
+  if (isPlaylistQuery) {
+    builder = supabase.from('playlistentries').select('*, songs!inner(*, albums!inner(*))').in('playlistid', playlists);
+  } else if (styles.length) {
+    builder = supabase.from('songs').select('*, albums!inner(*), songstyles!inner(*)').in('songstyles.styleid', styles);
+  } else {
+    builder = supabase.from('songs').select('*, albums!inner(*)');
+  }
+
+  [builder, limit, orderBy] = buildQueryPredicate(builder as PostgrestFilterBuilder<any, any, any[], any, any>, query, limit, orderBy, energy, isPlaylistQuery);
 
   switch (orderBy) {
     case OrderBy.RELEASE_DATE:
-      builder = builder.order('albums(releasedateyear)', { ascending: false })
-      builder = builder.order('albums(releasedatemonth)', { ascending: false })
-      builder = builder.order('albums(releasedateday)', { ascending: false })
+      if (isPlaylistQuery) {
+        builder = builder.order('songs.albums(releasedateyear)', { ascending: false })
+        builder = builder.order('songs.albums(releasedatemonth)', { ascending: false })
+        builder = builder.order('songs.albums(releasedateday)', { ascending: false })
+      } else {
+        builder = builder.order('albums(releasedateyear)', { ascending: false })
+        builder = builder.order('albums(releasedatemonth)', { ascending: false })
+        builder = builder.order('albums(releasedateday)', { ascending: false })
+      }
       break
     case OrderBy.RANDOM:
       console.warn('Random order not supported (though it is possible).')
       break
     case OrderBy.BPM:
-      builder = builder.order('bpm', { ascending: true })
+      if (isPlaylistQuery) {
+        builder = builder.order('songs.bpm', { ascending: true })
+      } else {
+        builder = builder.order('bpm', { ascending: true })
+      }
       break
     case OrderBy.PLAYLIST:
-      builder = builder.order('playlistentries(playlistid)', { ascending: false })
-      builder = builder.order('playlistentries(position)', { ascending: true })
+      builder = builder.order('playlistid', { ascending: false })
+      builder = builder.order('position', { ascending: true })
       break
     case OrderBy.ALBUM:
-      builder = builder.order('albumid', { ascending: false })
-      builder = builder.order('track', { ascending: true })
+      if (isPlaylistQuery) {
+        builder = builder.order('songs.albumid', { ascending: false })
+        builder = builder.order('songs.track', { ascending: true })
+      } else {
+        builder = builder.order('albumid', { ascending: false })
+        builder = builder.order('track', { ascending: true })
+      }
       break
-    default:
-      builder = builder.order('id', { ascending: false })
+    default: // OrderBy.DATE_ADDED
+      if (isPlaylistQuery) {
+        builder = builder.order('songs.id', { ascending: false })
+      } else {
+        builder = builder.order('id', { ascending: false })
+      }
   }
 
-  const { data, error } = await builder.range(offset, offset + limit - 1)
+  const { data, error } = await builder.range(offset, offset + limit - 1);
   if (error) {
-    console.error(error)
-  }
-  if (data) {
-    data.forEach((song: Song) => {
-      songList.push(song)
-    })
+    console.error(error);
   }
 
-  console.log(songList)
+  let transformedData = data;
+  if (isPlaylistQuery && data) {
+    transformedData = data.map((item: any) => item.songs).filter(song => song != null);
+  }
+
+  if (transformedData) {
+    transformedData.forEach((song: Song) => { // Ensure song type is used here
+      songList.push(song);
+    });
+  }
+
+  console.log(songList);
   return songList
 }
 
