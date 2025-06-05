@@ -108,7 +108,11 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
             {/* Icons Group - always on the right */}
             <div class="flex items-center">
               <span
-                onclick={(event) => { event.stopPropagation(); setGenreToEdit(props.genre.genre); }}
+                onclick={(event) => {
+                  event.stopPropagation();
+                  const genreToSet = props.genre.genre; // Explicitly capture the value
+                  setGenreToEdit(genreToSet);
+                }}
                 class="cursor-pointer hover:opacity-70"
                 classList={{ "mr-2": !!props.genre.children.length && props.genre.children.length > 0 }} // Margin right if expand arrow is present
               >
