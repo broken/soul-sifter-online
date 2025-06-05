@@ -48,11 +48,18 @@ describe('GenreListItem', () => {
 
     // The pencil icon itself is an SVG, let's find its clickable parent span
     // We added 'ml-2 cursor-pointer hover:opacity-70' to this span
-    const pencilIconContainer = screen.getByText(sampleGenre.name).nextElementSibling;
+    const genreNameElement = screen.getByText(sampleGenre.name);
+    const pencilIconContainer = genreNameElement.nextElementSibling;
 
+    // Explicitly check if the container is found
     if (!pencilIconContainer) {
-      throw new Error('Pencil icon container not found');
+      throw new Error('Pencil icon container (nextElementSibling of genre name) not found. Check component structure.');
     }
+
+    // Optional: Add a more specific attribute to the pencil icon's span in GenreListItem.tsx for robust selection
+    // e.g., data-testid="edit-genre-icon"
+    // const pencilIconContainer = screen.getByTestId('edit-genre-icon');
+
 
     await fireEvent.click(pencilIconContainer);
 

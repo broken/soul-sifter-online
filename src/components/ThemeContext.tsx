@@ -1,7 +1,15 @@
 import { Accessor, createContext, createSignal, ParentComponent, Setter, useContext } from "solid-js"
 
+// Moved darkThemes and lightThemes to the top
+const darkThemes: string[] = ['default', 'dark', 'soul', 'sifter', 'black', 'business', 'coffee', 'dracula', 'forest',
+    'halloween', 'luxury', 'night', 'synthwave']
 
-const [appTheme, setAppTheme] = createSignal<string>('dark')
+const lightThemes: string[] = ['light', 'acid', 'aqua', 'autumn', 'bumblebee', 'cmyk', 'corporate', 'cupcake',
+    'cyberpunk', 'emerald', 'fantasy', 'garden', 'lemonade', 'lofi', 'pastel', 'retro', 'winter', 'wireframe']
+
+const allThemes = [...darkThemes, ...lightThemes];
+const randomTheme = allThemes[Math.floor(Math.random() * allThemes.length)];
+const [appTheme, setAppTheme] = createSignal<string>(randomTheme)
 const Theme = createContext<{appTheme: Accessor<string>, setAppTheme: Setter<string>}>({appTheme, setAppTheme})
 
 const ThemeContext: ParentComponent = (props) => {
@@ -18,11 +26,6 @@ const useTheme = () => {
   return useContext(Theme)!
 }
 
-const darkThemes: string[] = ['default', 'dark', 'soul', 'sifter', 'black', 'business', 'coffee', 'dracula', 'forest',
-    'halloween', 'luxury', 'night', 'synthwave']
-
-const lightThemes: string[] = ['light', 'acid', 'aqua', 'autumn', 'bumblebee', 'cmyk', 'corporate', 'cupcake',
-    'cyberpunk', 'emerald', 'fantasy', 'garden', 'lemonade', 'lofi', 'pastel', 'retro', 'winter', 'wireframe']
-
 export default ThemeContext
-export {useTheme, darkThemes, lightThemes}
+// Export appTheme for testing purposes
+export {useTheme, darkThemes, lightThemes, appTheme}
