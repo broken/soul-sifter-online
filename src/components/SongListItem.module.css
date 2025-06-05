@@ -41,5 +41,8 @@ svg {
 .data {
   text-wrap: wrap;
   -webkit-line-clamp: 2;
-  width: calc(100vw - 70px - 24px * 2 - 31px);
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0; /* To allow shrinking below content size */
+  margin-right: 8px; /* For spacing between text and rating */
 }
