@@ -6,9 +6,7 @@ import styles from './Settings.module.css'
 
 const Settings: Component = () => {
   const {appTheme, setAppTheme} = useTheme();
-  createEffect(() => {
-    document.querySelector('html')!.setAttribute('data-theme', appTheme())
-  })
+  // createEffect has been moved to App.tsx (via AppView component)
 
   return (
     <div class="overflow-x-hidden overflow-y-scroll w-screen" style="height: calc(100vh - 128px);">
