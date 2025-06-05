@@ -1,4 +1,4 @@
-import { Suspense, type Component, Switch, Match, createSignal, useTransition } from 'solid-js'
+import { Suspense, type Component, Switch, Match, createSignal, useTransition, onMount } from 'solid-js' // Added onMount
 import { createClient } from '@supabase/supabase-js'
 
 import GenresContext from './GenresContext'
@@ -25,6 +25,33 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 const App: Component = () => {
   const [tab, setTab] = createSignal(0)
   const [pending, start] = useTransition()
+
+  onMount(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authStatus = urlParams.get('youtube_auth_status');
+    const errorMessage = urlParams.get('error_message'); // Changed from error_message to error_message for consistency
+    const message = urlParams.get('message'); // Optional success message from callback
+
+    if (authStatus === 'success') {
+      localStorage.setItem('youtubeConnected', 'true');
+      // Dispatch a custom event to notify other components like NavBar immediately
+      window.dispatchEvent(new CustomEvent('youtubeConnectionChanged', { detail: { connected: true } }));
+
+      const successMessage = message || 'YouTube account linked successfully! If this was the first time, ensure the refresh token from the function logs has been saved as a Supabase secret.';
+      alert(successMessage);
+      // Clean the URL query parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (authStatus === 'error') {
+      localStorage.removeItem('youtubeConnected');
+      // Dispatch a custom event to notify other components like NavBar immediately
+      window.dispatchEvent(new CustomEvent('youtubeConnectionChanged', { detail: { connected: false } }));
+
+      alert(`Failed to link YouTube account: ${errorMessage || 'Unknown error'}`);
+      // Clean the URL query parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  });
+
   return (
     <GenresContext><ActivePlaylistContext><SongContext><SongsContext><ThemeContext>
       <div class="flex flex-col h-screen w-screen overflow-hidden">

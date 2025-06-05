@@ -1,9 +1,12 @@
 import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup, on, createRoot, createResource } from 'solid-js'
 
+import { type Component, createEffect, Index, DEV, Show, createSignal, onMount, onCleanup, on, createRoot, createResource } from 'solid-js' // Added missing imports from original
+
 import { useGenres } from './GenresContext'
 import { useActivePlaylist } from './PlaylistContext'
 import { debouncedSearchQuery } from './SearchToolbar'
-import { searchSongs, OrderBy } from '../SearchUtil'
+import { searchSongs, OrderBy } from '../lib/search/SearchUtil' // Updated import path
+import { supabase } from './App'; // Import supabase client
 import SongListItem from './SongListItem'
 import { useSongs } from './SongsContext'
 
@@ -46,6 +49,7 @@ const SongList: Component = () => {
     try {
       console.log("[ResourceFetcher] Calling searchSongs with offset:", offset, "limit:", limit);
       const songResults = await searchSongs(
+        supabase, // Pass supabase client instance
         query,
         limit,
         0, // bpm
