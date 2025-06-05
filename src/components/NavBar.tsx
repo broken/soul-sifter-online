@@ -1,23 +1,7 @@
 import { Setter, type Component } from 'solid-js'
-import { useTheme, darkThemes, lightThemes } from '../components/ThemeContext'
 
 
 const NavBar: Component<{start: (fn: () => void, cb?: () => void) => void, setTab: Setter<number>}> = (props) => {
-  const { appTheme, setAppTheme } = useTheme()
-
-  const toggleTheme = () => {
-    const current = appTheme()
-    if (darkThemes.includes(current)) {
-      // Switch to a random light theme
-      const randomLightTheme = lightThemes[Math.floor(Math.random() * lightThemes.length)]
-      setAppTheme(randomLightTheme)
-    } else {
-      // Switch to a random dark theme
-      const randomDarkTheme = darkThemes[Math.floor(Math.random() * darkThemes.length)]
-      setAppTheme(randomDarkTheme)
-    }
-  }
-
   const updateTab = (index: number) => () => {
     props.start(() => props.setTab(index))
     const botNavBarElements = document.querySelectorAll('.bot-nav-bar')
@@ -52,7 +36,7 @@ const NavBar: Component<{start: (fn: () => void, cb?: () => void) => void, setTa
         <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12.25V1m0 11.25a2.25 2.25 0 0 0 0 4.5m0-4.5a2.25 2.25 0 0 1 0 4.5M4 19v-2.25m6-13.5V1m0 2.25a2.25 2.25 0 0 0 0 4.5m0-4.5a2.25 2.25 0 0 1 0 4.5M10 19V7.75m6 4.5V1m0 11.25a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5ZM16 19v-2"/>
         </svg>
-        <span class="btm-nav-label" onClick={toggleTheme}>Settings</span>
+        <span class="btm-nav-label">Settings</span>
       </button>
     </div>
   )

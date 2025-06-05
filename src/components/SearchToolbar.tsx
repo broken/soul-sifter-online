@@ -1,4 +1,5 @@
 import { createSignal, type Component, createEffect, onCleanup, on } from 'solid-js'
+import { useTheme, darkThemes, lightThemes } from './ThemeContext' // Added import
 
 import logo from '../assets/hires_candidate_2.png'
 import styles from './SearchToolbar.module.css'
@@ -8,7 +9,19 @@ const [internalSearchQuery, setInternalSearchQuery] = createSignal<string>('')
 const [debouncedSearchQuery, setDebouncedSearchQuery] = createSignal<string>('')
 
 const SearchToolbar: Component = () => {
+  const { appTheme, setAppTheme } = useTheme(); // Added for theme toggling
   const [inputFocused, setInputFocused] = createSignal<boolean>(false)
+
+  const toggleTheme = () => { // Added theme toggle function
+    const currentTheme = appTheme();
+    if (darkThemes.includes(currentTheme)) {
+      const randomLightTheme = lightThemes[Math.floor(Math.random() * lightThemes.length)];
+      setAppTheme(randomLightTheme);
+    } else {
+      const randomDarkTheme = darkThemes[Math.floor(Math.random() * darkThemes.length)];
+      setAppTheme(randomDarkTheme);
+    }
+  };
 
   createEffect(on(internalSearchQuery, (currentQuery) => {
     let timerId: number;
@@ -25,7 +38,7 @@ const SearchToolbar: Component = () => {
   return (
     <div class="navbar bg-base-200 gap-2">
       <div class="flex-none justify-between">
-        <a class="btn btn-ghost text-xl text-primary">SSO</a>
+        <a class="btn btn-ghost text-xl text-primary" onClick={toggleTheme}>SSO</a> {/* Added onClick */}
       </div>
       <div class="flex-1">
         <input type="text"
