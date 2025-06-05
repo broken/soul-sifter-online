@@ -41,7 +41,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
   return (
     <tr onclick={() => setSong?.(props.song)}>
       <td class="px-0 py-0" classList={{ [styles.swipe_container]: !!props.song.youtubeid }} ontouchend={[handleSwipe, props.song.youtubeid]}>
-        <div class={`flex flex-row justify-between px-6 py-3 min-w-screen max-w-screen ${styles["swipe-element"]}`}>
+        <div class={`flex flex-row items-center justify-between px-6 py-3 min-w-screen max-w-screen ${styles["swipe-element"]}`}>
           <span class={styles.data}>
             <span>{props.song.artist}</span>
             <span> - </span>

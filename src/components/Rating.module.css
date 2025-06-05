@@ -1,0 +1,6 @@
+.starIcon {
+  width: 1em; /* Or a specific pixel value if 'em' is problematic */
+  height: 1em; /* Or a specific pixel value */
+  display: inline-block; /* Ensures width/height are respected */
+  vertical-align: middle; /* Helps with alignment in text flow */
+}

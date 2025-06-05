@@ -2,6 +2,7 @@ import { ImStarEmpty, ImStarFull } from 'solid-icons/im'
 import { For, type Component, Show, mergeProps } from "solid-js"
 import { produce } from "solid-js/store"
 
+import styles from './Rating.module.css';
 import { supabase } from "./App"
 import { Song } from '../model.types'
 import { SongConsumer } from "./SongContext"
@@ -47,8 +48,8 @@ const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) =>
         {
           (i) => {
             return (
-              <Show when={i < (props.song?.rating || 0)} fallback={<ImStarEmpty onclick={() => props.mutable ? setRating(i+1) : ''} />}>
-                <ImStarFull onclick={() => props.mutable ? setRating(i+1) : ''} class="fill-secondary"/>
+              <Show when={i < (props.song?.rating || 0)} fallback={<ImStarEmpty class={styles.starIcon} onclick={() => props.mutable ? setRating(i+1) : ''} />}>
+                <ImStarFull class={`${styles.starIcon} fill-secondary`} onclick={() => props.mutable ? setRating(i+1) : ''} />
               </Show>
             )
           }
