@@ -29,7 +29,8 @@ const App: Component = () => {
     <GenresContext><ActivePlaylistContext><SongContext><SongsContext><ThemeContext>
       <div class="flex flex-col h-screen w-screen overflow-hidden">
         <SearchToolbar />
-        <div class="tab px-0" classList={{ pending: pending() }}>
+        {/* Added flex-1 and overflow-auto to the tab container */}
+        <div class="tab px-0 flex-1 overflow-auto" classList={{ pending: pending() }}>
           <Suspense fallback={<div class="loader">Loading...</div>}>
             <Switch>
               <Match when={tab() === 0}>
