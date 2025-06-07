@@ -1,8 +1,10 @@
 import { Accessor, createContext, createSignal, ParentComponent, Setter, useContext } from "solid-js"
 
 // Moved darkThemes and lightThemes to the top
-const darkThemes: string[] = ['default', 'dark', 'soul', 'sifter', 'black', 'business', 'coffee', 'dracula', 'forest',
+const darkThemes: string[] = ['default', 'dark', 'soul', 'sifter', 'black', 'coffee', 'dracula', 'forest',
     'halloween', 'luxury', 'night', 'synthwave']
+// const darkThemes: string[] = ['default', 'dark', 'soul', 'sifter', 'black', 'business', 'coffee', 'dracula', 'forest',
+    // 'halloween', 'luxury', 'night', 'synthwave']
 
 const lightThemes: string[] = ['light', 'acid', 'aqua', 'autumn', 'bumblebee', 'cmyk', 'corporate', 'cupcake',
     'cyberpunk', 'emerald', 'fantasy', 'garden', 'lemonade', 'lofi', 'pastel', 'retro', 'winter', 'wireframe']
