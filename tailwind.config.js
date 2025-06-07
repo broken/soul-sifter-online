@@ -55,7 +55,7 @@ module.exports = {
         },
         sifter: {
           "primary": "#ca8a04",
-          "secondary": "#6e6000",
+          "secondary": "#c3a503",
           "accent": "#4d7c0f",
           "neutral": "#161011",
           "base-100": "#2e2726",
