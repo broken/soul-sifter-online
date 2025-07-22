@@ -19,6 +19,13 @@ const SongListItem: Component<{song: Song}> = (props) => {
     }
   });
 
+  const openInNewTab = (url: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.click();
+  };
+
   const openVideo = (youtubeId: string | undefined, song: Song) =>  {
     let appLink: string;
     if (youtubeId && youtubeId.trim() !== "") {
@@ -28,7 +35,8 @@ const SongListItem: Component<{song: Song}> = (props) => {
       const title = encodeURIComponent(song.title);
       appLink = `https://www.youtube.com/results?search_query=${artist}+${title}`;
     }
-    window.open(appLink);
+    //window.open(appLink);
+    openInNewTab(appLink);
   }
 
   const openYouTubeMusic = (youtubeId: string | undefined, song: Song) => {
@@ -40,7 +48,8 @@ const SongListItem: Component<{song: Song}> = (props) => {
       const title = encodeURIComponent(song.title);
       appLink = `https://music.youtube.com/search?q=${artist}+${title}`;
     }
-    window.open(appLink);
+    //window.open(appLink);
+    openInNewTab(appLink);
   }
 
   const handleSwipe = (song: Song, event: TouchEvent) => {
