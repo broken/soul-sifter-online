@@ -22,7 +22,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
   const openVideo = (youtubeId: string | undefined, song: Song) =>  {
     let appLink: string;
     if (youtubeId && youtubeId.trim() !== "") {
-      appLink = `https://www.youtube.com/watch?v=${youtubeId}`;
+      appLink = `vnd.youtube:${youtubeId}`;
     } else {
       const artist = encodeURIComponent(song.artist);
       const title = encodeURIComponent(song.title);
@@ -34,7 +34,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
   const openYouTubeMusic = (youtubeId: string | undefined, song: Song) => {
     let appLink: string;
     if (youtubeId && youtubeId.trim() !== "") {
-      appLink = `https://music.youtube.com/watch?v=${youtubeId}`;
+      appLink = `vnd.youtube.music://watch/${youtubeId}`;
     } else {
       const artist = encodeURIComponent(song.artist);
       const title = encodeURIComponent(song.title);
