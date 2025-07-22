@@ -1,6 +1,6 @@
 {
   "name": "Soul Sifter Online",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "",
   "scripts": {
     "bump:internal": "npm version $version_type && VERSION=$(npm pkg get version --workspaces=false | sed 's/\\\"//g'); sed -i '' -e \"s/^VITE_APP_VERSION=.*/VITE_APP_VERSION=$VERSION/\" .env",
