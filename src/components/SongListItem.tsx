@@ -22,7 +22,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
   const openVideo = (youtubeId: string | undefined, song: Song) =>  {
     let appLink: string;
     if (youtubeId && youtubeId.trim() !== "") {
-      appLink = `intent://www.youtube.com/watch?v=${youtubeId}#Intent;scheme=https;package=com.google.android.youtube;end`;
+      appLink = `https://www.youtube.com/watch?v=${youtubeId}`;
     } else {
       const artist = encodeURIComponent(song.artist);
       const title = encodeURIComponent(song.title);
@@ -34,7 +34,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
   const openYouTubeMusic = (youtubeId: string | undefined, song: Song) => {
     let appLink: string;
     if (youtubeId && youtubeId.trim() !== "") {
-      appLink = `intent://music.youtube.com/watch?v=${youtubeId}#Intent;scheme=https;package=com.google.android.apps.youtube.music;end`;
+      appLink = `https://music.youtube.com/watch?v=${youtubeId}`;
     } else {
       const artist = encodeURIComponent(song.artist);
       const title = encodeURIComponent(song.title);
