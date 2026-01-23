@@ -28,7 +28,7 @@ const fields: Record<string, string[]> = {
   'Styles': ['id', 'name', 'relabel', 'reid', 'description'],
   'StyleChildren': ['parentId', 'childId'],
   'MusicVideos': ['id', 'filepath', 'thumbnailfilepath'],
-  'Songs': ['id', 'artist', 'track', 'title', 'remixer', 'featuring', 'filepath', 'resongid', 'albumid', 'rating', 'dateadded', 'comments', 'trashed', 'albumpartid', 'bpm', 'lowquality', 'tonickey', 'energy', 'googlesongid', 'durationinms', 'curator', 'musicvideoid', 'youtubeid', 'bpmlock', 'tonickeylock', 'spotifyid', 'dupeid'],
+  'Songs': ['id', 'artist', 'track', 'title', 'remixer', 'featuring', 'filepath', 'resongid', 'albumid', 'rating', 'dateadded', 'comments', 'trashed', 'albumpartid', 'bpm', 'lowquality', 'tonickey', 'energy', 'googlesongid', 'durationinms', 'curator', 'musicvideoid', 'youtubeid', 'bpmlock', 'tonickeylock', 'spotifyid', 'dupeid', 'explicitlyrics'],
   'Mixes': ['id', 'outsongid', 'insongid', 'bpmdiff', 'rating', 'comments', 'addon'],
   'SongStyles': ['songId', 'styleId'],
   'Playlists': ['id', 'name', 'query', 'gmusicid', 'youtubeid', 'spotifyid'],
