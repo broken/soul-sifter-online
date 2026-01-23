@@ -141,7 +141,10 @@ const filterUpdates = (table: string, added: number[], dir: string) => {
   return new Promise((resolve, reject) => {
     let stdout = '';
     let stderr = '';
-    const childProcess = spawn('sh', ['-c', `perl -p -e 's/\\\\\\R/  /g;' ${table}.txt | grep -E '^(${added.join('|')})'`], {cwd: dir});
+    const cmd = added.length === 0
+      ? `perl -p -e 's/\\\\\\R/  /g;' ${table}.txt`
+      : `perl -p -e 's/\\\\\\R/  /g;' ${table}.txt | grep -E '^(${added.join('|')})'`;
+    const childProcess = spawn('sh', ['-c', cmd], {cwd: dir});
 
     childProcess.stdout.pipe(fs.createWriteStream(`/tmp/${table}.txt`));
 
@@ -191,7 +194,7 @@ export default class Push extends Command {
   }
 
   public async run(): Promise<void> {
-    const {args, flags} = await this.parse(Push)
+  const {args, flags} = await this.parse(Push)
 
     // get the changed lines
     for (const t of tables) {
@@ -202,9 +205,9 @@ export default class Push extends Command {
         supabase.from(t).delete().in('id', removed);
       }
       if (added.length > 0) {
-        this.log(`${t} to add: ${added}`)
+        this.log(`${t} to add: ${added.length}`)
         // pipe update to new file
-        await filterUpdates(t, added, args.dir);
+        await filterUpdates(t, added.length > 1000 ? [] : added, args.dir);
         // execute upsert
         // create temporary table first
         await executePsql(`CREATE TEMP TABLE staging_${t.toLowerCase()} AS SELECT ${fields[t].join(', ')} FROM ${t.toLowerCase()} LIMIT 0`);
