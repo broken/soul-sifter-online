@@ -10,31 +10,31 @@
 .swipe_container::-webkit-scrollbar {
   display: none;
 }
-/* main element should always snap into view */
-.swipe-element {
-  scroll-snap-align: start;
-}
-/* actions and element should be 100% wide */
-.action,
+/* main element should always snap into center view */
 .swipe-element {
   min-width: 100%;
+  width: 100%;
+  flex-shrink: 0;
+  scroll-snap-align: center;
 }
+/* action buttons */
 .action {
+  width: 5rem;
+  min-width: 5rem;
+  flex-shrink: 0;
   display: flex;
-  align-items: right;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-decoration: none;
 }
-/* icon should remain sticky */
-svg {
-  position: sticky;
-  left: 16px;
-  right: 16px;
-}
-/* action background colors */
+/* action background colors and snap points */
 .left {
+  scroll-snap-align: start;
   background-color: orchid;
 }
 .right {
-  justify-content: flex-end;
+  scroll-snap-align: end;
   background-color: rgb(180, 65, 65);
 }
 /* width of artist/title text */
