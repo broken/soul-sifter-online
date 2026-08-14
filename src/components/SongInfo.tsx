@@ -171,8 +171,17 @@ const SongInfo: Component = () => {
     fetchGenreTree();
   });
 
+  let lastSongId: number | undefined = undefined;
+
   createEffect(async () => {
     const currentSong = song();
+    const currentSongId = currentSong?.id;
+
+    if (currentSongId === lastSongId) {
+      return;
+    }
+    lastSongId = currentSongId;
+
     setShowAddMenu(false);
     setIsEditMode(false);
     setSearchText("");
