@@ -10,32 +10,47 @@
 .swipe_container::-webkit-scrollbar {
   display: none;
 }
-/* main element should always snap into center view */
+/* main element should always snap into start view */
 .swipe-element {
   min-width: 100%;
   width: 100%;
   flex-shrink: 0;
-  scroll-snap-align: center;
+  scroll-snap-align: start;
 }
-/* action buttons */
-.action {
+/* action link containers */
+.action_container {
+  display: flex;
+  flex-shrink: 0;
+  color: white;
+  text-decoration: none;
+}
+/* extra swipe distance room */
+.overswipe_space {
+  width: 50vw;
+  max-width: 200px;
+  flex-shrink: 0;
+}
+/* action buttons (resting reveal area) */
+.action_button {
   width: 5rem;
   min-width: 5rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  text-decoration: none;
 }
 /* action background colors and snap points */
 .left {
-  scroll-snap-align: start;
   background-color: orchid;
 }
+.left .action_button {
+  scroll-snap-align: start;
+}
 .right {
-  scroll-snap-align: end;
   background-color: rgb(180, 65, 65);
+}
+.right .action_button {
+  scroll-snap-align: end;
 }
 /* width of artist/title text */
 .data {
