@@ -54,7 +54,7 @@ enum Property {
 class Atom {
   value: string = ''
   type: Type = Type.ANY
-  props: number =  0
+  props: number = 0
 
   clear = () => {
     this.value = ''
@@ -108,8 +108,7 @@ function parse(queryFragment: string): Atom | undefined {
   }
 
   // Set type
-  if (match[2])  
- {
+  if (match[2]) {
     switch (match[3]) {
       case "id":
         atom.type = Type.S_ID
@@ -214,11 +213,11 @@ function parse(queryFragment: string): Atom | undefined {
 
 
 function buildEqualityOperator(
-    builder: PostgrestFilterBuilder<any, any, any[], any, any>,
-    field: string,
-    props: Property,
-    value: string,
-    defaultProps: Property = Property.EQUAL
+  builder: PostgrestFilterBuilder<any, any, any[], any, any>,
+  field: string,
+  props: Property,
+  value: string,
+  defaultProps: Property = Property.EQUAL
 ): PostgrestFilterBuilder<any, any, any[], any, any> {
   const p = props ? props : defaultProps
   const negated = p & Property.NEGATED
@@ -242,12 +241,12 @@ function buildEqualityOperator(
 
 
 function buildQueryPredicate(
-    builder: PostgrestFilterBuilder<any, any, any[], any, any>,
-    query: string,
-    limit: number,
-    orderBy: number,
-    energy: number | undefined,
-    isPlaylistQuery: boolean
+  builder: PostgrestFilterBuilder<any, any, any[], any, any>,
+  query: string,
+  limit: number,
+  orderBy: number,
+  energy: number | undefined,
+  isPlaylistQuery: boolean
 ): [PostgrestFilterBuilder<any, any, any[], any, any>, number, number] {
   // Split query into fragments
   const fragments = splitString(query)
@@ -392,25 +391,25 @@ function buildQueryPredicate(
           orderBy = OrderBy.PLAYLIST
         }
         break
-      }
     }
-
-    return [builder, limit, orderBy]
   }
+
+  return [builder, limit, orderBy]
+}
 
 
 async function searchSongs(
-    query: string,
-    limit: number = 3,
-    bpm: number = 0,
-    key: string = '',
-    styles: number[] = [],
-    songsToOmit: Song[] = [],
-    playlists: number[] =  [],
-    energy: number = 0,
-    offset: number = 0,
-    orderBy: OrderBy = OrderBy.DATE_ADDED,
-    errorCallback?: any): Promise<Song[]> {
+  query: string,
+  limit: number = 3,
+  bpm: number = 0,
+  key: string = '',
+  styles: number[] = [],
+  songsToOmit: Song[] = [],
+  playlists: number[] = [],
+  energy: number = 0,
+  offset: number = 0,
+  orderBy: OrderBy = OrderBy.DATE_ADDED,
+  errorCallback?: any): Promise<Song[]> {
   console.log("q:", query, ", limit:", limit, ", bpm:", bpm, ", key:", key, ", styles:", styles, ", songsToOmit:", songsToOmit.length, ", playlists:", playlists, ", energy:", energy, ", offset:", offset, ", orderBy:", orderBy);
 
   let songList: Song[] = []
@@ -493,4 +492,4 @@ async function searchSongs(
 
 
 export default searchSongs
-export {searchSongs, OrderBy}
+export { searchSongs, OrderBy }
