@@ -4,34 +4,171 @@ import Rating from "./Rating";
 import { SongConsumer } from "./SongContext";
 import Backdrop from './Backdrop';
 import { supabase } from "./App";
-import { Style } from "../model.types";
+import { Style, StyleChildren } from "../model.types";
+import { GenreWrapper } from "./GenreListItem";
+
+const StyleTreeItem: Component<{
+  genre: GenreWrapper;
+  padding: number;
+  assignedStyleIds: () => Set<number>;
+  onAddStyle: (style: Style) => void;
+  searchFilter: string;
+}> = (props) => {
+  const isAssigned = () => props.assignedStyleIds().has(props.genre.genre.id);
+  const hasChildren = () => props.genre.children.length > 0;
+
+  const matchesSearch = () => {
+    if (!props.searchFilter) return true;
+    const q = props.searchFilter.toLowerCase();
+    if ((props.genre.genre.name || '').toLowerCase().includes(q)) return true;
+    return props.genre.getAllDescendants().some((d) => (d.name || '').toLowerCase().includes(q));
+  };
+
+  // If search filter is active and descendants match, auto-expand
+  createEffect(() => {
+    if (props.searchFilter) {
+      const q = props.searchFilter.toLowerCase();
+      const hasMatchingDescendant = props.genre.getAllDescendants().some((d) => (d.name || '').toLowerCase().includes(q));
+      if (hasMatchingDescendant) {
+        props.genre.collapsed = false;
+      }
+    }
+  });
+
+  return (
+    <Show when={matchesSearch()}>
+      <div
+        class="flex flex-row items-center justify-between py-1 px-2 hover:bg-base-200/60 rounded text-xs"
+        style={{ "padding-left": `${props.padding + 4}px` }}
+      >
+        <div class="flex items-center gap-1 flex-1 min-w-0">
+          <Show when={hasChildren()} fallback={<span class="w-4 h-4 inline-block shrink-0" />}>
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-square h-4 w-4 min-h-0 p-0 shrink-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.genre.collapsed = !props.genre.collapsed;
+              }}
+              aria-label={props.genre.collapsed ? "Expand" : "Collapse"}
+            >
+              <Show when={props.genre.collapsed}>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </Show>
+              <Show when={!props.genre.collapsed}>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </Show>
+            </button>
+          </Show>
+
+          <span class={`truncate ${isAssigned() ? "opacity-40 line-through" : "font-medium"}`}>
+            {props.genre.genre.name}
+          </span>
+        </div>
+
+        <div class="shrink-0 ml-2">
+          <Show
+            when={!isAssigned()}
+            fallback={<span class="text-[10px] text-base-content/40 italic">Added</span>}
+          >
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs h-5 min-h-0 text-primary font-bold px-1.5 hover:bg-primary hover:text-primary-content"
+              onClick={() => props.onAddStyle(props.genre.genre)}
+              title={`Add ${props.genre.genre.name}`}
+            >
+              + Add
+            </button>
+          </Show>
+        </div>
+      </div>
+
+      <Show when={!props.genre.collapsed && hasChildren()}>
+        <For each={props.genre.children}>
+          {(child) => (
+            <StyleTreeItem
+              genre={child}
+              padding={props.padding + 16}
+              assignedStyleIds={props.assignedStyleIds}
+              onAddStyle={props.onAddStyle}
+              searchFilter={props.searchFilter}
+            />
+          )}
+        </For>
+      </Show>
+    </Show>
+  );
+};
 
 const SongInfo: Component = () => {
   const { song, setSong } = SongConsumer();
 
-  const [allStyles, setAllStyles] = createSignal<Style[]>([]);
+  const [genreTree, setGenreTree] = createSignal<GenreWrapper[]>([]);
   const [songStyles, setSongStyles] = createSignal<Style[]>([]);
   const [loadingStyles, setLoadingStyles] = createSignal<boolean>(false);
+  const [loadingTree, setLoadingTree] = createSignal<boolean>(false);
   const [showAddMenu, setShowAddMenu] = createSignal<boolean>(false);
   const [isRemoveMode, setIsRemoveMode] = createSignal<boolean>(false);
   const [searchText, setSearchText] = createSignal<string>("");
 
-  const fetchAllStyles = async () => {
-    if (allStyles().length > 0) return;
-    try {
-      const { data, error } = await supabase.from('styles').select('*').order('name');
-      if (error) {
-        console.error('Error fetching all styles:', error);
-      } else if (data) {
-        setAllStyles(data);
+  const fetchGenreTree = async () => {
+    if (genreTree().length > 0) return;
+    setLoadingTree(true);
+
+    const addChildren = (genre: GenreWrapper, genres: Style[], children: Record<number, number[]>) => {
+      for (let g of genres) {
+        if (children[genre.genre.id] && children[genre.genre.id].includes(g.id)) {
+          let wrapper = new GenreWrapper(g);
+          addChildren(wrapper, genres, children);
+          genre.children.push(wrapper);
+        }
       }
+      return genre;
+    };
+
+    try {
+      let genreList: Style[] = [];
+      const { data: stylesData, error: stylesError } = await supabase.from('styles').select();
+      if (stylesError) {
+        console.error('Error fetching styles:', stylesError);
+        return;
+      }
+      if (stylesData) {
+        genreList = stylesData;
+      }
+      genreList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      let children: Record<number, number[]> = {};
+      let childIds: Record<number, boolean> = {};
+      const { data: styleChildrenData, error: styleChildrenError } = await supabase.from('stylechildren').select();
+      if (styleChildrenError) {
+        console.error('Error fetching stylechildren:', styleChildrenError);
+        return;
+      }
+      if (styleChildrenData) {
+        styleChildrenData.forEach((x: StyleChildren) => {
+          if (!children[x.parentid]) children[x.parentid] = [];
+          children[x.parentid].push(x.childid);
+          childIds[x.childid] = true;
+        });
+      }
+
+      let parentGenres: GenreWrapper[] = genreList.filter((g) => !childIds[g.id]).map((g) => new GenreWrapper(g));
+      parentGenres = parentGenres.map((g) => addChildren(g, genreList, children));
+      setGenreTree(parentGenres);
     } catch (err) {
-      console.error('Failed to fetch all styles:', err);
+      console.error('Failed to load genre tree:', err);
+    } finally {
+      setLoadingTree(false);
     }
   };
 
   onMount(() => {
-    fetchAllStyles();
+    fetchGenreTree();
   });
 
   createEffect(async () => {
@@ -68,13 +205,7 @@ const SongInfo: Component = () => {
     }
   });
 
-  const availableStyles = createMemo(() => {
-    const currentIds = new Set(songStyles().map((s) => s.id));
-    const query = searchText().toLowerCase().trim();
-    return allStyles()
-      .filter((s) => !currentIds.has(s.id))
-      .filter((s) => !query || (s.name || '').toLowerCase().includes(query));
-  });
+  const assignedStyleIds = createMemo(() => new Set(songStyles().map((s) => s.id)));
 
   const handleAddStyle = async (style: Style) => {
     const currentSong = song();
@@ -200,7 +331,7 @@ const SongInfo: Component = () => {
                   setShowAddMenu(nextState);
                   if (nextState) {
                     setIsRemoveMode(false);
-                    fetchAllStyles();
+                    fetchGenreTree();
                   }
                 }}
               >
@@ -226,31 +357,33 @@ const SongInfo: Component = () => {
               </Show>
             </div>
 
-            {/* Searchable Add Style Panel */}
+            {/* Hierarchical Tree for Adding Styles */}
             <Show when={showAddMenu()}>
               <div class="mt-2 p-2 bg-base-300 rounded-box flex flex-col gap-2">
                 <input
                   type="text"
-                  placeholder="Search styles to add..."
+                  placeholder="Search styles..."
                   class="input input-xs input-bordered w-full"
                   value={searchText()}
                   onInput={(e) => setSearchText(e.currentTarget.value)}
                   autofocus
                 />
-                <div class="max-h-36 overflow-y-auto flex flex-col gap-1">
-                  <For each={availableStyles()}>
-                    {(style) => (
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs justify-start normal-case text-left hover:bg-primary hover:text-primary-content"
-                        onClick={() => handleAddStyle(style)}
-                      >
-                        + {style.name}
-                      </button>
-                    )}
-                  </For>
-                  <Show when={availableStyles().length === 0}>
-                    <span class="text-xs text-base-content/60 p-1">No matching styles found</span>
+                <div class="max-h-48 overflow-y-auto flex flex-col divide-y divide-base-200/40">
+                  <Show when={!loadingTree()} fallback={<div class="p-2 text-center text-xs opacity-60">Loading styles tree...</div>}>
+                    <For each={genreTree()}>
+                      {(genreWrapper) => (
+                        <StyleTreeItem
+                          genre={genreWrapper}
+                          padding={0}
+                          assignedStyleIds={assignedStyleIds}
+                          onAddStyle={handleAddStyle}
+                          searchFilter={searchText()}
+                        />
+                      )}
+                    </For>
+                    <Show when={genreTree().length === 0}>
+                      <span class="text-xs text-base-content/60 p-1">No styles available</span>
+                    </Show>
                   </Show>
                 </div>
               </div>

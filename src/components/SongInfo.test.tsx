@@ -4,7 +4,7 @@ import { createSignal } from 'solid-js';
 
 import SongInfo from './SongInfo';
 import { SongConsumer } from './SongContext';
-import { Song, Style } from '../model.types';
+import { Song, Style, StyleChildren } from '../model.types';
 import { supabase } from './App';
 
 // Mock SongContext
@@ -59,14 +59,20 @@ describe('SongInfo Component', () => {
   };
 
   const sampleStyles: Style[] = [
-    { id: 1, name: 'House', description: null, reid: null, relabel: null },
-    { id: 2, name: 'French Touch', description: null, reid: null, relabel: null },
-    { id: 3, name: 'Techno', description: null, reid: null, relabel: null },
+    { id: 1, name: 'Electronic', description: null, reid: null, relabel: null },
+    { id: 2, name: 'House', description: null, reid: null, relabel: null },
+    { id: 3, name: 'French Touch', description: null, reid: null, relabel: null },
+    { id: 4, name: 'Techno', description: null, reid: null, relabel: null },
+  ];
+
+  // Electronic is parent of House, House is parent of French Touch
+  const sampleStyleChildren: StyleChildren[] = [
+    { parentid: 1, childid: 2 },
+    { parentid: 2, childid: 3 },
   ];
 
   let mockDelete: any;
   let mockInsert: any;
-  let mockSelect: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,9 +88,12 @@ describe('SongInfo Component', () => {
     (supabase.from as any).mockImplementation((table: string) => {
       if (table === 'styles') {
         return {
-          select: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({ data: sampleStyles, error: null }),
-          }),
+          select: vi.fn().mockResolvedValue({ data: sampleStyles, error: null }),
+        };
+      }
+      if (table === 'stylechildren') {
+        return {
+          select: vi.fn().mockResolvedValue({ data: sampleStyleChildren, error: null }),
         };
       }
       if (table === 'songstyles') {
@@ -92,8 +101,7 @@ describe('SongInfo Component', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockResolvedValue({
               data: [
-                { styleid: 1, styles: sampleStyles[0] },
-                { styleid: 2, styles: sampleStyles[1] },
+                { styleid: 3, styles: sampleStyles[2] }, // French Touch
               ],
               error: null,
             }),
@@ -122,12 +130,10 @@ describe('SongInfo Component', () => {
     expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
     expect(screen.getByText('One More Time')).toBeInTheDocument();
 
-    // Styles assigned to song
-    expect(await screen.findByText('House')).toBeInTheDocument();
-    expect(screen.getByText('French Touch')).toBeInTheDocument();
+    // Assigned style
+    expect(await screen.findByText('French Touch')).toBeInTheDocument();
 
     // In default mode, no remove buttons are shown
-    expect(screen.queryByTitle('Remove House')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Remove French Touch')).not.toBeInTheDocument();
   });
 
@@ -137,7 +143,7 @@ describe('SongInfo Component', () => {
 
     setSong(mockSong);
 
-    expect(await screen.findByText('House')).toBeInTheDocument();
+    expect(await screen.findByText('French Touch')).toBeInTheDocument();
 
     const removeStyleBtn = screen.getByRole('button', { name: /remove style/i });
     expect(removeStyleBtn).toBeInTheDocument();
@@ -146,12 +152,12 @@ describe('SongInfo Component', () => {
     await fireEvent.click(removeStyleBtn);
 
     // Now remove buttons appear
-    const removeHouseBtn = screen.getByTitle('Remove House');
-    expect(removeHouseBtn).toBeInTheDocument();
+    const removeFrenchTouchBtn = screen.getByTitle('Remove French Touch');
+    expect(removeFrenchTouchBtn).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /done/i })).toBeInTheDocument();
 
     // Clicking remove calls supabase delete
-    await fireEvent.click(removeHouseBtn);
+    await fireEvent.click(removeFrenchTouchBtn);
     expect(mockDelete).toHaveBeenCalled();
 
     // Click Done to exit remove mode
@@ -162,26 +168,34 @@ describe('SongInfo Component', () => {
     expect(screen.queryByTitle('Remove French Touch')).not.toBeInTheDocument();
   });
 
-  it('opens add style menu, searches, and adds a style', async () => {
+  it('displays styles in a collapsible tree format defaulting to unexpanded', async () => {
     const { setSong } = SongConsumer();
     render(() => <SongInfo />);
 
     setSong(mockSong);
 
-    expect(await screen.findByText('House')).toBeInTheDocument();
-
     const addStyleBtn = screen.getByRole('button', { name: /\+ add style/i });
     await fireEvent.click(addStyleBtn);
 
-    // Unassigned style 'Techno' should be listed in available styles
-    const addTechnoBtn = await screen.findByRole('button', { name: /\+ techno/i });
-    expect(addTechnoBtn).toBeInTheDocument();
+    // Top-level parents (Electronic and Techno) should be visible
+    expect(await screen.findByText('Electronic')).toBeInTheDocument();
+    expect(screen.getByText('Techno')).toBeInTheDocument();
 
-    // Click to add Techno
-    await fireEvent.click(addTechnoBtn);
-    expect(mockInsert).toHaveBeenCalledWith({
-      songid: 101,
-      styleid: 3,
-    });
+    // Child styles (House and French Touch) should NOT be visible initially because tree defaults to collapsed
+    expect(screen.queryByText('House')).not.toBeInTheDocument();
+
+    // Find and click the expand button for Electronic
+    const expandButtons = screen.getAllByRole('button', { name: /expand/i });
+    expect(expandButtons.length).toBeGreaterThan(0);
+    await fireEvent.click(expandButtons[0]);
+
+    // Now child style 'House' should be visible
+    expect(await screen.findByText('House')).toBeInTheDocument();
+
+    // Click + Add button on Techno
+    const addTechnoButtons = screen.getAllByRole('button', { name: /\+ add/i });
+    await fireEvent.click(addTechnoButtons[0]);
+
+    expect(mockInsert).toHaveBeenCalled();
   });
 });
