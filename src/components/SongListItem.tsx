@@ -68,36 +68,15 @@ const SongListItem: Component<{song: Song}> = (props) => {
     isOpen = null;
     stateAtTouchStart = null;
 
-    // Instantly kill any ongoing native momentum/inertia
-    tdRef.style.overflowX = 'hidden';
-    tdRef.style.scrollSnapType = 'none';
-
-    // Force reflow to flush momentum cancellation
-    void tdRef.offsetWidth;
-
-    // Restore scrollability
-    tdRef.style.overflowX = 'auto';
-
-    // Smoothly scroll to center position
     tdRef.scrollTo({ left: centerPos, behavior: 'smooth' });
 
-    let checkCount = 0;
-    const interval = setInterval(() => {
-      checkCount++;
-      if (!tdRef) {
-        clearInterval(interval);
-        isClosing = false;
-        return;
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = window.setTimeout(() => {
+      if (tdRef && centerRef) {
+        tdRef.scrollLeft = centerRef.offsetLeft;
       }
-      if (Math.abs(tdRef.scrollLeft - centerPos) <= 2 || checkCount > 25) {
-        clearInterval(interval);
-        if (tdRef) {
-          tdRef.scrollLeft = centerPos;
-          tdRef.style.scrollSnapType = 'x mandatory';
-        }
-        isClosing = false;
-      }
-    }, 25);
+      isClosing = false;
+    }, 300);
   };
 
   const handleScroll = () => {

@@ -37,8 +37,7 @@
 }
 /* extra swipe distance room */
 .overswipe_space {
-  width: 30vw;
-  max-width: 120px;
+  width: 100px;
   flex-shrink: 0;
 }
 /* action buttons (resting reveal area) */
