@@ -72,7 +72,8 @@ describe('SongInfo Component', () => {
   ];
 
   let mockDelete: any;
-  let mockInsert: any;
+  let mockInsertSongStyles: any;
+  let mockInsertChanges: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -83,7 +84,8 @@ describe('SongInfo Component', () => {
       }),
     });
 
-    mockInsert = vi.fn().mockResolvedValue({ error: null });
+    mockInsertSongStyles = vi.fn().mockResolvedValue({ error: null });
+    mockInsertChanges = vi.fn().mockResolvedValue({ error: null });
 
     (supabase.from as any).mockImplementation((table: string) => {
       if (table === 'styles') {
@@ -106,8 +108,13 @@ describe('SongInfo Component', () => {
               error: null,
             }),
           }),
-          insert: mockInsert,
+          insert: mockInsertSongStyles,
           delete: mockDelete,
+        };
+      }
+      if (table === 'changes') {
+        return {
+          insert: mockInsertChanges,
         };
       }
       return {
@@ -156,9 +163,15 @@ describe('SongInfo Component', () => {
     expect(removeFrenchTouchBtn).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /done/i })).toBeInTheDocument();
 
-    // Clicking remove calls supabase delete
+    // Clicking remove calls supabase delete on songstyles and insert on changes
     await fireEvent.click(removeFrenchTouchBtn);
     expect(mockDelete).toHaveBeenCalled();
+    expect(mockInsertChanges).toHaveBeenCalledWith({
+      key: 101,
+      table: 'SongStyles',
+      field: 'delete',
+      value: '3',
+    });
 
     // Click Done to exit remove mode
     const doneBtn = screen.getByRole('button', { name: /done/i });
@@ -168,7 +181,7 @@ describe('SongInfo Component', () => {
     expect(screen.queryByTitle('Remove French Touch')).not.toBeInTheDocument();
   });
 
-  it('displays styles in a collapsible tree format defaulting to unexpanded', async () => {
+  it('displays styles in a collapsible tree format defaulting to unexpanded and logs addition change', async () => {
     const { setSong } = SongConsumer();
     render(() => <SongInfo />);
 
@@ -196,6 +209,15 @@ describe('SongInfo Component', () => {
     const addTechnoButtons = screen.getAllByRole('button', { name: /\+ add/i });
     await fireEvent.click(addTechnoButtons[0]);
 
-    expect(mockInsert).toHaveBeenCalled();
+    expect(mockInsertSongStyles).toHaveBeenCalledWith({
+      songid: 101,
+      styleid: 4,
+    });
+    expect(mockInsertChanges).toHaveBeenCalledWith({
+      key: 101,
+      table: 'SongStyles',
+      field: 'insert',
+      value: '4',
+    });
   });
 });

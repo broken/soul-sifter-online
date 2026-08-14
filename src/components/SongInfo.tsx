@@ -215,15 +215,27 @@ const SongInfo: Component = () => {
     setSongStyles((prev) => [...prev, style].sort((a, b) => (a.name || '').localeCompare(b.name || '')));
 
     try {
-      const { error } = await supabase.from('songstyles').insert({
+      const { error: insertError } = await supabase.from('songstyles').insert({
         songid: currentSong.id,
         styleid: style.id,
       });
 
-      if (error) {
-        console.error('Error adding song style:', error);
+      if (insertError) {
+        console.error('Error adding song style:', insertError);
         // Revert on error
         setSongStyles((prev) => prev.filter((s) => s.id !== style.id));
+        return;
+      }
+
+      const { error: changeError } = await supabase.from('changes').insert({
+        key: currentSong.id,
+        table: 'SongStyles',
+        field: 'insert',
+        value: String(style.id),
+      });
+
+      if (changeError) {
+        console.error('Error recording change for added song style:', changeError);
       }
     } catch (err) {
       console.error('Failed to add song style:', err);
@@ -240,18 +252,30 @@ const SongInfo: Component = () => {
     setSongStyles((prev) => prev.filter((s) => s.id !== styleId));
 
     try {
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('songstyles')
         .delete()
         .eq('songid', currentSong.id)
         .eq('styleid', styleId);
 
-      if (error) {
-        console.error('Error removing song style:', error);
+      if (deleteError) {
+        console.error('Error removing song style:', deleteError);
         // Revert on error
         if (removed) {
           setSongStyles((prev) => [...prev, removed].sort((a, b) => (a.name || '').localeCompare(b.name || '')));
         }
+        return;
+      }
+
+      const { error: changeError } = await supabase.from('changes').insert({
+        key: currentSong.id,
+        table: 'SongStyles',
+        field: 'delete',
+        value: String(styleId),
+      });
+
+      if (changeError) {
+        console.error('Error recording change for removed song style:', changeError);
       }
     } catch (err) {
       console.error('Failed to remove song style:', err);
