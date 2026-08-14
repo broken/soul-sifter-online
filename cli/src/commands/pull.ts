@@ -37,11 +37,20 @@ export default class Pull extends Command {
     }
 
     // create update statements
-    if (!data) {
+    if (!data || data.length === 0) {
       this.log('No updates found.');
       return;
     }
-    let stmts = data.map(x => `update ${x.table} set ${x.field}=${x.value} where id=${x.key};`);
+
+    let stmts = data.map(x => {
+      if (x.table?.toLowerCase() === 'songstyles') {
+        if (x.field === 'delete') {
+          return `DELETE FROM SongStyles WHERE songId=${x.key} AND styleId=${x.value};`;
+        }
+        return `INSERT IGNORE INTO SongStyles (songId, styleId) VALUES (${x.key}, ${x.value});`;
+      }
+      return `update ${x.table} set ${x.field}=${x.value} where id=${x.key};`;
+    });
 
     // apply changes
     let connection;
@@ -52,14 +61,14 @@ export default class Pull extends Command {
           password: process.env.MYSQL_PASSWORD,
           database: 'music',
       });
-      stmts.forEach(async stmt => {
+      for (const stmt of stmts) {
         this.log(`Executing: ${stmt}`);
-        const [result] = await connection.execute(stmt);
+        const [result]: any = await connection.execute(stmt);
         this.log('Update successful: ', result.affectedRows);
-      });
+      }
 
       // delete applied changes
-      this.executePsql(`DELETE FROM changes WHERE 1=1`);
+      await this.executePsql(`DELETE FROM changes WHERE 1=1`);
 
     } catch (error) {
       this.error('Error executing query:', error);
