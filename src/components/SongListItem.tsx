@@ -1,4 +1,4 @@
-import { type Component, onMount } from 'solid-js'
+import { type Component, onMount, onCleanup } from 'solid-js'
 
 import { Song } from '../model.types'
 import Rating from './Rating'
@@ -9,6 +9,14 @@ const SongListItem: Component<{song: Song}> = (props) => {
   const {setSong} = SongConsumer()
   let tdRef: HTMLTableCellElement | undefined;
   let centerRef: HTMLDivElement | undefined;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+  let lastTouchX = 0;
+  let lastTouchY = 0;
+  let stateAtTouchStart: 'left' | 'right' | null = null;
+  let isOpen: 'left' | 'right' | null = null;
+  let scrollTimeout: number | undefined;
 
   onMount(() => {
     if (tdRef && centerRef) {
@@ -16,6 +24,132 @@ const SongListItem: Component<{song: Song}> = (props) => {
       tdRef.scrollLeft = centerRef.offsetLeft;
     }
   });
+
+  onCleanup(() => {
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+  });
+
+  const closeRow = () => {
+    if (!tdRef || !centerRef) return;
+    const centerPos = centerRef.offsetLeft;
+    isOpen = null;
+    stateAtTouchStart = null;
+
+    // Instantly kill any ongoing native momentum/inertia
+    tdRef.style.overflowX = 'hidden';
+    tdRef.style.scrollSnapType = 'none';
+
+    // Force reflow to flush momentum cancellation
+    void tdRef.offsetWidth;
+
+    // Restore scrollability
+    tdRef.style.overflowX = 'auto';
+
+    // Smoothly scroll to center position
+    tdRef.scrollTo({ left: centerPos, behavior: 'smooth' });
+
+    let checkCount = 0;
+    const interval = setInterval(() => {
+      checkCount++;
+      if (!tdRef) {
+        clearInterval(interval);
+        return;
+      }
+      if (Math.abs(tdRef.scrollLeft - centerPos) <= 2 || checkCount > 25) {
+        clearInterval(interval);
+        if (tdRef) {
+          tdRef.scrollLeft = centerPos;
+          tdRef.style.scrollSnapType = 'x mandatory';
+        }
+      }
+    }, 25);
+  };
+
+  const handleScroll = () => {
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = window.setTimeout(() => {
+      if (!tdRef || !centerRef) return;
+      const currentScroll = tdRef.scrollLeft;
+      const centerPos = centerRef.offsetLeft;
+      const threshold = 20;
+
+      if (currentScroll < centerPos - threshold) {
+        isOpen = 'left';
+      } else if (currentScroll > centerPos + threshold) {
+        isOpen = 'right';
+      } else {
+        isOpen = null;
+      }
+    }, 80);
+  };
+
+  const handleTouchStart = (e: TouchEvent) => {
+    if (e.touches.length === 1 && tdRef && centerRef) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+      lastTouchX = touchStartX;
+      lastTouchY = touchStartY;
+
+      const currentScroll = tdRef.scrollLeft;
+      const centerPos = centerRef.offsetLeft;
+      const threshold = 20;
+
+      if (isOpen === 'left' || currentScroll < centerPos - threshold) {
+        stateAtTouchStart = 'left';
+      } else if (isOpen === 'right' || currentScroll > centerPos + threshold) {
+        stateAtTouchStart = 'right';
+      } else {
+        stateAtTouchStart = null;
+      }
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (e.touches.length === 1) {
+      lastTouchX = e.touches[0].clientX;
+      lastTouchY = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (!tdRef || !centerRef) return;
+
+    let endX = lastTouchX;
+    let endY = lastTouchY;
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      endX = e.changedTouches[0].clientX;
+      endY = e.changedTouches[0].clientY;
+    }
+
+    const duration = Date.now() - touchStartTime;
+    const deltaX = endX - touchStartX;
+    const deltaY = endY - touchStartY;
+
+    // Fast flick (>12px in <300ms) or standard swipe (>20px)
+    const isSwipe = (Math.abs(deltaX) > 12 && duration < 300) || Math.abs(deltaX) > 20;
+    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+
+    if (isSwipe && isHorizontal) {
+      // Left action (YouTube Music) was already open and user swiped right again
+      if (stateAtTouchStart === 'left' && deltaX > 0) {
+        closeRow();
+      }
+      // Right action (YouTube) was already open and user swiped left again
+      else if (stateAtTouchStart === 'right' && deltaX < 0) {
+        closeRow();
+      }
+    }
+  };
+
+  const handleRowClick = (e: MouseEvent) => {
+    if (isOpen !== null) {
+      e.stopPropagation();
+      closeRow();
+      return;
+    }
+    setSong?.(props.song);
+  };
 
   const getYouTubeUrl = (youtubeId: string | undefined, song: Song) => {
     if (youtubeId && youtubeId.trim() !== "") {
@@ -36,10 +170,14 @@ const SongListItem: Component<{song: Song}> = (props) => {
   };
 
   return (
-    <tr onclick={() => setSong?.(props.song)}>
+    <tr onclick={handleRowClick}>
       <td
         ref={tdRef}
         class={`px-0 py-0 ${styles.swipe_container}`}
+        onscroll={handleScroll}
+        ontouchstart={handleTouchStart}
+        ontouchmove={handleTouchMove}
+        ontouchend={handleTouchEnd}
       >
         {/* Left Action: YouTube Music */}
         <a

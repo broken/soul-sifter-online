@@ -242,7 +242,7 @@ const SongList: Component = () => {
           </div>
         </div>
       </Show>
-      <table class="table">
+      <table class="table table-fixed w-full">
         <tbody>
           <Index each={songs}>
             {song => <SongListItem song={song()} />}

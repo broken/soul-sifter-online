@@ -42,7 +42,7 @@ const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) =>
   }
 
   return (
-    <span class="flex flex-row text-primary items-center">
+    <span class="flex flex-row text-primary items-center shrink-0">
       <For each={[...Array(5).keys()]}>
         {
           (i) => {

@@ -1,21 +1,32 @@
 /* scroll snap takes care of restoring scroll position */
 .swipe_container {
   display: flex;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow: auto;
   overflow-x: scroll;
   scroll-snap-type: x mandatory;
   white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
 }
 /* scrollbar should be hidden */
 .swipe_container::-webkit-scrollbar {
   display: none;
 }
-/* main element should always snap into start view */
+.swipe_container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+/* main element should always snap into start view and be exactly 100% of visible width */
 .swipe-element {
-  min-width: 100%;
   width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   flex-shrink: 0;
   scroll-snap-align: start;
+  white-space: normal;
 }
 /* action link containers */
 .action_container {
@@ -26,8 +37,8 @@
 }
 /* extra swipe distance room */
 .overswipe_space {
-  width: 50vw;
-  max-width: 200px;
+  width: 30vw;
+  max-width: 120px;
   flex-shrink: 0;
 }
 /* action buttons (resting reveal area) */
@@ -54,8 +65,12 @@
 }
 /* width of artist/title text */
 .data {
+  white-space: normal;
   text-wrap: wrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  overflow: hidden;
   flex-grow: 1;
   flex-shrink: 1;
   min-width: 0; /* To allow shrinking below content size */
