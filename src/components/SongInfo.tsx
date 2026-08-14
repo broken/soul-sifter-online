@@ -112,7 +112,7 @@ const SongInfo: Component = () => {
   const [loadingStyles, setLoadingStyles] = createSignal<boolean>(false);
   const [loadingTree, setLoadingTree] = createSignal<boolean>(false);
   const [showAddMenu, setShowAddMenu] = createSignal<boolean>(false);
-  const [isRemoveMode, setIsRemoveMode] = createSignal<boolean>(false);
+  const [isEditMode, setIsEditMode] = createSignal<boolean>(false);
   const [searchText, setSearchText] = createSignal<string>("");
 
   const fetchGenreTree = async () => {
@@ -174,7 +174,7 @@ const SongInfo: Component = () => {
   createEffect(async () => {
     const currentSong = song();
     setShowAddMenu(false);
-    setIsRemoveMode(false);
+    setIsEditMode(false);
     setSearchText("");
 
     if (!currentSong) {
@@ -287,7 +287,7 @@ const SongInfo: Component = () => {
 
   const handleClose = () => {
     setShowAddMenu(false);
-    setIsRemoveMode(false);
+    setIsEditMode(false);
     setSong(undefined);
   };
 
@@ -321,7 +321,7 @@ const SongInfo: Component = () => {
                 {(style) => (
                   <span class="badge badge-secondary gap-1 py-3 px-2.5 text-xs">
                     <span>{style.name}</span>
-                    <Show when={isRemoveMode()}>
+                    <Show when={isEditMode()}>
                       <button
                         type="button"
                         class="btn btn-ghost btn-xs btn-circle h-4 w-4 min-h-0 text-error-content hover:bg-error hover:text-white ml-0.5"
@@ -345,7 +345,7 @@ const SongInfo: Component = () => {
               </Show>
             </div>
 
-            {/* Action buttons row: Add Style & Remove Style */}
+            {/* Action buttons row: Add Style & Edit */}
             <div class="flex flex-row gap-2 mt-3 items-center">
               <button
                 type="button"
@@ -354,7 +354,7 @@ const SongInfo: Component = () => {
                   const nextState = !showAddMenu();
                   setShowAddMenu(nextState);
                   if (nextState) {
-                    setIsRemoveMode(false);
+                    setIsEditMode(false);
                     fetchGenreTree();
                   }
                 }}
@@ -364,21 +364,19 @@ const SongInfo: Component = () => {
                 </Show>
               </button>
 
-              <Show when={songStyles().length > 0}>
-                <button
-                  type="button"
-                  class={`btn btn-xs ${isRemoveMode() ? "btn-error" : "btn-outline btn-error"}`}
-                  onClick={() => {
-                    const nextRemove = !isRemoveMode();
-                    setIsRemoveMode(nextRemove);
-                    if (nextRemove) {
-                      setShowAddMenu(false);
-                    }
-                  }}
-                >
-                  {isRemoveMode() ? "Done" : "Remove Style"}
-                </button>
-              </Show>
+              <button
+                type="button"
+                class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
+                onClick={() => {
+                  const nextEdit = !isEditMode();
+                  setIsEditMode(nextEdit);
+                  if (nextEdit) {
+                    setShowAddMenu(false);
+                  }
+                }}
+              >
+                {isEditMode() ? "Done" : "Edit"}
+              </button>
             </div>
 
             {/* Hierarchical Tree for Adding Styles */}
@@ -415,7 +413,7 @@ const SongInfo: Component = () => {
           </div>
 
           <div class="card-actions justify-end mt-4">
-            <Rating song={song()} mutable={true} size="2em" />
+            <Rating song={song()} mutable={isEditMode()} size="2em" />
           </div>
         </div>
       </div>

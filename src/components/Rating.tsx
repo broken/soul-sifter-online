@@ -47,8 +47,8 @@ const Rating: Component<{song: Song | undefined, mutable?: boolean, size?: strin
         {
           (i) => {
             return (
-              <Show when={i < (props.song?.rating || 0)} fallback={<ImStarEmpty size={props.size} onclick={() => props.mutable ? setRating(i+1) : ''} />}>
-                <ImStarFull size={props.size} onclick={() => props.mutable ? setRating(i+1) : ''} class="fill-secondary"/>
+              <Show when={i < (props.song?.rating || 0)} fallback={<ImStarEmpty size={props.size} class={props.mutable ? "cursor-pointer" : ""} onclick={() => props.mutable ? setRating(i+1) : ''} />}>
+                <ImStarFull size={props.size} onclick={() => props.mutable ? setRating(i+1) : ''} class={`fill-secondary ${props.mutable ? "cursor-pointer" : ""}`} />
               </Show>
             )
           }
