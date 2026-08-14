@@ -3,6 +3,10 @@ import { render } from 'solid-js/web';
 
 import './index.css';
 import Login from './components/Login';
+import { ToastProvider, initErrorInterceptor } from './components/ToastContext';
+
+// Initialize early to catch any initialization errors
+initErrorInterceptor();
 
 const root = document.getElementById('root');
 
@@ -12,4 +16,12 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-render(() => <Login />, root!);
+render(
+  () => (
+    <ToastProvider>
+      <Login />
+    </ToastProvider>
+  ),
+  root!
+);
+
