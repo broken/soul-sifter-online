@@ -415,7 +415,7 @@ const SongInfo: Component = () => {
           </div>
 
           <div class="card-actions justify-end mt-4">
-            <Rating song={song()} mutable={true} />
+            <Rating song={song()} mutable={true} size="2em" />
           </div>
         </div>
       </div>

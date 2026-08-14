@@ -7,7 +7,7 @@ import { Song } from '../model.types'
 import { SongConsumer } from "./SongContext"
 import { useSongs } from './SongsContext'
 
-const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) => {
+const Rating: Component<{song: Song | undefined, mutable?: boolean, size?: string | number}> = (props) => {
   props = mergeProps({ mutable: false }, props)
   const {setSong} = SongConsumer()
   const {songs, setSongs} = useSongs()
@@ -47,8 +47,8 @@ const Rating: Component<{song: Song | undefined, mutable: boolean}> = (props) =>
         {
           (i) => {
             return (
-              <Show when={i < (props.song?.rating || 0)} fallback={<ImStarEmpty onclick={() => props.mutable ? setRating(i+1) : ''} />}>
-                <ImStarFull onclick={() => props.mutable ? setRating(i+1) : ''} class="fill-secondary"/>
+              <Show when={i < (props.song?.rating || 0)} fallback={<ImStarEmpty size={props.size} onclick={() => props.mutable ? setRating(i+1) : ''} />}>
+                <ImStarFull size={props.size} onclick={() => props.mutable ? setRating(i+1) : ''} class="fill-secondary"/>
               </Show>
             )
           }
