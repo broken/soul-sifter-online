@@ -5,7 +5,36 @@ import Rating from './Rating'
 import { SongConsumer } from './SongContext'
 import styles from './SongListItem.module.css'
 
+// Module-level manager for single-open row coordination
+let activeCloseRowFn: (() => void) | null = null;
+let activeRowOwner: symbol | null = null;
+
+const closeAnyOpenSongRow = (excludeOwner?: symbol) => {
+  if (activeCloseRowFn && activeRowOwner !== excludeOwner) {
+    const fnToClose = activeCloseRowFn;
+    activeCloseRowFn = null;
+    activeRowOwner = null;
+    fnToClose();
+  }
+};
+
+const registerOpenSongRow = (owner: symbol, closeFn: () => void) => {
+  if (activeRowOwner !== owner) {
+    closeAnyOpenSongRow(owner);
+  }
+  activeCloseRowFn = closeFn;
+  activeRowOwner = owner;
+};
+
+const unregisterOpenSongRow = (owner: symbol) => {
+  if (activeRowOwner === owner) {
+    activeCloseRowFn = null;
+    activeRowOwner = null;
+  }
+};
+
 const SongListItem: Component<{song: Song}> = (props) => {
+  const rowId = Symbol();
   const {setSong} = SongConsumer()
   let tdRef: HTMLTableCellElement | undefined;
   let centerRef: HTMLDivElement | undefined;
@@ -16,6 +45,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
   let lastTouchY = 0;
   let stateAtTouchStart: 'left' | 'right' | null = null;
   let isOpen: 'left' | 'right' | null = null;
+  let isClosing = false;
   let scrollTimeout: number | undefined;
 
   onMount(() => {
@@ -27,10 +57,13 @@ const SongListItem: Component<{song: Song}> = (props) => {
 
   onCleanup(() => {
     if (scrollTimeout) clearTimeout(scrollTimeout);
+    unregisterOpenSongRow(rowId);
   });
 
   const closeRow = () => {
     if (!tdRef || !centerRef) return;
+    isClosing = true;
+    unregisterOpenSongRow(rowId);
     const centerPos = centerRef.offsetLeft;
     isOpen = null;
     stateAtTouchStart = null;
@@ -53,6 +86,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
       checkCount++;
       if (!tdRef) {
         clearInterval(interval);
+        isClosing = false;
         return;
       }
       if (Math.abs(tdRef.scrollLeft - centerPos) <= 2 || checkCount > 25) {
@@ -61,29 +95,36 @@ const SongListItem: Component<{song: Song}> = (props) => {
           tdRef.scrollLeft = centerPos;
           tdRef.style.scrollSnapType = 'x mandatory';
         }
+        isClosing = false;
       }
     }, 25);
   };
 
   const handleScroll = () => {
+    if (isClosing) return;
+    if (!tdRef || !centerRef) return;
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = window.setTimeout(() => {
-      if (!tdRef || !centerRef) return;
+      if (isClosing || !tdRef || !centerRef) return;
       const currentScroll = tdRef.scrollLeft;
-      const centerPos = centerRef.offsetLeft;
+      const cPos = centerRef.offsetLeft;
       const threshold = 20;
 
-      if (currentScroll < centerPos - threshold) {
+      if (currentScroll < cPos - threshold) {
         isOpen = 'left';
-      } else if (currentScroll > centerPos + threshold) {
+        registerOpenSongRow(rowId, closeRow);
+      } else if (currentScroll > cPos + threshold) {
         isOpen = 'right';
+        registerOpenSongRow(rowId, closeRow);
       } else {
         isOpen = null;
+        unregisterOpenSongRow(rowId);
       }
     }, 80);
   };
 
   const handleTouchStart = (e: TouchEvent) => {
+    isClosing = false;
     if (e.touches.length === 1 && tdRef && centerRef) {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
@@ -109,6 +150,11 @@ const SongListItem: Component<{song: Song}> = (props) => {
     if (e.touches.length === 1) {
       lastTouchX = e.touches[0].clientX;
       lastTouchY = e.touches[0].clientY;
+      const deltaX = lastTouchX - touchStartX;
+      const deltaY = lastTouchY - touchStartY;
+      if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > 2 * Math.abs(deltaY)) {
+        closeAnyOpenSongRow(rowId);
+      }
     }
   };
 
@@ -148,6 +194,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
       closeRow();
       return;
     }
+    closeAnyOpenSongRow(rowId);
     setSong?.(props.song);
   };
 
@@ -229,3 +276,4 @@ const SongListItem: Component<{song: Song}> = (props) => {
 }
 
 export default SongListItem
+
