@@ -381,7 +381,7 @@ const SongInfo: Component = () => {
 
               <button
                 type="button"
-                aria-label={isEditMode() ? "Done" : "Remove Style"}
+                aria-label={isEditMode() ? "Done" : "Edit"}
                 class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
                 onClick={() => {
                   const nextEdit = !isEditMode();
