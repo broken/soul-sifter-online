@@ -1,6 +1,7 @@
 import { render, fireEvent, screen, waitFor } from '@solidjs/testing-library';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createSignal } from 'solid-js';
+import '@testing-library/jest-dom/vitest';
 
 import SongInfo from './SongInfo';
 import { SongConsumer } from './SongContext';
@@ -12,6 +13,17 @@ vi.mock('./SongContext', () => {
   const [song, setSong] = createSignal<Song | undefined>(undefined);
   return {
     SongConsumer: () => ({ song, setSong }),
+    default: (props: any) => props.children,
+  };
+});
+
+// Mock SongsContext
+vi.mock('./SongsContext', () => {
+  return {
+    useSongs: () => ({
+      songs: [],
+      setSongs: vi.fn(),
+    }),
     default: (props: any) => props.children,
   };
 });
