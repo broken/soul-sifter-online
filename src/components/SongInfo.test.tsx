@@ -223,19 +223,19 @@ describe('SongInfo Component', () => {
     const houseEl = await screen.findByText('House');
     expect(houseEl).toBeInTheDocument();
 
-    // Click + Add button on Techno
-    const addTechnoButtons = screen.getAllByRole('button', { name: /\+ add/i });
-    await fireEvent.click(addTechnoButtons[0]);
+    // Click + Add button on Electronic (first '+ Add' button in the tree)
+    const addButtons = screen.getAllByRole('button', { name: /\+ add/i });
+    await fireEvent.click(addButtons[0]);
 
     expect(mockInsertSongStyles).toHaveBeenCalledWith({
       songid: 101,
-      styleid: 4,
+      styleid: 1,
     });
     expect(mockInsertChanges).toHaveBeenCalledWith({
       key: 101,
       table: 'SongStyles',
       field: 'insert',
-      value: '4',
+      value: '1',
     });
   });
 });
