@@ -1,5 +1,6 @@
 import { render, fireEvent, screen, waitFor } from "@solidjs/testing-library";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import '@testing-library/jest-dom/vitest';
 import { createSignal } from "solid-js";
 import SongPlayer from "./SongPlayer";
 import { Song } from "../model.types";
@@ -77,11 +78,9 @@ describe("SongPlayer Component", () => {
       Player: vi.fn().mockImplementation((element: any, config: any) => {
         playerEvents = config.events || {};
         if (playerEvents.onReady) {
-          setTimeout(() => {
-            playerEvents.onReady({
-              target: mockPlayerInstance,
-            });
-          }, 0);
+          playerEvents.onReady({
+            target: mockPlayerInstance,
+          });
         }
         return mockPlayerInstance;
       }),
