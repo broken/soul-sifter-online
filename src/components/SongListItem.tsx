@@ -38,12 +38,6 @@ const SongListItem: Component<{song: Song}> = (props) => {
   const {setSong} = SongConsumer()
   let tdRef: HTMLTableCellElement | undefined;
   let centerRef: HTMLDivElement | undefined;
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchStartTime = 0;
-  let lastTouchX = 0;
-  let lastTouchY = 0;
-  let stateAtTouchStart: 'left' | 'right' | null = null;
   let isOpen: 'left' | 'right' | null = null;
   let isClosing = false;
   let scrollTimeout: number | undefined;
@@ -102,47 +96,6 @@ const SongListItem: Component<{song: Song}> = (props) => {
     }, 80);
   };
 
-  const handleTouchStart = (e: TouchEvent) => {
-    isClosing = false;
-    if (e.touches.length === 1 && tdRef && centerRef) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-      lastTouchX = touchStartX;
-      lastTouchY = touchStartY;
-
-      const currentScroll = tdRef.scrollLeft;
-      const centerPos = centerRef.offsetLeft;
-      const threshold = 20;
-
-      if (isOpen === 'left' || currentScroll < centerPos - threshold) {
-        stateAtTouchStart = 'left';
-      } else if (isOpen === 'right' || currentScroll > centerPos + threshold) {
-        stateAtTouchStart = 'right';
-      } else {
-        stateAtTouchStart = null;
-      }
-    }
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (e.touches.length === 1) {
-      lastTouchX = e.touches[0].clientX;
-      lastTouchY = e.touches[0].clientY;
-      const deltaX = lastTouchX - touchStartX;
-      const deltaY = lastTouchY - touchStartY;
-      if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > 2 * Math.abs(deltaY)) {
-        closeAnyOpenSongRow(rowId);
-      }
-    }
-  };
-
-  const handleTouchEnd = (e: TouchEvent) => {
-    // Native CSS scroll-snap handles swipe closing and opening automatically.
-    // We only need to clear stateAtTouchStart so it doesn't fight native scroll momentum.
-    stateAtTouchStart = null;
-  };
-
   const handleRowClick = (e: MouseEvent) => {
     if (isOpen !== null) {
       e.stopPropagation();
@@ -177,9 +130,6 @@ const SongListItem: Component<{song: Song}> = (props) => {
         ref={tdRef}
         class={`px-0 py-0 ${styles.swipe_container}`}
         onscroll={handleScroll}
-        ontouchstart={handleTouchStart}
-        ontouchmove={handleTouchMove}
-        ontouchend={handleTouchEnd}
       >
         {/* Left Action: YouTube Music */}
         <a
