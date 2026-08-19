@@ -357,24 +357,6 @@ const SongInfo: Component = () => {
               </Show>
             </div>
 
-            {/* Action buttons row: Edit */}
-            <div class="flex flex-row gap-2 mt-3 items-center">
-              <button
-                type="button"
-                aria-label={isEditMode() ? "Done" : "Edit"}
-                class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
-                onClick={() => {
-                  const nextEdit = !isEditMode();
-                  setIsEditMode(nextEdit);
-                  if (nextEdit) {
-                    fetchGenreTree();
-                  }
-                }}
-              >
-                {isEditMode() ? "Done" : "Edit"}
-              </button>
-            </div>
-
             {/* Hierarchical Tree for Adding Styles */}
             <Show when={isEditMode()}>
               <div class="mt-2 p-2 bg-base-300 rounded-box flex flex-col gap-2">
@@ -408,7 +390,21 @@ const SongInfo: Component = () => {
             </Show>
           </div>
 
-          <div class="card-actions justify-end mt-4">
+          <div class="card-actions justify-between items-center mt-4">
+            <button
+              type="button"
+              aria-label={isEditMode() ? "Done" : "Edit"}
+              class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
+              onClick={() => {
+                const nextEdit = !isEditMode();
+                setIsEditMode(nextEdit);
+                if (nextEdit) {
+                  fetchGenreTree();
+                }
+              }}
+            >
+              {isEditMode() ? "Done" : "Edit"}
+            </button>
             <Rating song={song()} mutable={isEditMode()} size="2em" />
           </div>
         </div>
