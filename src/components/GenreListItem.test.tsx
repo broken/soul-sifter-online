@@ -61,10 +61,10 @@ describe('GenreListItem', () => {
   it('Test 2: genreToEdit is set when pencil icon is clicked', async () => {
     render(() => <GenreListItem genre={wrapperGenre} padding={0} />);
 
-    // The pencil icon itself is an SVG, let's find its clickable parent span
-    // We added 'ml-2 cursor-pointer hover:opacity-70' to this span
+    // The pencil icon is inside the sibling icons container div
     const genreNameElement = screen.getByText(sampleGenre.name);
-    const pencilIconContainer = genreNameElement.nextElementSibling;
+    const iconsContainer = genreNameElement.nextElementSibling;
+    const pencilIconContainer = iconsContainer?.firstElementChild;
 
     // Explicitly check if the container is found
     if (!pencilIconContainer) {
