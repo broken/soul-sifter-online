@@ -53,14 +53,13 @@ const StyleTreeItem: Component<{
               }}
               aria-label={props.genre.collapsed ? "Expand" : "Collapse"}
             >
-              <Show when={props.genre.collapsed}>
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </Show>
-              <Show when={!props.genre.collapsed}>
+              <Show when={props.genre.collapsed} fallback={
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              }>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </Show>
             </button>
@@ -139,9 +138,8 @@ const SongInfo: Component = () => {
         return;
       }
       if (stylesData) {
-        genreList = stylesData;
+        genreList = stylesData.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       }
-      genreList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
       let children: Record<number, number[]> = {};
       let childIds: Record<number, boolean> = {};
@@ -160,7 +158,7 @@ const SongInfo: Component = () => {
 
       let parentGenres: GenreWrapper[] = genreList.filter((g) => !childIds[g.id]).map((g) => new GenreWrapper(g));
       parentGenres = parentGenres.map((g) => addChildren(g, genreList, children));
-      setGenreTree(parentGenres);
+      setGenreTree([...parentGenres]);
     } catch (err) {
       console.error('Failed to load genre tree:', err);
     } finally {
@@ -192,27 +190,31 @@ const SongInfo: Component = () => {
       return;
     }
 
-    setLoadingStyles(true);
-    try {
-      const { data: songStylesData, error } = await supabase
-        .from('songstyles')
-        .select('styleid, styles(*)')
-        .eq('songid', currentSong.id);
+    const fetchSongStyles = async (songId: number) => {
+      setLoadingStyles(true);
+      try {
+        const { data: songStylesData, error } = await supabase
+          .from('songstyles')
+          .select('styleid, styles(*)')
+          .eq('songid', songId);
 
-      if (error) {
-        console.error('Error fetching song styles:', error);
-      } else if (songStylesData) {
-        const stylesList: Style[] = songStylesData
-          .map((item: any) => item.styles)
-          .filter(Boolean)
-          .sort((a: Style, b: Style) => (a.name || '').localeCompare(b.name || ''));
-        setSongStyles(stylesList);
+        if (error) {
+          console.error('Error fetching song styles:', error);
+        } else if (songStylesData) {
+          const stylesList: Style[] = songStylesData
+            .map((item: any) => item.styles)
+            .filter(Boolean)
+            .sort((a: Style, b: Style) => (a.name || '').localeCompare(b.name || ''));
+          setSongStyles(stylesList);
+        }
+      } catch (err) {
+        console.error('Failed to fetch song styles:', err);
+      } finally {
+        setLoadingStyles(false);
       }
-    } catch (err) {
-      console.error('Failed to fetch song styles:', err);
-    } finally {
-      setLoadingStyles(false);
-    }
+    };
+
+    fetchSongStyles(currentSong.id);
   });
 
   const assignedStyleIds = createMemo(() => new Set(songStyles().map((s) => s.id)));
