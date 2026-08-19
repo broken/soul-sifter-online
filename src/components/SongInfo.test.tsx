@@ -157,7 +157,7 @@ describe('SongInfo Component', () => {
     expect(screen.queryByTitle('Remove French Touch')).not.toBeInTheDocument();
   });
 
-  it('toggles remove mode and reveals remove buttons only when Remove Style is clicked', async () => {
+  it('toggles edit mode and reveals remove buttons only when Edit is clicked', async () => {
     const { setSong } = SongConsumer();
     render(() => <SongInfo />);
 
@@ -165,11 +165,11 @@ describe('SongInfo Component', () => {
 
     expect(await screen.findByText('French Touch')).toBeInTheDocument();
 
-    const removeStyleBtn = screen.getByRole('button', { name: /remove style/i });
-    expect(removeStyleBtn).toBeInTheDocument();
+    const editBtn = screen.getByRole('button', { name: /edit/i });
+    expect(editBtn).toBeInTheDocument();
 
-    // Click to enter remove mode
-    await fireEvent.click(removeStyleBtn);
+    // Click to enter edit mode
+    await fireEvent.click(editBtn);
 
     // Now remove buttons appear
     const removeFrenchTouchBtn = await screen.findByTitle('Remove French Touch');
@@ -187,7 +187,7 @@ describe('SongInfo Component', () => {
       value: '3',
     });
 
-    // Exit remove mode by clicking button (or button label changes if styles were emptied)
+    // Exit edit mode by clicking button (or button label changes if styles were emptied)
     if (screen.queryByRole('button', { name: /done/i })) {
       await fireEvent.click(screen.getByRole('button', { name: /done/i }));
     }
