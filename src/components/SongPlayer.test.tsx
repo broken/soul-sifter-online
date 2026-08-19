@@ -1,5 +1,6 @@
 import { render, fireEvent, screen, waitFor } from "@solidjs/testing-library";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createSignal } from "solid-js";
 import SongPlayer from "./SongPlayer";
 import { Song } from "../model.types";
 
@@ -149,6 +150,24 @@ describe("SongPlayer Component", () => {
         videoId: "ytMusicId123",
       })
     );
+  });
+
+  it("does not reinitialize or stop playback when song rating or metadata is updated", async () => {
+    const [songSignal, setSongSignal] = createSignal<Song>(mockSongWithYoutube);
+    render(() => <SongPlayer song={songSignal()} />);
+
+    await screen.findByRole("button", { name: /play/i });
+    expect(window.YT.Player).toHaveBeenCalledTimes(1);
+
+    // Simulate rating update (new object reference with same ID and YouTube ID)
+    setSongSignal({
+      ...mockSongWithYoutube,
+      rating: 4,
+    });
+
+    // Player constructor should NOT be called again, and destroy should not be called
+    expect(window.YT.Player).toHaveBeenCalledTimes(1);
+    expect(mockPlayerInstance.destroy).not.toHaveBeenCalled();
   });
 
   it("displays error message when video playback errors occur", async () => {

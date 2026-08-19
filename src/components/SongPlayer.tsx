@@ -220,9 +220,21 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     }
   };
 
+  let lastSongId: number | undefined = undefined;
+  let lastLoadedYtId: string | undefined = undefined;
+
   createEffect(() => {
-    const currentId = youtubeId();
-    initPlayer(currentId);
+    const currentSong = props.song;
+    const currentSongId = currentSong?.id;
+    const currentYtId = youtubeId();
+
+    if (currentSongId === lastSongId && currentYtId === lastLoadedYtId) {
+      return;
+    }
+    lastSongId = currentSongId;
+    lastLoadedYtId = currentYtId;
+
+    initPlayer(currentYtId);
   });
 
   onCleanup(() => {
