@@ -28,7 +28,7 @@ const fields: Record<string, string[]> = {
   'Styles': ['id', 'name', 'relabel', 'reid', 'description'],
   'StyleChildren': ['parentId', 'childId'],
   'MusicVideos': ['id', 'filepath', 'thumbnailfilepath'],
-  'Songs': ['id', 'artist', 'track', 'title', 'remixer', 'featuring', 'filepath', 'resongid', 'albumid', 'rating', 'dateadded', 'comments', 'trashed', 'albumpartid', 'bpm', 'lowquality', 'tonickey', 'energy', 'googlesongid', 'durationinms', 'curator', 'musicvideoid', 'youtubeid', 'bpmlock', 'tonickeylock', 'spotifyid', 'dupeid', 'explicitlyrics'],
+  'Songs': ['id', 'artist', 'track', 'title', 'remixer', 'featuring', 'filepath', 'resongid', 'albumid', 'rating', 'dateadded', 'comments', 'trashed', 'albumpartid', 'bpm', 'lowquality', 'tonickey', 'energy', 'googlesongid', 'durationinms', 'curator', 'musicvideoid', 'youtubeid', 'youtubemusicid', 'bpmlock', 'tonickeylock', 'spotifyid', 'dupeid', 'explicitlyrics'],
   'Mixes': ['id', 'outsongid', 'insongid', 'bpmdiff', 'rating', 'comments', 'addon'],
   'SongStyles': ['songId', 'styleId'],
   'Playlists': ['id', 'name', 'query', 'gmusicid', 'youtubeid', 'spotifyid'],
@@ -57,12 +57,12 @@ const getChangesFromGit = async (baseDir: string, table: string): Promise<[numbe
 
     // split changes & reduce to just keys
     const added = changedLines.filter(line => /^\+([0-9]+)/.test(line))
-                              .map(line => line.match(/^\+([0-9]+)/)[1])
-                              .map(k => Number(k));
+      .map(line => line.match(/^\+([0-9]+)/)[1])
+      .map(k => Number(k));
     const removed = changedLines.filter(line => /^-([0-9]+)/.test(line))
-                                .map(line => line.match(/^-([0-9]+)/)[1])
-                                .map(k => Number(k))
-                                .filter(k => !added.includes(k));
+      .map(line => line.match(/^-([0-9]+)/)[1])
+      .map(k => Number(k))
+      .filter(k => !added.includes(k));
     return [removed, added];
   } catch (error) {
     console.error('Error fetching changes from the last two commits:', error);
@@ -104,7 +104,7 @@ const executePsql = (sql: string) => {
     console.log(`Executing ${sql}`);
     let stdout = '';
     let stderr = '';
-    const childProcess = spawn('psql', ['-h', process.env.SUPABASE_SERVER, '-p', '6543', '-d', 'postgres', '-U', process.env.SUPABASE_USER, '-c', sql], { env: { ...process.env, PGPASSWORD: process.env.SUPABASE_PASSWD} });
+    const childProcess = spawn('psql', ['-h', process.env.SUPABASE_SERVER, '-p', '6543', '-d', 'postgres', '-U', process.env.SUPABASE_USER, '-c', sql], { env: { ...process.env, PGPASSWORD: process.env.SUPABASE_PASSWD } });
 
     // Capture standard output
     childProcess.stdout.on('data', (data) => {
@@ -144,7 +144,7 @@ const filterUpdates = (table: string, added: number[], dir: string) => {
     const cmd = added.length === 0
       ? `perl -p -e 's/\\\\\\R/  /g;' ${table}.txt`
       : `perl -p -e 's/\\\\\\R/  /g;' ${table}.txt | grep -E '^(${added.join('|')})'`;
-    const childProcess = spawn('sh', ['-c', cmd], {cwd: dir});
+    const childProcess = spawn('sh', ['-c', cmd], { cwd: dir });
 
     childProcess.stdout.pipe(fs.createWriteStream(`/tmp/${table}.txt`));
 
@@ -177,7 +177,7 @@ const filterUpdates = (table: string, added: number[], dir: string) => {
 
 export default class Push extends Command {
   static override args = {
-    dir: Args.string({description: 'base directory of mysql dump files'}),
+    dir: Args.string({ description: 'base directory of mysql dump files' }),
   }
 
   static override description = 'describe the command here'
@@ -188,13 +188,13 @@ export default class Push extends Command {
 
   static override flags = {
     // flag with no value (-f, --force)
-    force: Flags.boolean({char: 'f'}),
+    force: Flags.boolean({ char: 'f' }),
     // flag with a value (-n, --name=VALUE)
-    name: Flags.string({char: 'n', description: 'name to print'}),
+    name: Flags.string({ char: 'n', description: 'name to print' }),
   }
 
   public async run(): Promise<void> {
-  const {args, flags} = await this.parse(Push)
+    const { args, flags } = await this.parse(Push)
 
     // get the changed lines
     for (const t of tables) {
