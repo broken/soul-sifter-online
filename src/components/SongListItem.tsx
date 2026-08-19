@@ -138,33 +138,9 @@ const SongListItem: Component<{song: Song}> = (props) => {
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
-    if (!tdRef || !centerRef) return;
-
-    let endX = lastTouchX;
-    let endY = lastTouchY;
-    if (e.changedTouches && e.changedTouches.length > 0) {
-      endX = e.changedTouches[0].clientX;
-      endY = e.changedTouches[0].clientY;
-    }
-
-    const duration = Date.now() - touchStartTime;
-    const deltaX = endX - touchStartX;
-    const deltaY = endY - touchStartY;
-
-    // Fast flick (>12px in <300ms) or standard swipe (>20px)
-    const isSwipe = (Math.abs(deltaX) > 12 && duration < 300) || Math.abs(deltaX) > 20;
-    const isHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
-
-    if (isSwipe && isHorizontal) {
-      // Left action (YouTube Music) was already open and user swiped right again
-      if (stateAtTouchStart === 'left' && deltaX > 0) {
-        closeRow();
-      }
-      // Right action (YouTube) was already open and user swiped left again
-      else if (stateAtTouchStart === 'right' && deltaX < 0) {
-        closeRow();
-      }
-    }
+    // Native CSS scroll-snap handles swipe closing and opening automatically.
+    // We only need to clear stateAtTouchStart so it doesn't fight native scroll momentum.
+    stateAtTouchStart = null;
   };
 
   const handleRowClick = (e: MouseEvent) => {
