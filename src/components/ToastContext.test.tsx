@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@solidjs/testing-library';
+import '@testing-library/jest-dom/vitest';
 import {
   toasts,
   addToast,
@@ -112,12 +113,6 @@ describe('Toast UI & console interceptor', () => {
   });
 
   it('intercepts console.error and displays a toast while preserving console output', () => {
-    const originalConsoleError = console.error;
-    const consoleSpy = vi.fn();
-    console.error = consoleSpy;
-
-    initErrorInterceptor();
-
     console.error('Intercepted console error message');
 
     expect(toasts().some((t) => t.message === 'Intercepted console error message')).toBe(true);
