@@ -321,6 +321,7 @@ export type Database = {
           track: string | null
           trashed: boolean
           youtubeid: string | null
+          youtubemusicid: string | null
         }
         Insert: {
           albumid?: number | null
@@ -351,6 +352,7 @@ export type Database = {
           track?: string | null
           trashed?: boolean
           youtubeid?: string | null
+          youtubemusicid?: string | null
         }
         Update: {
           albumid?: number | null
@@ -381,6 +383,7 @@ export type Database = {
           track?: string | null
           trashed?: boolean
           youtubeid?: string | null
+          youtubemusicid?: string | null
         }
         Relationships: [
           {

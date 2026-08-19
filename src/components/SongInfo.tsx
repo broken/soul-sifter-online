@@ -1,6 +1,7 @@
 import { Show, For, type Component, createSignal, createEffect, onMount, createMemo } from "solid-js";
 
 import Rating from "./Rating";
+import SongPlayer from "./SongPlayer";
 import { SongConsumer } from "./SongContext";
 import Backdrop from './Backdrop';
 import { supabase } from "./App";
@@ -318,6 +319,9 @@ const SongInfo: Component = () => {
           {/* Display title directly, without a label */}
           <p class="text-sm opacity-80">{song()?.title}</p>
 
+          {/* YouTube Music Playback Controls */}
+          <SongPlayer song={song()} />
+
           {/* Genres / Styles Section */}
           <div class="mt-3">
             <div class="text-xs font-semibold uppercase tracking-wider text-base-content/70 mb-1.5">
@@ -375,6 +379,7 @@ const SongInfo: Component = () => {
 
               <button
                 type="button"
+                aria-label={isEditMode() ? "Done" : "Remove Style"}
                 class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
                 onClick={() => {
                   const nextEdit = !isEditMode();

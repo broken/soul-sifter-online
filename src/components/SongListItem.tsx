@@ -207,7 +207,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
       >
         {/* Left Action: YouTube Music */}
         <a
-          href={getYouTubeMusicUrl(props.song.youtubeid, props.song)}
+          href={getYouTubeMusicUrl(props.song.youtubemusicid || props.song.youtubeid, props.song)}
           target="_blank"
           rel="noopener noreferrer"
           class={`${styles.action_container} ${styles.left}`}

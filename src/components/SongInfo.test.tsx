@@ -56,6 +56,7 @@ describe('SongInfo Component', () => {
     track: '1',
     trashed: false,
     youtubeid: 'FGBhQbmPwH8',
+    youtubemusicid: null,
   };
 
   const sampleStyles: Style[] = [
