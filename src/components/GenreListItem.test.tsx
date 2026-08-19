@@ -43,20 +43,20 @@ describe('GenreListItem', () => {
     expect(genreToEdit()).toBeUndefined();
   });
 
-  it('Test 2: genreToEdit is set when pencil icon is clicked', async () => {
+  it('Test 2: genreToEdit is set when info icon is clicked', async () => {
     render(() => <GenreListItem genre={wrapperGenre} padding={0} />);
 
-    // The pencil icon is inside the sibling icons container div
+    // The info icon is inside the sibling icons container div
     const genreNameElement = screen.getByText(sampleGenre.name);
     const iconsContainer = genreNameElement.nextElementSibling;
-    const pencilIconContainer = iconsContainer?.firstElementChild;
+    const infoIconContainer = iconsContainer?.firstElementChild;
 
     // Explicitly check if the container is found
-    if (!pencilIconContainer) {
-      throw new Error('Pencil icon container (nextElementSibling of genre name) not found. Check component structure.');
+    if (!infoIconContainer) {
+      throw new Error('Info icon container (nextElementSibling of genre name) not found. Check component structure.');
     }
 
-    await fireEvent.click(pencilIconContainer);
+    await fireEvent.click(infoIconContainer);
 
     expect(genreToEdit()).toEqual(sampleGenre);
   });
