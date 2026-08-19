@@ -107,19 +107,21 @@ const GenreListItem: Component<{genre: GenreWrapper, padding: number}> = (props)
 
             {/* Icons Group - always on the right */}
             <div class="flex items-center">
-              <span
-                onclick={(event) => {
-                  event.stopPropagation();
-                  const genreToSet = props.genre.genre; // Explicitly capture the value
-                  setGenreToEdit(genreToSet);
-                }}
-                class="cursor-pointer hover:opacity-70"
-                classList={{ "mr-2": !!props.genre.children.length && props.genre.children.length > 0 }} // Margin right if expand arrow is present
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                </svg>
-              </span>
+              <Show when={!!props.genre.genre.description}>
+                <span
+                  onclick={(event) => {
+                    event.stopPropagation();
+                    const genreToSet = props.genre.genre; // Explicitly capture the value
+                    setGenreToEdit(genreToSet);
+                  }}
+                  class="cursor-pointer hover:opacity-70"
+                  classList={{ "mr-2": !!props.genre.children.length && props.genre.children.length > 0 }} // Margin right if expand arrow is present
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                  </svg>
+                </span>
+              </Show>
               <Show when={!!props.genre.children.length && props.genre.children.length > 0}>
                 <span onclick={(event) => { event.stopPropagation(); props.genre.collapsed = !props.genre.collapsed; }} class="cursor-pointer">
                   <Show when={props.genre.collapsed}>

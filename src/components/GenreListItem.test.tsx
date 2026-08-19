@@ -30,7 +30,7 @@ describe('GenreListItem', () => {
       setActiveGenres: mockSetActiveGenres,
     });
 
-    sampleGenre = { id: '1', name: 'Electronic', keywords: [], songIds: [] };
+    sampleGenre = { id: 1, name: 'Electronic', description: 'Electronic dance music', reid: null, relabel: null };
     wrapperGenre = new GenreWrapper(sampleGenre, []);
   });
 
@@ -59,5 +59,15 @@ describe('GenreListItem', () => {
     await fireEvent.click(infoIconContainer);
 
     expect(genreToEdit()).toEqual(sampleGenre);
+  });
+
+  it('Test 3: info icon is not rendered when genre has no description', async () => {
+    const noDescGenre: Style = { id: 2, name: 'Rock', description: null, reid: null, relabel: null };
+    const noDescWrapper = new GenreWrapper(noDescGenre, []);
+    render(() => <GenreListItem genre={noDescWrapper} padding={0} />);
+
+    const genreNameElement = screen.getByText(noDescGenre.name);
+    const iconsContainer = genreNameElement.nextElementSibling;
+    expect(iconsContainer?.children.length).toBe(0);
   });
 });
