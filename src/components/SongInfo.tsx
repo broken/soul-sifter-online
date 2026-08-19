@@ -111,7 +111,6 @@ const SongInfo: Component = () => {
   const [songStyles, setSongStyles] = createSignal<Style[]>([]);
   const [loadingStyles, setLoadingStyles] = createSignal<boolean>(false);
   const [loadingTree, setLoadingTree] = createSignal<boolean>(false);
-  const [showAddMenu, setShowAddMenu] = createSignal<boolean>(false);
   const [isEditMode, setIsEditMode] = createSignal<boolean>(false);
   const [searchText, setSearchText] = createSignal<string>("");
 
@@ -181,7 +180,6 @@ const SongInfo: Component = () => {
     }
     lastSongId = currentSongId;
 
-    setShowAddMenu(false);
     setIsEditMode(false);
     setSearchText("");
 
@@ -298,7 +296,6 @@ const SongInfo: Component = () => {
   };
 
   const handleClose = () => {
-    setShowAddMenu(false);
     setIsEditMode(false);
     setSong(undefined);
   };
@@ -360,25 +357,8 @@ const SongInfo: Component = () => {
               </Show>
             </div>
 
-            {/* Action buttons row: Add Style & Edit */}
+            {/* Action buttons row: Edit */}
             <div class="flex flex-row gap-2 mt-3 items-center">
-              <button
-                type="button"
-                class="btn btn-xs btn-outline btn-primary"
-                onClick={() => {
-                  const nextState = !showAddMenu();
-                  setShowAddMenu(nextState);
-                  if (nextState) {
-                    setIsEditMode(false);
-                    fetchGenreTree();
-                  }
-                }}
-              >
-                <Show when={showAddMenu()} fallback={"+ Add Style"}>
-                  Cancel Add
-                </Show>
-              </button>
-
               <button
                 type="button"
                 aria-label={isEditMode() ? "Done" : "Edit"}
@@ -387,7 +367,7 @@ const SongInfo: Component = () => {
                   const nextEdit = !isEditMode();
                   setIsEditMode(nextEdit);
                   if (nextEdit) {
-                    setShowAddMenu(false);
+                    fetchGenreTree();
                   }
                 }}
               >
@@ -396,7 +376,7 @@ const SongInfo: Component = () => {
             </div>
 
             {/* Hierarchical Tree for Adding Styles */}
-            <Show when={showAddMenu()}>
+            <Show when={isEditMode()}>
               <div class="mt-2 p-2 bg-base-300 rounded-box flex flex-col gap-2">
                 <input
                   type="text"

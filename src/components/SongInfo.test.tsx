@@ -196,14 +196,14 @@ describe('SongInfo Component', () => {
     expect(screen.queryByTitle('Remove French Touch')).not.toBeInTheDocument();
   });
 
-  it('displays styles in a collapsible tree format defaulting to unexpanded and logs addition change', async () => {
+  it('displays styles in a collapsible tree format defaulting to unexpanded when in edit mode and logs addition change', async () => {
     const { setSong } = SongConsumer();
     render(() => <SongInfo />);
 
     setSong(mockSong);
 
-    const addStyleBtn = await screen.findByRole('button', { name: /\+ add style/i });
-    await fireEvent.click(addStyleBtn);
+    const editBtn = await screen.findByRole('button', { name: /edit/i });
+    await fireEvent.click(editBtn);
 
     // Top-level parents (Electronic and Techno) should be visible
     await waitFor(() => {
@@ -239,3 +239,4 @@ describe('SongInfo Component', () => {
     });
   });
 });
+
