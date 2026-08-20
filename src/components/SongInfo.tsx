@@ -154,13 +154,13 @@ const SongInfo: Component = () => {
       setTimeout(() => {
         setSong(targetSong);
         setDragX(0);
+        setIsTransitioning(false);
         setAnimState('slide-in-prepare-right');
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             setAnimState('slide-in-active');
             setTimeout(() => {
               setAnimState('');
-              setIsTransitioning(false);
             }, 200);
           });
         });
@@ -170,13 +170,13 @@ const SongInfo: Component = () => {
       setTimeout(() => {
         setSong(targetSong);
         setDragX(0);
+        setIsTransitioning(false);
         setAnimState('slide-in-prepare-left');
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             setAnimState('slide-in-active');
             setTimeout(() => {
               setAnimState('');
-              setIsTransitioning(false);
             }, 200);
           });
         });
@@ -548,7 +548,7 @@ const SongInfo: Component = () => {
                 type="button"
                 class="btn btn-ghost btn-xs btn-circle"
                 onClick={() => prevSong() && navigateToSong(prevSong()!, 'prev')}
-                disabled={!prevSong() || isTransitioning()}
+                disabled={!prevSong()}
                 title="Previous song (Swipe right or Left Arrow)"
                 aria-label="Previous song"
               >
@@ -565,7 +565,7 @@ const SongInfo: Component = () => {
                 type="button"
                 class="btn btn-ghost btn-xs btn-circle"
                 onClick={() => nextSong() && navigateToSong(nextSong()!, 'next')}
-                disabled={!nextSong() || isTransitioning()}
+                disabled={!nextSong()}
                 title="Next song (Swipe left or Right Arrow)"
                 aria-label="Next song"
               >

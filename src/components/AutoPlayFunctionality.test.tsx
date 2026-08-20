@@ -195,6 +195,8 @@ describe('Auto-Play Playback Behavior', () => {
 
   beforeEach(() => {
     setAutoPlayNext(false);
+    const { setSong } = SongConsumer();
+    setSong(undefined);
     playerEvents = {};
     mockPlayerInstance = {
       playVideo: vi.fn(() => {
