@@ -1,11 +1,12 @@
-import { Show, For, type Component, createSignal, createEffect, onMount, createMemo } from "solid-js";
+import { Show, For, type Component, createSignal, createEffect, onMount, onCleanup, createMemo } from "solid-js";
 
 import Rating from "./Rating";
 import SongPlayer from "./SongPlayer";
 import { SongConsumer } from "./SongContext";
+import { useSongs } from "./SongsContext";
 import Backdrop from './Backdrop';
 import { supabase } from "./App";
-import { Style, StyleChildren } from "../model.types";
+import { Song, Style, StyleChildren } from "../model.types";
 import { GenreWrapper } from "./GenreListItem";
 
 const StyleTreeItem: Component<{
@@ -106,6 +107,7 @@ const StyleTreeItem: Component<{
 
 const SongInfo: Component = () => {
   const { song, setSong } = SongConsumer();
+  const songsContext = useSongs?.();
 
   const [genreTree, setGenreTree] = createSignal<GenreWrapper[]>([]);
   const [songStyles, setSongStyles] = createSignal<Style[]>([]);
@@ -113,6 +115,74 @@ const SongInfo: Component = () => {
   const [loadingTree, setLoadingTree] = createSignal<boolean>(false);
   const [isEditMode, setIsEditMode] = createSignal<boolean>(false);
   const [searchText, setSearchText] = createSignal<string>("");
+
+  // Swipe and transition signals
+  const [dragX, setDragX] = createSignal<number>(0);
+  const [isDragging, setIsDragging] = createSignal<boolean>(false);
+  const [animState, setAnimState] = createSignal<string>("");
+  const [isTransitioning, setIsTransitioning] = createSignal<boolean>(false);
+
+  const songList = () => songsContext?.songs ?? [];
+
+  const currentIndex = createMemo(() => {
+    const current = song();
+    const list = songList();
+    if (!current || !list.length) return -1;
+    return list.findIndex((s) => s.id === current.id);
+  });
+
+  const prevSong = createMemo(() => {
+    const idx = currentIndex();
+    if (idx > 0) return songList()[idx - 1];
+    return undefined;
+  });
+
+  const nextSong = createMemo(() => {
+    const idx = currentIndex();
+    const list = songList();
+    if (idx !== -1 && idx < list.length - 1) return list[idx + 1];
+    return undefined;
+  });
+
+  const navigateToSong = (targetSong: Song, direction: 'next' | 'prev') => {
+    if (isTransitioning()) return;
+    setIsTransitioning(true);
+    setIsDragging(false);
+
+    if (direction === 'next') {
+      setAnimState('slide-out-left');
+      setTimeout(() => {
+        setSong(targetSong);
+        setDragX(0);
+        setAnimState('slide-in-prepare-right');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setAnimState('slide-in-active');
+            setTimeout(() => {
+              setAnimState('');
+              setIsTransitioning(false);
+            }, 200);
+          });
+        });
+      }, 160);
+    } else {
+      setAnimState('slide-out-right');
+      setTimeout(() => {
+        setSong(targetSong);
+        setDragX(0);
+        setAnimState('slide-in-prepare-left');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setAnimState('slide-in-active');
+            setTimeout(() => {
+              setAnimState('');
+              setIsTransitioning(false);
+            }, 200);
+          });
+        });
+      }, 160);
+    }
+  };
 
   const fetchGenreTree = async () => {
     if (genreTree().length > 0) return;
@@ -167,6 +237,29 @@ const SongInfo: Component = () => {
 
   onMount(() => {
     fetchGenreTree();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!song()) return;
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        return;
+      }
+      if (e.key === 'ArrowRight' && nextSong()) {
+        e.preventDefault();
+        navigateToSong(nextSong()!, 'next');
+      } else if (e.key === 'ArrowLeft' && prevSong()) {
+        e.preventDefault();
+        navigateToSong(prevSong()!, 'prev');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    onCleanup(() => {
+      window.removeEventListener('keydown', handleKeyDown);
+    });
   });
 
   let lastSongId: number | undefined = undefined;
@@ -297,6 +390,9 @@ const SongInfo: Component = () => {
 
   const handleClose = () => {
     setIsEditMode(false);
+    setDragX(0);
+    setIsDragging(false);
+    setAnimState('');
     setSong(undefined);
   };
 
@@ -304,15 +400,189 @@ const SongInfo: Component = () => {
     event.stopPropagation(); // Prevent clicks inside the card from closing it
   };
 
+  // Touch and pointer gesture handling
+  let gestureStartX = 0;
+  let gestureStartY = 0;
+  let gestureStartTime = 0;
+  let gestureDirection: 'horizontal' | 'vertical' | null = null;
+  let isPointerActive = false;
+
+  const onTouchStart = (e: TouchEvent) => {
+    if (isTransitioning()) return;
+    const touch = e.touches[0];
+    gestureStartX = touch.clientX;
+    gestureStartY = touch.clientY;
+    gestureStartTime = Date.now();
+    gestureDirection = null;
+    isPointerActive = true;
+  };
+
+  const onTouchMove = (e: TouchEvent) => {
+    if (!isPointerActive || isTransitioning()) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - gestureStartX;
+    const deltaY = touch.clientY - gestureStartY;
+
+    if (gestureDirection === null) {
+      if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          gestureDirection = 'horizontal';
+          setIsDragging(true);
+        } else {
+          gestureDirection = 'vertical';
+        }
+      }
+    }
+
+    if (gestureDirection === 'horizontal') {
+      let effectiveDeltaX = deltaX;
+      if ((deltaX > 0 && !prevSong()) || (deltaX < 0 && !nextSong())) {
+        effectiveDeltaX = deltaX * 0.25; // Rubber banding resistance at ends
+      }
+      setDragX(effectiveDeltaX);
+    }
+  };
+
+  const onTouchEnd = () => {
+    if (!isPointerActive) return;
+    isPointerActive = false;
+
+    if (gestureDirection === 'horizontal' && isDragging()) {
+      const elapsed = Date.now() - gestureStartTime;
+      const currentDrag = dragX();
+      const velocity = Math.abs(currentDrag) / (elapsed || 1);
+      const isFlick = velocity > 0.35 && Math.abs(currentDrag) > 25;
+      const isPastThreshold = Math.abs(currentDrag) > 65;
+
+      if ((isFlick || isPastThreshold) && currentDrag < 0 && nextSong()) {
+        navigateToSong(nextSong()!, 'next');
+      } else if ((isFlick || isPastThreshold) && currentDrag > 0 && prevSong()) {
+        navigateToSong(prevSong()!, 'prev');
+      } else {
+        setIsDragging(false);
+        setDragX(0);
+      }
+    } else {
+      setIsDragging(false);
+      setDragX(0);
+    }
+    gestureDirection = null;
+  };
+
+  // Card transform styling based on drag and transition state
+  const cardTransformStyle = () => {
+    if (isDragging()) {
+      return {
+        transform: `translateX(${dragX()}px)`,
+        transition: 'none',
+        'user-select': 'none',
+      };
+    }
+    if (animState() === 'slide-out-left') {
+      return {
+        transform: 'translateX(-110vw)',
+        opacity: '0',
+        transition: 'transform 160ms cubic-bezier(0.4, 0, 1, 1), opacity 160ms ease-in',
+      };
+    }
+    if (animState() === 'slide-out-right') {
+      return {
+        transform: 'translateX(110vw)',
+        opacity: '0',
+        transition: 'transform 160ms cubic-bezier(0.4, 0, 1, 1), opacity 160ms ease-in',
+      };
+    }
+    if (animState() === 'slide-in-prepare-right') {
+      return {
+        transform: 'translateX(100vw)',
+        opacity: '0',
+        transition: 'none',
+      };
+    }
+    if (animState() === 'slide-in-prepare-left') {
+      return {
+        transform: 'translateX(-100vw)',
+        opacity: '0',
+        transition: 'none',
+      };
+    }
+    if (animState() === 'slide-in-active') {
+      return {
+        transform: 'translateX(0px)',
+        opacity: '1',
+        transition: 'transform 200ms cubic-bezier(0, 0, 0.2, 1), opacity 200ms ease-out',
+      };
+    }
+    return {
+      transform: 'translateX(0px)',
+      opacity: '1',
+      transition: 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1), opacity 200ms ease',
+    };
+  };
+
   return (
     <Show when={!!song()}>
       <Backdrop show={!!song()} onClick={handleClose} />
       <div
         class="card w-96 max-w-[calc(100vw-2rem)] bg-base-200 shadow-xl m-auto absolute left-0 right-0 top-16 md:top-1/4 max-h-[85vh] overflow-y-auto"
-        style={{ 'z-index': '100' }} // Ensure card is above backdrop
-        onClick={cardClickHandler} // Add click handler to the card
+        style={{
+          'z-index': '100',
+          'touch-action': 'pan-y',
+          ...cardTransformStyle(),
+        }}
+        onClick={cardClickHandler}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
       >
         <div class="card-body p-6">
+          {/* Header Bar with Navigation Controls & Close Button */}
+          <div class="flex items-center justify-between text-xs text-base-content/60 -mt-2 mb-2">
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-circle"
+                onClick={() => prevSong() && navigateToSong(prevSong()!, 'prev')}
+                disabled={!prevSong() || isTransitioning()}
+                title="Previous song (Swipe right or Left Arrow)"
+                aria-label="Previous song"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <Show when={currentIndex() !== -1 && songList().length > 0}>
+                <span class="font-mono text-[11px] opacity-75">
+                  {currentIndex() + 1} / {songList().length}
+                </span>
+              </Show>
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-circle"
+                onClick={() => nextSong() && navigateToSong(nextSong()!, 'next')}
+                disabled={!nextSong() || isTransitioning()}
+                title="Next song (Swipe left or Right Arrow)"
+                aria-label="Next song"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-base-content"
+              onClick={handleClose}
+              aria-label="Close modal"
+              title="Close"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
           {/* Display artist in bold, without a label */}
           <p style={{ "font-weight": "bold" }}>{song()?.artist}</p>
           {/* Display title directly, without a label */}

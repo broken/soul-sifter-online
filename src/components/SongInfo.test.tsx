@@ -8,6 +8,54 @@ import { SongConsumer } from './SongContext';
 import { Song, Style, StyleChildren } from '../model.types';
 import { supabase } from './App';
 
+const mockSong1: Song = {
+  id: 101,
+  artist: 'Daft Punk',
+  title: 'One More Time',
+  albumid: 1,
+  albumpartid: null,
+  bpm: 123,
+  bpmlock: false,
+  comments: null,
+  curator: null,
+  dateadded: '2023-01-01',
+  dupeid: null,
+  durationinms: 320000,
+  energy: 7,
+  featuring: null,
+  filepath: '/music/one_more_time.mp3',
+  googlesongid: null,
+  lowquality: false,
+  musicvideoid: null,
+  rating: 5,
+  remixer: null,
+  resongid: null,
+  search_text: null,
+  spotifyid: null,
+  tonickey: '11B',
+  tonickeylock: false,
+  track: '1',
+  trashed: false,
+  youtubeid: 'FGBhQbmPwH8',
+  youtubemusicid: null,
+};
+
+const mockSong2: Song = {
+  ...mockSong1,
+  id: 102,
+  artist: 'Justice',
+  title: 'Genesis',
+};
+
+const mockSong3: Song = {
+  ...mockSong1,
+  id: 103,
+  artist: 'Kavinsky',
+  title: 'Nightcall',
+};
+
+const mockSongsList: Song[] = [mockSong1, mockSong2, mockSong3];
+
 // Mock SongContext
 vi.mock('./SongContext', () => {
   const [song, setSong] = createSignal<Song | undefined>(undefined);
@@ -21,7 +69,7 @@ vi.mock('./SongContext', () => {
 vi.mock('./SongsContext', () => {
   return {
     useSongs: () => ({
-      songs: [],
+      songs: mockSongsList,
       setSongs: vi.fn(),
     }),
     default: (props: any) => props.children,
@@ -39,38 +87,6 @@ vi.mock('./App', () => {
 });
 
 describe('SongInfo Component', () => {
-  const mockSong: Song = {
-    id: 101,
-    artist: 'Daft Punk',
-    title: 'One More Time',
-    albumid: 1,
-    albumpartid: null,
-    bpm: 123,
-    bpmlock: false,
-    comments: null,
-    curator: null,
-    dateadded: '2023-01-01',
-    dupeid: null,
-    durationinms: 320000,
-    energy: 7,
-    featuring: null,
-    filepath: '/music/one_more_time.mp3',
-    googlesongid: null,
-    lowquality: false,
-    musicvideoid: null,
-    rating: 5,
-    remixer: null,
-    resongid: null,
-    search_text: null,
-    spotifyid: null,
-    tonickey: '11B',
-    tonickeylock: false,
-    track: '1',
-    trashed: false,
-    youtubeid: 'FGBhQbmPwH8',
-    youtubemusicid: null,
-  };
-
   const sampleStyles: Style[] = [
     { id: 1, name: 'Electronic', description: null, reid: null, relabel: null },
     { id: 2, name: 'House', description: null, reid: null, relabel: null },
@@ -145,7 +161,7 @@ describe('SongInfo Component', () => {
     const { setSong } = SongConsumer();
     render(() => <SongInfo />);
 
-    setSong(mockSong);
+    setSong(mockSong1);
 
     expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
     expect(screen.getByText('One More Time')).toBeInTheDocument();
@@ -161,7 +177,7 @@ describe('SongInfo Component', () => {
     const { setSong } = SongConsumer();
     render(() => <SongInfo />);
 
-    setSong(mockSong);
+    setSong(mockSong1);
 
     expect(await screen.findByText('French Touch')).toBeInTheDocument();
 
@@ -200,7 +216,7 @@ describe('SongInfo Component', () => {
     const { setSong } = SongConsumer();
     render(() => <SongInfo />);
 
-    setSong(mockSong);
+    setSong(mockSong1);
 
     const editBtn = await screen.findByRole('button', { name: /edit/i });
     await fireEvent.click(editBtn);
@@ -238,5 +254,92 @@ describe('SongInfo Component', () => {
       value: '1',
     });
   });
-});
 
+  it('navigates to next and previous song using navigation buttons', async () => {
+    const { setSong } = SongConsumer();
+    render(() => <SongInfo />);
+
+    setSong(mockSong1);
+
+    expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
+
+    // Next button should be enabled, previous button disabled on first song
+    const nextBtn = screen.getByRole('button', { name: /next song/i });
+    const prevBtn = screen.getByRole('button', { name: /previous song/i });
+    expect(prevBtn).toBeDisabled();
+    expect(nextBtn).toBeEnabled();
+
+    // Click Next
+    await fireEvent.click(nextBtn);
+
+    // Wait for transition to target song (mockSong2: Justice)
+    await waitFor(() => {
+      expect(screen.getByText('Justice')).toBeInTheDocument();
+      expect(screen.getByText('Genesis')).toBeInTheDocument();
+    });
+
+    // Now both prev and next should be enabled
+    expect(screen.getByRole('button', { name: /previous song/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /next song/i })).toBeEnabled();
+
+    // Click Previous
+    await fireEvent.click(screen.getByRole('button', { name: /previous song/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Daft Punk')).toBeInTheDocument();
+    });
+  });
+
+  it('navigates songs using left and right swipe touch gestures', async () => {
+    const { setSong } = SongConsumer();
+    const { container } = render(() => <SongInfo />);
+
+    setSong(mockSong1);
+
+    expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
+
+    const card = container.querySelector('.card')!;
+    expect(card).toBeInTheDocument();
+
+    // Swipe Left (deltaX = -100): TouchStart at 200, TouchMove to 100, TouchEnd
+    fireEvent.touchStart(card, { touches: [{ clientX: 200, clientY: 100 }] });
+    fireEvent.touchMove(card, { touches: [{ clientX: 100, clientY: 100 }] });
+    fireEvent.touchEnd(card);
+
+    await waitFor(() => {
+      expect(screen.getByText('Justice')).toBeInTheDocument();
+    });
+
+    // Swipe Right (deltaX = +100): TouchStart at 100, TouchMove to 200, TouchEnd
+    fireEvent.touchStart(card, { touches: [{ clientX: 100, clientY: 100 }] });
+    fireEvent.touchMove(card, { touches: [{ clientX: 200, clientY: 100 }] });
+    fireEvent.touchEnd(card);
+
+    await waitFor(() => {
+      expect(screen.getByText('Daft Punk')).toBeInTheDocument();
+    });
+  });
+
+  it('navigates songs using arrow keys', async () => {
+    const { setSong } = SongConsumer();
+    render(() => <SongInfo />);
+
+    setSong(mockSong1);
+
+    expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
+
+    // Press ArrowRight to go to next song
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+
+    await waitFor(() => {
+      expect(screen.getByText('Justice')).toBeInTheDocument();
+    });
+
+    // Press ArrowLeft to return to previous song
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+
+    await waitFor(() => {
+      expect(screen.getByText('Daft Punk')).toBeInTheDocument();
+    });
+  });
+});
