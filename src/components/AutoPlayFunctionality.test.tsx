@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { ParentComponent, createSignal } from 'solid-js';
 import ThemeContext from './ThemeContext';
 import FontSizeContext from './FontSizeContext';
-import AutoPlayContext, { autoPlayNext, setAutoPlayNext } from './AutoPlayContext';
+import AutoPlayContext, { autoPlayNext, setAutoPlayNext, autoPlayOnOpen, setAutoPlayOnOpen } from './AutoPlayContext';
 import SongContext, { SongConsumer } from './SongContext';
 import SongsContext, { useSongs } from './SongsContext';
 import Settings from './Settings';
@@ -158,13 +158,15 @@ const TestSettingsApp: ParentComponent = (props) => {
 describe('Auto-Play Settings Functionality', () => {
   beforeEach(() => {
     setAutoPlayNext(false);
+    setAutoPlayOnOpen(false);
   });
 
   it('should initialize with auto-play disabled by default', () => {
     expect(autoPlayNext()).toBe(false);
+    expect(autoPlayOnOpen()).toBe(false);
   });
 
-  it('should render the auto-play toggle and allow switching it on/off in Settings', async () => {
+  it('should render the auto-play next toggle and allow switching it on/off in Settings', async () => {
     const { unmount } = render(() => (
       <TestSettingsApp>
         <Settings />
@@ -187,6 +189,30 @@ describe('Auto-Play Settings Functionality', () => {
 
     unmount();
   });
+
+  it('should render the auto-play on open toggle and allow switching it on/off in Settings', async () => {
+    const { unmount } = render(() => (
+      <TestSettingsApp>
+        <Settings />
+      </TestSettingsApp>
+    ));
+
+    const toggle = screen.getByRole('checkbox', { name: /auto-play on song info open/i }) as HTMLInputElement;
+    expect(toggle).toBeInTheDocument();
+    expect(toggle.checked).toBe(false);
+
+    // Toggle on
+    fireEvent.click(toggle);
+    expect(autoPlayOnOpen()).toBe(true);
+    expect(toggle.checked).toBe(true);
+
+    // Toggle off
+    fireEvent.click(toggle);
+    expect(autoPlayOnOpen()).toBe(false);
+    expect(toggle.checked).toBe(false);
+
+    unmount();
+  });
 });
 
 describe('Auto-Play Playback Behavior', () => {
@@ -195,6 +221,7 @@ describe('Auto-Play Playback Behavior', () => {
 
   beforeEach(() => {
     setAutoPlayNext(false);
+    setAutoPlayOnOpen(false);
     const { setSong } = SongConsumer();
     setSong(undefined);
     playerEvents = {};
@@ -389,6 +416,61 @@ describe('Auto-Play Playback Behavior', () => {
     playerEvents.onStateChange({ data: 0 });
 
     expect(mockOnAutoPlayNext).toHaveBeenCalledTimes(1);
+
+    unmount();
+  });
+
+  it('does not auto-play when song info is opened if autoPlayOnOpen is disabled', async () => {
+    setAutoPlayOnOpen(false);
+
+    const { unmount } = render(() => (
+      <SongContext>
+        <SongsContext>
+          <AutoPlayContext>
+            <PlaybackTestHarness />
+          </AutoPlayContext>
+        </SongsContext>
+      </SongContext>
+    ));
+
+    await screen.findByRole('button', { name: /play/i });
+
+    expect(window.YT.Player).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        videoId: "yt_song_1",
+        playerVars: expect.objectContaining({ autoplay: 0 }),
+      })
+    );
+    expect(mockPlayerInstance.playVideo).not.toHaveBeenCalled();
+
+    unmount();
+  });
+
+  it('automatically plays song when song info is opened if autoPlayOnOpen is enabled', async () => {
+    setAutoPlayOnOpen(true);
+
+    const { unmount } = render(() => (
+      <SongContext>
+        <SongsContext>
+          <AutoPlayContext>
+            <PlaybackTestHarness />
+          </AutoPlayContext>
+        </SongsContext>
+      </SongContext>
+    ));
+
+    await waitFor(() => {
+      expect(window.YT.Player).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          videoId: "yt_song_1",
+          playerVars: expect.objectContaining({ autoplay: 1 }),
+        })
+      );
+    });
+
+    expect(mockPlayerInstance.playVideo).toHaveBeenCalled();
 
     unmount();
   });

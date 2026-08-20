@@ -7,7 +7,7 @@ import { useAutoPlay } from "./AutoPlayContext"
 const Settings: Component = () => {
   const { appTheme, setAppTheme } = useTheme();
   const { fontSize, setFontSize } = useFontSize();
-  const { autoPlayNext, setAutoPlayNext } = useAutoPlay();
+  const { autoPlayNext, setAutoPlayNext, autoPlayOnOpen, setAutoPlayOnOpen } = useAutoPlay();
 
   return (
     <div class="overflow-x-hidden overflow-y-auto w-screen p-4 max-w-2xl mx-auto flex flex-col gap-4" style="height: calc(100vh - 128px);">
@@ -94,18 +94,36 @@ const Settings: Component = () => {
       {/* Playback Section */}
       <div class="card bg-base-200 shadow-sm">
         <div class="card-body p-4 sm:p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="card-title text-base">Auto-Play Next Song</h2>
-              <p class="text-xs text-base-content/60">Automatically play the next song in the list when playback ends</p>
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="card-title text-base">Auto-Play Next Song</h2>
+                <p class="text-xs text-base-content/60">Automatically play the next song in the list when playback ends</p>
+              </div>
+              <input
+                type="checkbox"
+                class="toggle toggle-primary"
+                checked={autoPlayNext()}
+                onChange={(e) => setAutoPlayNext(e.currentTarget.checked)}
+                aria-label="Auto-Play Next Song"
+              />
             </div>
-            <input
-              type="checkbox"
-              class="toggle toggle-primary"
-              checked={autoPlayNext()}
-              onChange={(e) => setAutoPlayNext(e.currentTarget.checked)}
-              aria-label="Auto-Play Next Song"
-            />
+
+            <div class="divider my-0"></div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="card-title text-base">Auto-Play on Song Info Open</h2>
+                <p class="text-xs text-base-content/60">Automatically play song when song info is opened</p>
+              </div>
+              <input
+                type="checkbox"
+                class="toggle toggle-primary"
+                checked={autoPlayOnOpen()}
+                onChange={(e) => setAutoPlayOnOpen(e.currentTarget.checked)}
+                aria-label="Auto-Play on Song Info Open"
+              />
+            </div>
           </div>
         </div>
       </div>

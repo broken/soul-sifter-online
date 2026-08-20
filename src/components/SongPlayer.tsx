@@ -72,6 +72,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
   const songsContext = useSongs?.();
 
   const autoPlayNext = () => autoPlayContext?.autoPlayNext?.() ?? false;
+  const autoPlayOnOpen = () => autoPlayContext?.autoPlayOnOpen?.() ?? false;
   const songs = () => songsContext?.songs ?? [];
   const setSong = (s: Song | undefined) => songConsumer?.setSong?.(s);
 
@@ -161,7 +162,8 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     const targetElement = playerContainerRef.querySelector(".yt-embed-target");
     if (!targetElement) return;
 
-    const autoplayFlag = shouldAutoPlayNext ? 1 : 0;
+    const willAutoPlay = shouldAutoPlayNext || autoPlayOnOpen();
+    const autoplayFlag = willAutoPlay ? 1 : 0;
 
     try {
       playerInstance = new window.YT.Player(targetElement, {
@@ -184,7 +186,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
             if (dur > 0) {
               setDuration(dur);
             }
-            if (shouldAutoPlayNext) {
+            if (shouldAutoPlayNext || autoPlayOnOpen()) {
               shouldAutoPlayNext = false;
               try {
                 event.target?.playVideo?.();
