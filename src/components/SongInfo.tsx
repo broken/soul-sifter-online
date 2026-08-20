@@ -409,6 +409,10 @@ const SongInfo: Component = () => {
 
   const onTouchStart = (e: TouchEvent) => {
     if (isTransitioning()) return;
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest('input, textarea, select, button, a, [role="slider"], .range')) {
+      return;
+    }
     const touch = e.touches[0];
     gestureStartX = touch.clientX;
     gestureStartY = touch.clientY;

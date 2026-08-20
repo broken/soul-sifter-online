@@ -342,4 +342,25 @@ describe('SongInfo Component', () => {
       expect(screen.getByText('Daft Punk')).toBeInTheDocument();
     });
   });
+
+  it('does not trigger swipe navigation when dragging sliders or interactive controls', async () => {
+    const { setSong } = SongConsumer();
+    const { container } = render(() => <SongInfo />);
+
+    setSong(mockSong1);
+
+    expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
+
+    const slider = container.querySelector('input[type="range"]');
+    if (slider) {
+      // Touching and dragging on the range slider
+      fireEvent.touchStart(slider, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchMove(slider, { touches: [{ clientX: 50, clientY: 100 }] });
+      fireEvent.touchEnd(slider);
+
+      // Should still be Daft Punk (did not swipe to Justice)
+      expect(screen.getByText('Daft Punk')).toBeInTheDocument();
+      expect(screen.queryByText('Justice')).not.toBeInTheDocument();
+    }
+  });
 });
