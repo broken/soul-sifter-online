@@ -60,7 +60,6 @@ const SongListItem: Component<{song: Song}> = (props) => {
     unregisterOpenSongRow(rowId);
     const centerPos = centerRef.offsetLeft;
     isOpen = null;
-    stateAtTouchStart = null;
 
     tdRef.scrollTo({ left: centerPos, behavior: 'smooth' });
 
