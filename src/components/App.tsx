@@ -2,6 +2,8 @@ import { Suspense, type Component, Switch, Match, createSignal, useTransition, c
 import { createClient } from '@supabase/supabase-js'
 
 import { useTheme } from './ThemeContext' // Added useTheme
+import { useFontSize, fontSizes } from './FontSizeContext'
+import FontSizeContext from './FontSizeContext'
 import GenresContext from './GenresContext'
 import GenreInfo from './GenreInfo'
 import GenreList from './GenreList'
@@ -28,9 +30,15 @@ const AppView: Component = () => {
   const [tab, setTab] = createSignal(0)
   const [pending, start] = useTransition()
   const { appTheme } = useTheme(); // Moved from Settings.tsx
+  const { fontSize } = useFontSize();
 
   createEffect(() => { // Moved from Settings.tsx
     document.documentElement.setAttribute("data-theme", appTheme());
+  });
+
+  createEffect(() => {
+    const currentSize = fontSizes.find(f => f.id === fontSize())?.size || '16px';
+    document.documentElement.style.fontSize = currentSize;
   });
 
   return (
@@ -69,7 +77,9 @@ const App: Component = () => {
         <SongContext>
           <SongsContext>
             <ThemeContext> {/* ThemeContext provider */}
-              <AppView /> {/* AppView is now a child of ThemeContext */}
+              <FontSizeContext>
+                <AppView /> {/* AppView is now a child of ThemeContext and FontSizeContext */}
+              </FontSizeContext>
             </ThemeContext>
           </SongsContext>
         </SongContext>

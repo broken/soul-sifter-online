@@ -57,11 +57,15 @@ vi.mock('@supabase/supabase-js', () => {
 
 // Removed NavBar specific mocks
 
+import FontSizeContext from './FontSizeContext';
+
 // A wrapper component to provide ThemeContext for testing
 const TestApp: ParentComponent = (props) => {
   return (
     <ThemeContext>
-      {props.children}
+      <FontSizeContext>
+        {props.children}
+      </FontSizeContext>
     </ThemeContext>
   );
 };
