@@ -593,7 +593,10 @@ const SongInfo: Component = () => {
           <p class="text-sm opacity-80">{song()?.title}</p>
 
           {/* YouTube Music Playback Controls */}
-          <SongPlayer song={song()} />
+          <SongPlayer
+            song={song()}
+            onAutoPlayNext={() => nextSong() && navigateToSong(nextSong()!, 'next')}
+          />
 
           {/* Genres / Styles Section */}
           <div class="mt-3">

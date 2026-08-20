@@ -58,6 +58,7 @@ const formatTime = (seconds: number): string => {
 
 export interface SongPlayerProps {
   song?: Song | null;
+  onAutoPlayNext?: () => void;
 }
 
 const SongPlayer: Component<SongPlayerProps> = (props) => {
@@ -215,14 +216,18 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               stopTimer();
               setCurrentTime(duration());
 
-              if (autoPlayNext() && setSong) {
+              if (autoPlayNext()) {
                 const songList = songs();
                 if (songList && songList.length > 0 && props.song) {
                   const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
                   if (currentIndex !== -1 && currentIndex + 1 < songList.length) {
                     const nextSong = songList[currentIndex + 1];
                     shouldAutoPlayNext = true;
-                    setSong(nextSong);
+                    if (props.onAutoPlayNext) {
+                      props.onAutoPlayNext();
+                    } else if (setSong) {
+                      setSong(nextSong);
+                    }
                   }
                 }
               }

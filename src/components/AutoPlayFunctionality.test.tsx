@@ -354,4 +354,40 @@ describe('Auto-Play Playback Behavior', () => {
 
     unmount();
   });
+
+  it('triggers onAutoPlayNext callback when provided upon song playback completion', async () => {
+    setAutoPlayNext(true);
+    const mockOnAutoPlayNext = vi.fn();
+
+    const CallbackTestHarness: ParentComponent = () => {
+      const { song, setSong } = SongConsumer();
+      const { setSongs } = useSongs();
+
+      setSongs(mockSongs);
+      if (!song()) {
+        setSong(mockSongs[0]);
+      }
+
+      return <SongPlayer song={song()} onAutoPlayNext={mockOnAutoPlayNext} />;
+    };
+
+    const { unmount } = render(() => (
+      <SongContext>
+        <SongsContext>
+          <AutoPlayContext>
+            <CallbackTestHarness />
+          </AutoPlayContext>
+        </SongsContext>
+      </SongContext>
+    ));
+
+    await screen.findByRole('button', { name: /play/i });
+
+    // Trigger ENDED on song 1
+    playerEvents.onStateChange({ data: 0 });
+
+    expect(mockOnAutoPlayNext).toHaveBeenCalledTimes(1);
+
+    unmount();
+  });
 });
