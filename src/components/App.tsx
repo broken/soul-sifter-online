@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 import { useTheme } from './ThemeContext' // Added useTheme
 import { useFontSize, fontSizes } from './FontSizeContext'
+import AutoPlayContext from './AutoPlayContext'
 import FontSizeContext from './FontSizeContext'
 import GenresContext from './GenresContext'
 import GenreInfo from './GenreInfo'
@@ -78,7 +79,9 @@ const App: Component = () => {
           <SongsContext>
             <ThemeContext> {/* ThemeContext provider */}
               <FontSizeContext>
-                <AppView /> {/* AppView is now a child of ThemeContext and FontSizeContext */}
+                <AutoPlayContext>
+                  <AppView /> {/* AppView is now a child of ThemeContext, FontSizeContext, and AutoPlayContext */}
+                </AutoPlayContext>
               </FontSizeContext>
             </ThemeContext>
           </SongsContext>

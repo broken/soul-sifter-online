@@ -1,5 +1,8 @@
 import { Component, createSignal, createEffect, onMount, onCleanup, Show } from "solid-js";
 import { Song } from "../model.types";
+import { useAutoPlay } from "./AutoPlayContext";
+import { SongConsumer } from "./SongContext";
+import { useSongs } from "./SongsContext";
 
 declare global {
   interface Window {
@@ -61,6 +64,15 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
   let playerContainerRef: HTMLDivElement | undefined;
   let playerInstance: any = null;
   let timeInterval: number | undefined;
+  let shouldAutoPlayNext = false;
+
+  const autoPlayContext = useAutoPlay?.();
+  const songConsumer = SongConsumer?.();
+  const songsContext = useSongs?.();
+
+  const autoPlayNext = () => autoPlayContext?.autoPlayNext?.() ?? false;
+  const songs = () => songsContext?.songs ?? [];
+  const setSong = (s: Song | undefined) => songConsumer?.setSong?.(s);
 
   const [isPlaying, setIsPlaying] = createSignal<boolean>(false);
   const [isBuffering, setIsBuffering] = createSignal<boolean>(false);
@@ -127,6 +139,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     destroyPlayer();
 
     if (!ytId) {
+      shouldAutoPlayNext = false;
       // Set estimated duration from song metadata if available
       if (props.song?.durationinms) {
         setDuration(Math.round(props.song.durationinms / 1000));
@@ -147,13 +160,15 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     const targetElement = playerContainerRef.querySelector(".yt-embed-target");
     if (!targetElement) return;
 
+    const autoplayFlag = shouldAutoPlayNext ? 1 : 0;
+
     try {
       playerInstance = new window.YT.Player(targetElement, {
         height: "100%",
         width: "100%",
         videoId: ytId,
         playerVars: {
-          autoplay: 0,
+          autoplay: autoplayFlag,
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -167,6 +182,14 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
             const dur = event.target?.getDuration?.() || 0;
             if (dur > 0) {
               setDuration(dur);
+            }
+            if (shouldAutoPlayNext) {
+              shouldAutoPlayNext = false;
+              try {
+                event.target?.playVideo?.();
+              } catch (err) {
+                console.warn("Auto-play playVideo error:", err);
+              }
             }
           },
           onStateChange: (event: any) => {
@@ -191,6 +214,18 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               setIsBuffering(false);
               stopTimer();
               setCurrentTime(duration());
+
+              if (autoPlayNext() && setSong) {
+                const songList = songs();
+                if (songList && songList.length > 0 && props.song) {
+                  const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
+                  if (currentIndex !== -1 && currentIndex + 1 < songList.length) {
+                    const nextSong = songList[currentIndex + 1];
+                    shouldAutoPlayNext = true;
+                    setSong(nextSong);
+                  }
+                }
+              }
             } else if (state === 5 || state === -1) {
               // CUED or UNSTARTED
               setIsPlaying(false);
@@ -238,6 +273,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
   });
 
   onCleanup(() => {
+    shouldAutoPlayNext = false;
     destroyPlayer();
   });
 
