@@ -43,7 +43,7 @@ const AppView: Component = () => {
   });
 
   return (
-    <div class="flex flex-col h-screen w-screen overflow-hidden">
+    <div class="flex flex-col h-screen w-screen overflow-hidden relative">
       <SearchToolbar />
       {/* Added flex-1 and overflow-auto to the tab container */}
       <div class="px-0 flex-1 overflow-auto" classList={{ pending: pending() }}>

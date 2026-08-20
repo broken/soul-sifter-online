@@ -527,20 +527,20 @@ const SongInfo: Component = () => {
   return (
     <Show when={!!song()}>
       <Backdrop show={!!song()} onClick={handleClose} />
-      <div
-        class="card w-96 max-w-[calc(100vw-2rem)] bg-base-200 shadow-xl m-auto absolute left-0 right-0 top-16 md:top-1/4 max-h-[85vh] overflow-y-auto"
-        style={{
-          'z-index': '100',
-          'touch-action': 'pan-y',
-          ...cardTransformStyle(),
-        }}
-        onClick={cardClickHandler}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onTouchCancel={onTouchEnd}
-      >
-        <div class="card-body p-6">
+      <div class="fixed inset-0 z-[100] overflow-hidden pointer-events-none flex items-start justify-center pt-16 md:pt-[25vh]">
+        <div
+          class="card w-96 max-w-[calc(100vw-2rem)] bg-base-200 shadow-xl max-h-[85vh] overflow-y-auto pointer-events-auto"
+          style={{
+            'touch-action': 'pan-y',
+            ...cardTransformStyle(),
+          }}
+          onClick={cardClickHandler}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchEnd}
+        >
+          <div class="card-body p-6">
           {/* Header Bar with Navigation Controls & Close Button */}
           <div class="flex items-center justify-between text-xs text-base-content/60 -mt-2 mb-2">
             <div class="flex items-center gap-1">
@@ -686,6 +686,7 @@ const SongInfo: Component = () => {
           </div>
         </div>
       </div>
+    </div>
     </Show>
   );
 };

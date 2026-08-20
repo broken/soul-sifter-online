@@ -15,16 +15,17 @@ const GenreInfo: Component = () => {
   return (
     <Show when={!!genreToEdit()}>
       <Backdrop show={!!genreToEdit()} onClick={handleClose} />
-      <div
-        class="card w-96 bg-base-200 shadow-xl m-auto absolute left-0 right-0 top-1/4"
-        style={{ 'z-index': '100' }} // Ensure card is above backdrop
-        onClick={cardClickHandler} // Add click handler to the card
-      >
-        <div class="card-body">
-          {/* Display genre name as the title */}
-          <h2 class="card-title">{genreToEdit()?.name}</h2>
-          {/* Display description directly, without a label */}
-          <p>{genreToEdit()?.description}</p>
+      <div class="fixed inset-0 z-[100] overflow-hidden pointer-events-none flex items-start justify-center pt-16 md:pt-[25vh]">
+        <div
+          class="card w-96 max-w-[calc(100vw-2rem)] bg-base-200 shadow-xl pointer-events-auto"
+          onClick={cardClickHandler} // Add click handler to the card
+        >
+          <div class="card-body">
+            {/* Display genre name as the title */}
+            <h2 class="card-title">{genreToEdit()?.name}</h2>
+            {/* Display description directly, without a label */}
+            <p>{genreToEdit()?.description}</p>
+          </div>
         </div>
       </div>
     </Show>
