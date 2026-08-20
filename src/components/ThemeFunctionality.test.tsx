@@ -2,6 +2,7 @@ import { render, fireEvent, screen } from '@solidjs/testing-library';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ThemeContext, { appTheme, darkThemes, lightThemes } from './ThemeContext';
 import SearchToolbar from './SearchToolbar';
+import Settings from './Settings';
 import App from './App'; // Import the main App component
 import { ParentComponent } from 'solid-js';
 
@@ -149,3 +150,27 @@ describe('SearchToolbar Theme Toggling', () => {
 
 // Removed NavBar specific test for props.start and props.setTab
 });
+
+describe('Settings Theme Selection', () => {
+  it('should render theme buttons and update theme on click', async () => {
+    const { unmount } = render(() => (
+      <TestApp>
+        <Settings />
+      </TestApp>
+    ));
+
+    const targetTheme = darkThemes[0] === appTheme() ? darkThemes[1] : darkThemes[0];
+    const themeButton = screen.getByRole('button', { name: new RegExp(`^${targetTheme}$`, 'i') });
+    expect(themeButton).toBeTruthy();
+
+    // Click the theme button
+    fireEvent.click(themeButton);
+
+    expect(appTheme()).toBe(targetTheme);
+    expect(themeButton.className).toContain('btn-primary');
+
+    unmount();
+  });
+});
+
+
