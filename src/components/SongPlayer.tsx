@@ -88,6 +88,76 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
   const youtubeId = () => props.song?.youtubemusicid?.trim() || props.song?.youtubeid?.trim() || "";
 
+  const updateMediaSession = () => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+
+    if (props.song) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: props.song.title || "Unknown Title",
+          artist: props.song.artist || "Unknown Artist",
+          album: props.song.curator || "",
+          artwork: [
+            { src: "/favicon.ico", sizes: "64x64", type: "image/x-icon" }
+          ],
+        });
+      } catch {
+        // Ignore MediaMetadata construction error in unsupported environments
+      }
+    } else {
+      try {
+        navigator.mediaSession.metadata = null;
+      } catch {
+        // Ignore
+      }
+    }
+  };
+
+  const updateMediaSessionPlaybackState = (state: "playing" | "paused" | "none") => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = state;
+    } catch {
+      // Ignore
+    }
+  };
+
+  const playNextSong = () => {
+    if (!autoPlayNext()) return;
+    const songList = songs();
+    if (songList && songList.length > 0 && props.song) {
+      const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
+      if (currentIndex !== -1 && currentIndex + 1 < songList.length) {
+        const nextSong = songList[currentIndex + 1];
+        shouldAutoPlayNext = true;
+        if (props.onAutoPlayNext) {
+          props.onAutoPlayNext();
+        } else if (setSong) {
+          setSong(nextSong);
+        }
+      }
+    }
+  };
+
+  const playPreviousSong = () => {
+    if (currentTime() > 3 && playerInstance && typeof playerInstance.seekTo === "function") {
+      playerInstance.seekTo(0, true);
+      setCurrentTime(0);
+      return;
+    }
+    const songList = songs();
+    if (songList && songList.length > 0 && props.song) {
+      const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
+      if (currentIndex > 0) {
+        const prevSong = songList[currentIndex - 1];
+        shouldAutoPlayNext = true;
+        if (setSong) {
+          setSong(prevSong);
+        }
+      }
+    }
+  };
+
   const startTimer = () => {
     stopTimer();
     timeInterval = window.setInterval(() => {
@@ -135,6 +205,64 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     setDuration(0);
     setHasError(false);
     setErrorMessage("");
+    updateMediaSessionPlaybackState("none");
+  };
+
+  const loadOrCueSong = (ytId: string) => {
+    if (!playerInstance || !playerReady()) {
+      initPlayer(ytId);
+      return;
+    }
+
+    if (!ytId) {
+      shouldAutoPlayNext = false;
+      try {
+        if (typeof playerInstance.stopVideo === "function") {
+          playerInstance.stopVideo();
+        }
+      } catch (err) {
+        console.warn("Error stopping video:", err);
+      }
+      setIsPlaying(false);
+      setIsBuffering(false);
+      stopTimer();
+      setCurrentTime(0);
+      setDuration(props.song?.durationinms ? Math.round(props.song.durationinms / 1000) : 0);
+      setHasError(false);
+      setErrorMessage("");
+      updateMediaSession();
+      updateMediaSessionPlaybackState("none");
+      return;
+    }
+
+    setHasError(false);
+    setErrorMessage("");
+    setCurrentTime(0);
+    if (props.song?.durationinms) {
+      setDuration(Math.round(props.song.durationinms / 1000));
+    }
+
+    const willAutoPlay = shouldAutoPlayNext || autoPlayOnOpen();
+    shouldAutoPlayNext = false;
+
+    try {
+      if (willAutoPlay) {
+        if (typeof playerInstance.loadVideoById === "function") {
+          playerInstance.loadVideoById(ytId);
+        } else if (typeof playerInstance.cueVideoById === "function") {
+          playerInstance.cueVideoById(ytId);
+          playerInstance.playVideo?.();
+        }
+      } else {
+        if (typeof playerInstance.cueVideoById === "function") {
+          playerInstance.cueVideoById(ytId);
+        }
+      }
+    } catch (err) {
+      console.warn("Error loading/cueing video on existing player:", err);
+      initPlayer(ytId);
+    }
+    updateMediaSession();
   };
 
   const initPlayer = async (ytId: string) => {
@@ -146,6 +274,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
       if (props.song?.durationinms) {
         setDuration(Math.round(props.song.durationinms / 1000));
       }
+      updateMediaSession();
       return;
     }
 
@@ -186,6 +315,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
             if (dur > 0) {
               setDuration(dur);
             }
+            updateMediaSession();
             if (shouldAutoPlayNext || autoPlayOnOpen()) {
               shouldAutoPlayNext = false;
               try {
@@ -203,11 +333,13 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               setIsPlaying(true);
               setIsBuffering(false);
               startTimer();
+              updateMediaSessionPlaybackState("playing");
             } else if (state === 2) {
               // PAUSED
               setIsPlaying(false);
               setIsBuffering(false);
               stopTimer();
+              updateMediaSessionPlaybackState("paused");
             } else if (state === 3) {
               // BUFFERING
               setIsBuffering(true);
@@ -217,22 +349,8 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               setIsBuffering(false);
               stopTimer();
               setCurrentTime(duration());
-
-              if (autoPlayNext()) {
-                const songList = songs();
-                if (songList && songList.length > 0 && props.song) {
-                  const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
-                  if (currentIndex !== -1 && currentIndex + 1 < songList.length) {
-                    const nextSong = songList[currentIndex + 1];
-                    shouldAutoPlayNext = true;
-                    if (props.onAutoPlayNext) {
-                      props.onAutoPlayNext();
-                    } else if (setSong) {
-                      setSong(nextSong);
-                    }
-                  }
-                }
-              }
+              updateMediaSessionPlaybackState("none");
+              playNextSong();
             } else if (state === 5 || state === -1) {
               // CUED or UNSTARTED
               setIsPlaying(false);
@@ -244,6 +362,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
             setIsPlaying(false);
             setIsBuffering(false);
             stopTimer();
+            updateMediaSessionPlaybackState("none");
             const code = event.data;
             if (code === 101 || code === 150) {
               setErrorMessage("Embed playback restricted by copyright owner.");
@@ -276,12 +395,59 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     lastSongId = currentSongId;
     lastLoadedYtId = currentYtId;
 
-    initPlayer(currentYtId);
+    if (playerInstance && playerReady()) {
+      loadOrCueSong(currentYtId);
+    } else {
+      initPlayer(currentYtId);
+    }
+  });
+
+  onMount(() => {
+    if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.setActionHandler("play", () => {
+          if (playerInstance && typeof playerInstance.playVideo === "function") {
+            playerInstance.playVideo();
+          }
+        });
+        navigator.mediaSession.setActionHandler("pause", () => {
+          if (playerInstance && typeof playerInstance.pauseVideo === "function") {
+            playerInstance.pauseVideo();
+          }
+        });
+        navigator.mediaSession.setActionHandler("nexttrack", () => {
+          playNextSong();
+        });
+        navigator.mediaSession.setActionHandler("previoustrack", () => {
+          playPreviousSong();
+        });
+        navigator.mediaSession.setActionHandler("seekto", (details) => {
+          if (details.seekTime !== undefined && playerInstance && typeof playerInstance.seekTo === "function") {
+            playerInstance.seekTo(details.seekTime, true);
+            setCurrentTime(details.seekTime);
+          }
+        });
+      } catch (err) {
+        console.warn("MediaSession action handler error:", err);
+      }
+    }
   });
 
   onCleanup(() => {
     shouldAutoPlayNext = false;
     destroyPlayer();
+    if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.setActionHandler("play", null);
+        navigator.mediaSession.setActionHandler("pause", null);
+        navigator.mediaSession.setActionHandler("nexttrack", null);
+        navigator.mediaSession.setActionHandler("previoustrack", null);
+        navigator.mediaSession.setActionHandler("seekto", null);
+        navigator.mediaSession.playbackState = "none";
+      } catch {
+        // Ignore
+      }
+    }
   });
 
   const togglePlayPause = () => {

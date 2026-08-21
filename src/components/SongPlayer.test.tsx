@@ -68,6 +68,12 @@ describe("SongPlayer Component", () => {
       }),
       stopVideo: vi.fn(),
       seekTo: vi.fn(),
+      loadVideoById: vi.fn((_id: string) => {
+        if (playerEvents.onStateChange) {
+          playerEvents.onStateChange({ data: 1 }); // PLAYING
+        }
+      }),
+      cueVideoById: vi.fn(),
       destroy: vi.fn(),
       getCurrentTime: vi.fn().mockReturnValue(45),
       getDuration: vi.fn().mockReturnValue(320),
@@ -167,6 +173,27 @@ describe("SongPlayer Component", () => {
     // Player constructor should NOT be called again, and destroy should not be called
     expect(window.YT.Player).toHaveBeenCalledTimes(1);
     expect(mockPlayerInstance.destroy).not.toHaveBeenCalled();
+  });
+
+  it("reuses existing player instance with cueVideoById when switching songs", async () => {
+    const [songSignal, setSongSignal] = createSignal<Song>(mockSongWithYoutube);
+    render(() => <SongPlayer song={songSignal()} />);
+
+    await screen.findByRole("button", { name: /play/i });
+    expect(window.YT.Player).toHaveBeenCalledTimes(1);
+
+    // Switch to different song
+    setSongSignal({
+      ...mockSongWithYoutube,
+      id: 102,
+      youtubeid: "nextVideoId123",
+    });
+
+    // Should call cueVideoById without creating a new YT.Player or destroying old one
+    await waitFor(() => {
+      expect(mockPlayerInstance.cueVideoById).toHaveBeenCalledWith("nextVideoId123");
+    });
+    expect(window.YT.Player).toHaveBeenCalledTimes(1);
   });
 
   it("displays error message when video playback errors occur", async () => {

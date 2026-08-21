@@ -256,6 +256,12 @@ describe('Auto-Play Playback Behavior', () => {
       }),
       stopVideo: vi.fn(),
       seekTo: vi.fn(),
+      loadVideoById: vi.fn((_id: string) => {
+        if (playerEvents.onStateChange) {
+          playerEvents.onStateChange({ data: 1 }); // PLAYING
+        }
+      }),
+      cueVideoById: vi.fn(),
       destroy: vi.fn(),
       getCurrentTime: vi.fn().mockReturnValue(0),
       getDuration: vi.fn().mockReturnValue(200),
@@ -345,18 +351,13 @@ describe('Auto-Play Playback Behavior', () => {
     // Simulate song 1 completion (state === 0)
     playerEvents.onStateChange({ data: 0 });
 
-    // Wait for the next song (Track Two, yt_song_2) to be loaded with autoplay
+    // Wait for the next song (Track Two, yt_song_2) to be loaded seamlessly via loadVideoById on existing player
     await waitFor(() => {
-      expect(window.YT.Player).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          videoId: "yt_song_2",
-          playerVars: expect.objectContaining({ autoplay: 1 }),
-        })
-      );
+      expect(mockPlayerInstance.loadVideoById).toHaveBeenCalledWith("yt_song_2");
     });
 
-    expect(mockPlayerInstance.playVideo).toHaveBeenCalled();
+    // Player constructor should only be called once initially
+    expect(window.YT.Player).toHaveBeenCalledTimes(1);
 
     unmount();
   });
