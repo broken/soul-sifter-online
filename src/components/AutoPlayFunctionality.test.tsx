@@ -180,11 +180,13 @@ describe('Auto-Play Settings Functionality', () => {
     // Toggle on
     fireEvent.click(toggle);
     expect(autoPlayNext()).toBe(true);
+    expect(window.localStorage.getItem('autoPlayNext')).toBe('true');
     expect(toggle.checked).toBe(true);
 
     // Toggle off
     fireEvent.click(toggle);
     expect(autoPlayNext()).toBe(false);
+    expect(window.localStorage.getItem('autoPlayNext')).toBe('false');
     expect(toggle.checked).toBe(false);
 
     unmount();
@@ -204,14 +206,30 @@ describe('Auto-Play Settings Functionality', () => {
     // Toggle on
     fireEvent.click(toggle);
     expect(autoPlayOnOpen()).toBe(true);
+    expect(window.localStorage.getItem('autoPlayOnOpen')).toBe('true');
     expect(toggle.checked).toBe(true);
 
     // Toggle off
     fireEvent.click(toggle);
     expect(autoPlayOnOpen()).toBe(false);
+    expect(window.localStorage.getItem('autoPlayOnOpen')).toBe('false');
     expect(toggle.checked).toBe(false);
 
     unmount();
+  });
+
+  it('should persist autoplay settings in localStorage when setters are called directly', () => {
+    setAutoPlayNext(true);
+    expect(window.localStorage.getItem('autoPlayNext')).toBe('true');
+
+    setAutoPlayNext(false);
+    expect(window.localStorage.getItem('autoPlayNext')).toBe('false');
+
+    setAutoPlayOnOpen(true);
+    expect(window.localStorage.getItem('autoPlayOnOpen')).toBe('true');
+
+    setAutoPlayOnOpen(false);
+    expect(window.localStorage.getItem('autoPlayOnOpen')).toBe('false');
   });
 });
 

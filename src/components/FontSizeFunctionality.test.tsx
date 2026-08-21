@@ -93,8 +93,17 @@ describe('Settings Font Size Selection', () => {
     fireEvent.click(largeButton);
 
     expect(fontSize()).toBe('large');
+    expect(window.localStorage.getItem('fontSize')).toBe('large');
     expect(largeButton.className).toContain('btn-primary');
 
     unmount();
+  });
+
+  it('should persist font size in localStorage when setFontSize is called', () => {
+    setFontSize('small');
+    expect(window.localStorage.getItem('fontSize')).toBe('small');
+
+    setFontSize('xlarge');
+    expect(window.localStorage.getItem('fontSize')).toBe('xlarge');
   });
 });
