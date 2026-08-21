@@ -86,6 +86,8 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
   const [hasError, setHasError] = createSignal<boolean>(false);
   const [errorMessage, setErrorMessage] = createSignal<string>("");
 
+  let currentlyPlayingYtId: string | undefined = undefined;
+
   const youtubeId = () => props.song?.youtubemusicid?.trim() || props.song?.youtubeid?.trim() || "";
 
   const updateMediaSession = () => {
@@ -122,27 +124,60 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     }
   };
 
-  const playNextSong = () => {
-    if (!autoPlayNext()) return;
+  const playNextSong = (_isAutoPlay = false): boolean => {
     const songList = songs();
-    if (songList && songList.length > 0 && props.song) {
-      const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
-      if (currentIndex !== -1 && currentIndex + 1 < songList.length) {
-        const nextSong = songList[currentIndex + 1];
-        shouldAutoPlayNext = true;
-        if (props.onAutoPlayNext) {
-          props.onAutoPlayNext();
-        } else if (setSong) {
-          setSong(nextSong);
-        }
+    if (!songList || songList.length === 0 || !props.song) return false;
+
+    const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
+    if (currentIndex === -1 || currentIndex + 1 >= songList.length) return false;
+
+    const nextSong = songList[currentIndex + 1];
+    const nextYtId = nextSong.youtubemusicid?.trim() || nextSong.youtubeid?.trim() || "";
+
+    // 1. Immediately update MediaSession with next song metadata & playing state
+    if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: nextSong.title || "Unknown Title",
+          artist: nextSong.artist || "Unknown Artist",
+          album: nextSong.curator || "",
+          artwork: [
+            { src: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
+          ],
+        });
+        navigator.mediaSession.playbackState = "playing";
+      } catch {
+        // Ignore
       }
     }
+
+    // 2. Seamlessly trigger loadVideoById on the player instance synchronously
+    if (nextYtId && playerInstance && typeof playerInstance.loadVideoById === "function") {
+      currentlyPlayingYtId = nextYtId;
+      try {
+        playerInstance.loadVideoById(nextYtId);
+      } catch (err) {
+        console.warn("Direct loadVideoById error:", err);
+      }
+    }
+
+    shouldAutoPlayNext = true;
+    if (props.onAutoPlayNext) {
+      props.onAutoPlayNext();
+    } else if (setSong) {
+      setSong(nextSong);
+    }
+
+    return true;
   };
 
   const playPreviousSong = () => {
     if (currentTime() > 3 && playerInstance && typeof playerInstance.seekTo === "function") {
       playerInstance.seekTo(0, true);
       setCurrentTime(0);
+      if (playerInstance.playVideo) {
+        playerInstance.playVideo();
+      }
       return;
     }
     const songList = songs();
@@ -150,6 +185,31 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
       const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
       if (currentIndex > 0) {
         const prevSong = songList[currentIndex - 1];
+        const prevYtId = prevSong.youtubemusicid?.trim() || prevSong.youtubeid?.trim() || "";
+
+        if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
+          try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: prevSong.title || "Unknown Title",
+              artist: prevSong.artist || "Unknown Artist",
+              album: prevSong.curator || "",
+              artwork: [
+                { src: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
+              ],
+            });
+            navigator.mediaSession.playbackState = "playing";
+          } catch {}
+        }
+
+        if (prevYtId && playerInstance && typeof playerInstance.loadVideoById === "function") {
+          currentlyPlayingYtId = prevYtId;
+          try {
+            playerInstance.loadVideoById(prevYtId);
+          } catch (err) {
+            console.warn("Direct loadVideoById error:", err);
+          }
+        }
+
         shouldAutoPlayNext = true;
         if (setSong) {
           setSong(prevSong);
@@ -185,6 +245,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
   const destroyPlayer = () => {
     stopTimer();
+    currentlyPlayingYtId = undefined;
     if (playerInstance) {
       try {
         if (typeof playerInstance.stopVideo === "function") {
@@ -215,6 +276,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     }
 
     if (!ytId) {
+      currentlyPlayingYtId = undefined;
       shouldAutoPlayNext = false;
       try {
         if (typeof playerInstance.stopVideo === "function") {
@@ -242,11 +304,18 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
       setDuration(Math.round(props.song.durationinms / 1000));
     }
 
+    // If this video ID is already actively loading from playNextSong / playPreviousSong
+    if (currentlyPlayingYtId === ytId) {
+      updateMediaSession();
+      return;
+    }
+
     const willAutoPlay = shouldAutoPlayNext || autoPlayOnOpen();
     shouldAutoPlayNext = false;
 
     try {
       if (willAutoPlay) {
+        currentlyPlayingYtId = ytId;
         if (typeof playerInstance.loadVideoById === "function") {
           playerInstance.loadVideoById(ytId);
         } else if (typeof playerInstance.cueVideoById === "function") {
@@ -254,6 +323,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
           playerInstance.playVideo?.();
         }
       } else {
+        currentlyPlayingYtId = undefined;
         if (typeof playerInstance.cueVideoById === "function") {
           playerInstance.cueVideoById(ytId);
         }
@@ -293,6 +363,9 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
     const willAutoPlay = shouldAutoPlayNext || autoPlayOnOpen();
     const autoplayFlag = willAutoPlay ? 1 : 0;
+    if (willAutoPlay) {
+      currentlyPlayingYtId = ytId;
+    }
 
     try {
       playerInstance = new window.YT.Player(targetElement, {
@@ -318,6 +391,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
             updateMediaSession();
             if (shouldAutoPlayNext || autoPlayOnOpen()) {
               shouldAutoPlayNext = false;
+              currentlyPlayingYtId = ytId;
               try {
                 event.target?.playVideo?.();
               } catch (err) {
@@ -349,8 +423,11 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               setIsBuffering(false);
               stopTimer();
               setCurrentTime(duration());
-              updateMediaSessionPlaybackState("none");
-              playNextSong();
+
+              const handled = autoPlayNext() && playNextSong(true);
+              if (!handled) {
+                updateMediaSessionPlaybackState("none");
+              }
             } else if (state === 5 || state === -1) {
               // CUED or UNSTARTED
               setIsPlaying(false);
@@ -416,7 +493,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
           }
         });
         navigator.mediaSession.setActionHandler("nexttrack", () => {
-          playNextSong();
+          playNextSong(false);
         });
         navigator.mediaSession.setActionHandler("previoustrack", () => {
           playPreviousSong();
@@ -511,11 +588,11 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
   };
 
   return (
-    <div class="w-full bg-base-300/60 rounded-xl p-3 my-3 border border-base-content/10 flex flex-col gap-2">
-      {/* Hidden container for YouTube Iframe - off-screen so audio plays cleanly */}
+    <div class="relative w-full bg-base-300/60 rounded-xl p-3 my-3 border border-base-content/10 flex flex-col gap-2 overflow-hidden">
+      {/* Container for YouTube Iframe - rendered with real layout box so mobile OS background power management does not suspend audio */}
       <div
         ref={playerContainerRef}
-        class="absolute -left-[9999px] -top-[9999px] w-[1px] h-[1px] opacity-0 pointer-events-none overflow-hidden"
+        class="absolute top-0 left-0 w-[200px] h-[200px] -z-10 opacity-[0.001] pointer-events-none overflow-hidden"
         aria-hidden="true"
       />
 

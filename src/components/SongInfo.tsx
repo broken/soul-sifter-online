@@ -658,7 +658,7 @@ const SongInfo: Component = () => {
           {/* YouTube Music Playback Controls */}
           <SongPlayer
             song={song()}
-            onAutoPlayNext={() => nextSong() && navigateToSong(nextSong()!, 'next')}
+            onAutoPlayNext={() => nextSong() && setSong(nextSong()!)}
           />
 
           {/* Genres / Styles Section */}
