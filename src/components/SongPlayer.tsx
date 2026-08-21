@@ -87,6 +87,38 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
   const [errorMessage, setErrorMessage] = createSignal<string>("");
 
   let currentlyPlayingYtId: string | undefined = undefined;
+  let silentAudioEl: HTMLAudioElement | null = null;
+
+  const startSilentAudio = () => {
+    if (typeof window === "undefined" || typeof Audio === "undefined") return;
+    try {
+      if (!silentAudioEl) {
+        silentAudioEl = new Audio(
+          "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"
+        );
+        silentAudioEl.loop = true;
+        silentAudioEl.volume = 0.01;
+      }
+      if (silentAudioEl && silentAudioEl.paused) {
+        const p = silentAudioEl.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => {});
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  };
+
+  const stopSilentAudio = () => {
+    try {
+      if (silentAudioEl && !silentAudioEl.paused) {
+        silentAudioEl.pause();
+      }
+    } catch {
+      // Ignore
+    }
+  };
 
   const youtubeId = () => props.song?.youtubemusicid?.trim() || props.song?.youtubeid?.trim() || "";
 
@@ -166,6 +198,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     const nextSong = songList[currentIndex + 1];
     const nextYtId = nextSong.youtubemusicid?.trim() || nextSong.youtubeid?.trim() || "";
 
+    startSilentAudio();
     // 1. Immediately update MediaSession with next song metadata & playing state
     updateMediaSession(nextSong);
     updateMediaSessionPlaybackState("playing");
@@ -206,6 +239,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
         const prevSong = songList[currentIndex - 1];
         const prevYtId = prevSong.youtubemusicid?.trim() || prevSong.youtubeid?.trim() || "";
 
+        startSilentAudio();
         updateMediaSession(prevSong);
         updateMediaSessionPlaybackState("playing");
 
@@ -254,6 +288,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
   const destroyPlayer = () => {
     stopTimer();
+    stopSilentAudio();
     currentlyPlayingYtId = undefined;
     if (playerInstance) {
       try {
@@ -416,6 +451,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               setIsPlaying(true);
               setIsBuffering(false);
               startTimer();
+              startSilentAudio();
               updateMediaSession();
               updateMediaSessionPlaybackState("playing");
               try {
@@ -430,6 +466,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               setIsPlaying(false);
               setIsBuffering(false);
               stopTimer();
+              stopSilentAudio();
               updateMediaSessionPlaybackState("paused");
               try {
                 const cur = playerInstance?.getCurrentTime?.() || 0;
@@ -450,6 +487,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
               const handled = autoPlayNext() && playNextSong(true);
               if (!handled) {
+                stopSilentAudio();
                 updateMediaSessionPlaybackState("none");
               }
             } else if (state === 5 || state === -1) {
@@ -536,6 +574,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
   onCleanup(() => {
     shouldAutoPlayNext = false;
+    stopSilentAudio();
     destroyPlayer();
     if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
       try {
@@ -566,8 +605,10 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
     try {
       if (isPlaying()) {
+        stopSilentAudio();
         playerInstance.pauseVideo();
       } else {
+        startSilentAudio();
         playerInstance.playVideo();
       }
     } catch (err) {
