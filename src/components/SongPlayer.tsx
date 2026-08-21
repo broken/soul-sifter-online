@@ -198,7 +198,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               ],
             });
             navigator.mediaSession.playbackState = "playing";
-          } catch {}
+          } catch { }
         }
 
         if (prevYtId && playerInstance && typeof playerInstance.loadVideoById === "function") {
@@ -480,6 +480,26 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
   });
 
   onMount(() => {
+    /**
+     * Whenever the phone is locked, the OS sends an OS-level pause signal to playing media.
+     * This listener is an attempt to contine playback, which is the desired behaviour.
+     * This only works on Android devices.
+     */
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        if (isPlaying() && playerInstance && typeof playerInstance.playVideo === "function") {
+          try {
+            playerInstance.playVideo();
+          } catch {
+            // Ignore if browser restricts script play without gesture on background
+          }
+        }
+      }
+    };
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
     if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
       try {
         navigator.mediaSession.setActionHandler("play", () => {
@@ -508,6 +528,12 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
         console.warn("MediaSession action handler error:", err);
       }
     }
+
+    onCleanup(() => {
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
+    });
   });
 
   onCleanup(() => {
