@@ -64,6 +64,42 @@ class Atom {
 }
 
 
+function compareTracks(a: string | null | undefined, b: string | null | undefined): number {
+  if (!a && !b) return 0
+  if (!a) return 1
+  if (!b) return -1
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+}
+
+
+function sortSongsByAlbum(songs: Song[]): Song[] {
+  return songs.sort((a, b) => {
+    const aAlbum = a.albumid
+    const bAlbum = b.albumid
+    if (aAlbum !== bAlbum) {
+      if (aAlbum == null) return 1
+      if (bAlbum == null) return -1
+      return bAlbum - aAlbum
+    }
+
+    const aPart = a.albumpartid
+    const bPart = b.albumpartid
+    if (aPart !== bPart) {
+      if (aPart == null) return -1
+      if (bPart == null) return 1
+      return aPart - bPart
+    }
+
+    const trackCompare = compareTracks(a.track, b.track)
+    if (trackCompare !== 0) {
+      return trackCompare
+    }
+
+    return (a.id ?? 0) - (b.id ?? 0)
+  })
+}
+
+
 function splitString(str: string): string[] {
   const regex = /[^\s"]+|"([^"]*)"/g
   const matches = []
@@ -486,10 +522,15 @@ async function searchSongs(
     });
   }
 
+  if (orderBy === OrderBy.ALBUM) {
+    sortSongsByAlbum(songList);
+  }
+
   console.log(songList);
   return songList
 }
 
 
 export default searchSongs
-export { searchSongs, OrderBy }
+export { searchSongs, OrderBy, compareTracks, sortSongsByAlbum }
+

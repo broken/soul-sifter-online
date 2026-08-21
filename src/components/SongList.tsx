@@ -32,7 +32,7 @@ const SongList: Component = () => {
       return { songs: [], hasMore: false, page };
     }
 
-    const limit = !DEV ? 20 : 3;
+    const limit = 20;
     const offset = page * limit;
     let order_by = OrderBy.DATE_ADDED
     let playlistIds: number[] = [];
