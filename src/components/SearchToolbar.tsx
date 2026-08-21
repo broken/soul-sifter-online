@@ -3,6 +3,7 @@ import { useTheme, darkThemes, lightThemes } from './ThemeContext' // Added impo
 
 import logo from '../assets/hires_candidate_2.png'
 import styles from './SearchToolbar.module.css'
+import QueryBuilderModal from './QueryBuilderModal'
 
 
 const [internalSearchQuery, setInternalSearchQuery] = createSignal<string>('')
@@ -11,6 +12,7 @@ const [debouncedSearchQuery, setDebouncedSearchQuery] = createSignal<string>('')
 const SearchToolbar: Component = () => {
   const { appTheme, setAppTheme } = useTheme(); // Added for theme toggling
   const [inputFocused, setInputFocused] = createSignal<boolean>(false)
+  const [isQueryBuilderOpen, setIsQueryBuilderOpen] = createSignal<boolean>(false)
 
   const toggleTheme = () => { // Added theme toggle function
     const currentTheme = appTheme();
@@ -35,39 +37,53 @@ const SearchToolbar: Component = () => {
     }, 3000);
   }, { defer: true }));
 
+  const handleApplyQuery = (newQuery: string) => {
+    setInternalSearchQuery(newQuery);
+    setDebouncedSearchQuery(newQuery);
+  };
+
   return (
-    <div class="navbar bg-base-200 gap-2">
-      <div class="flex-none justify-between">
-        <a class="btn btn-ghost text-xl text-primary" onClick={toggleTheme}>SSO</a> {/* Added onClick */}
-      </div>
-      <div class="flex-1">
-        <input type="text"
+    <>
+      <div class="navbar bg-base-200 gap-2">
+        <div class="flex-none justify-between">
+          <a class="btn btn-ghost text-xl text-primary" onClick={toggleTheme}>SSO</a> {/* Added onClick */}
+        </div>
+        <div class="flex-1">
+          <input
+            type="text"
             placeholder="Search"
+            value={internalSearchQuery()}
             onInput={(e) => setInternalSearchQuery(e.target.value)}
-            class="input input-bordered md:w-auto flex-1"
+            class="input input-bordered md:w-auto flex-1 w-full"
             classList={{["input-primary"]:inputFocused()}}
-            onfocusin={() => setInputFocused(true)} onfocusout={() => setInputFocused(false)}></input>
+            onfocusin={() => setInputFocused(true)}
+            onfocusout={() => setInputFocused(false)}
+          />
+        </div>
+        <div class="flex-none">
+          <button
+            type="button"
+            class="btn btn-ghost btn-circle avatar"
+            onClick={() => setIsQueryBuilderOpen(true)}
+            title="Open Query Builder"
+            aria-label="Open Query Builder"
+          >
+            <div class="w-10 rounded-full">
+              <img src={logo} class={styles.logo} alt="Query Builder" />
+            </div>
+          </button>
+        </div>
       </div>
-      <div class="flex-none dropdown dropdown-end">
-        <label tabIndex={0} class="btn btn-ghost btn-circle avatar">
-          <div class="w-10 rounded-full">
-            <img src={logo} class={styles.logo} alt="logo" />
-          </div>
-        </label>
-        <ul tabIndex={0} class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-200 rounded-box w-52">
-          <li>
-            <a class="justify-between">
-              Profile
-              <span class="badge">New</span>
-            </a>
-          </li>
-          <li><a>{import.meta.env.VITE_APP_VERSION}</a></li>
-          <li><a>Logout</a></li>
-        </ul>
-      </div>
-    </div>
+      <QueryBuilderModal
+        isOpen={isQueryBuilderOpen()}
+        initialQuery={internalSearchQuery()}
+        onClose={() => setIsQueryBuilderOpen(false)}
+        onApply={handleApplyQuery}
+      />
+    </>
   )
 }
 
 export default SearchToolbar
-export {debouncedSearchQuery}
+export {debouncedSearchQuery, internalSearchQuery, setInternalSearchQuery, setDebouncedSearchQuery}
+
