@@ -11,6 +11,11 @@ const Settings: Component = () => {
 
   return (
     <div class="overflow-x-hidden overflow-y-auto w-screen p-4 max-w-2xl mx-auto flex flex-col gap-4" style="height: calc(100vh - 128px);">
+      <div class="flex items-center justify-between px-1">
+        <h1 class="text-lg font-bold">Settings</h1>
+        <span class="text-xs text-base-content/60 font-mono">v{import.meta.env.VITE_APP_VERSION}</span>
+      </div>
+
       {/* Theme Section */}
       <div class="card bg-base-200 shadow-sm">
         <div class="card-body p-4 sm:p-6">
