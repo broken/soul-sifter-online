@@ -130,16 +130,29 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
       const artworkList: Array<{ src: string; sizes: string; type: string }> = [];
 
       if (ytId) {
-        artworkList.push({
-          src: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
-          sizes: "480x360",
-          type: "image/jpeg",
-        });
+        artworkList.push(
+          {
+            src: `https://i.ytimg.com/vi/${ytId}/sddefault.jpg`,
+            sizes: "640x480",
+            type: "image/jpeg",
+          },
+          {
+            src: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`,
+            sizes: "480x360",
+            type: "image/jpeg",
+          },
+          {
+            src: `https://i.ytimg.com/vi/${ytId}/mqdefault.jpg`,
+            sizes: "320x180",
+            type: "image/jpeg",
+          }
+        );
+      } else {
+        artworkList.push(
+          { src: "/assets/icon_192.png", sizes: "192x192", type: "image/png" },
+          { src: "/assets/icon_512.png", sizes: "512x512", type: "image/png" }
+        );
       }
-      artworkList.push(
-        { src: "/assets/icon_192.png", sizes: "192x192", type: "image/png" },
-        { src: "/assets/icon_512.png", sizes: "512x512", type: "image/png" }
-      );
 
       try {
         navigator.mediaSession.metadata = new MediaMetadata({
