@@ -36,17 +36,20 @@ const SongList: Component = () => {
     const offset = page * limit;
     let order_by = OrderBy.DATE_ADDED
     let playlistIds: number[] = [];
+    let effectiveQuery = query;
     if (playlist && playlist.id) {
-      playlistIds = [playlist.id];
-      if (!playlist.query) {
+      if (playlist.query) {
+        effectiveQuery = query && query.trim() ? `${playlist.query.trim()} ${query.trim()}` : playlist.query.trim();
+      } else {
+        playlistIds = [playlist.id];
         order_by = OrderBy.PLAYLIST;
       }
     }
 
     try {
-      console.log("[ResourceFetcher] Calling searchSongs with offset:", offset, "limit:", limit);
+      console.log("[ResourceFetcher] Calling searchSongs with offset:", offset, "limit:", limit, "effectiveQuery:", effectiveQuery);
       const songResults = await searchSongs(
-        query,
+        effectiveQuery,
         limit,
         0, // bpm
         '', // key

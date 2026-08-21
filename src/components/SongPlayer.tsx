@@ -39,7 +39,7 @@ function loadYouTubeIframeApi(): Promise<void> {
 
     // Fallback polling in case callback was missed
     const checkInterval = window.setInterval(() => {
-      if (window.YT && window.YT.Player) {
+      if (typeof window !== 'undefined' && window.YT && window.YT.Player) {
         clearInterval(checkInterval);
         resolve();
       }
