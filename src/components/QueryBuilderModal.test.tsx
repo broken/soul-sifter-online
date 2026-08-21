@@ -56,21 +56,21 @@ describe('QueryBuilderModal Tag-based UI', () => {
     await fireEvent.click(artistTag);
 
     const input = screen.getByPlaceholderText(/Tap tags below to insert atoms/i) as HTMLInputElement;
-    expect(input.value).toBe('artist:');
+    expect(input.value).toBe('a:');
 
     // Type value after prefix
-    await fireEvent.input(input, { target: { value: 'artist:Daft' } });
+    await fireEvent.input(input, { target: { value: 'a:Daft' } });
 
     // Tap bpm tag
     const bpmTag = screen.getByRole('button', { name: 'bpm:' });
     await fireEvent.click(bpmTag);
 
-    expect(input.value).toBe('artist:Daft bpm:');
+    expect(input.value).toBe('a:Daft bpm:');
 
     const searchButton = screen.getByRole('button', { name: 'Search' });
     await fireEvent.click(searchButton);
 
-    expect(mockOnApply).toHaveBeenCalledWith('artist:Daft bpm:');
+    expect(mockOnApply).toHaveBeenCalledWith('a:Daft bpm:');
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -91,7 +91,7 @@ describe('QueryBuilderModal Tag-based UI', () => {
     await fireEvent.click(artistTag);
 
     const input = screen.getByPlaceholderText(/Tap tags below to insert atoms/i) as HTMLInputElement;
-    expect(input.value).toBe('-artist:');
+    expect(input.value).toBe('-a:');
   });
 
   it('inserts sorting preset tags', async () => {
@@ -108,7 +108,7 @@ describe('QueryBuilderModal Tag-based UI', () => {
     await fireEvent.click(orderBpmTag);
 
     const input = screen.getByPlaceholderText(/Tap tags below to insert atoms/i) as HTMLInputElement;
-    expect(input.value).toBe('order:bpm');
+    expect(input.value).toBe('o:bpm');
   });
 
   it('populates initialQuery and clears query on Clear button', async () => {
