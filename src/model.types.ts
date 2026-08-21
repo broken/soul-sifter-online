@@ -10,7 +10,9 @@ type MusicVideo = Tables<'musicvideos'>
 type Playlist = Tables<'playlists'>
 type PlaylistEntry = Tables<'playlistentries'>
 type PlaylistStyle = Tables<'playliststyles'>
-type Song = Tables<'songs'>
+type Song = Tables<'songs'> & {
+  albums?: Album | null
+}
 type SongStyle = Tables<'songstyles'>
 type Style = Tables<'styles'>
 type StyleChildren = Tables<'stylechildren'>

@@ -5,8 +5,22 @@ import '@testing-library/jest-dom/vitest';
 
 import SongInfo from './SongInfo';
 import { SongConsumer } from './SongContext';
-import { Song, Style, StyleChildren } from '../model.types';
+import { Album, Song, Style, StyleChildren } from '../model.types';
 import { supabase } from './App';
+
+const sampleAlbum: Album = {
+  id: 1,
+  name: 'Discovery',
+  artist: 'Daft Punk',
+  catalogid: null,
+  coverfilepath: null,
+  label: 'Virgin',
+  mixed: false,
+  releasedateday: 12,
+  releasedatemonth: 3,
+  releasedateyear: 2001,
+  basicgenreid: null,
+};
 
 const mockSong1: Song = {
   id: 101,
@@ -139,6 +153,15 @@ describe('SongInfo Component', () => {
           }),
           insert: mockInsertSongStyles,
           delete: mockDelete,
+        };
+      }
+      if (table === 'albums') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: sampleAlbum, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'changes') {
@@ -362,5 +385,40 @@ describe('SongInfo Component', () => {
       expect(screen.getByText('Daft Punk')).toBeInTheDocument();
       expect(screen.queryByText('Justice')).not.toBeInTheDocument();
     }
+  });
+
+  it('renders album name and formatted release date fetched from supabase', async () => {
+    const { setSong } = SongConsumer();
+    render(() => <SongInfo />);
+
+    setSong(mockSong1);
+
+    expect(await screen.findByText('Discovery')).toBeInTheDocument();
+    expect(screen.getByText('2001-03-12')).toBeInTheDocument();
+  });
+
+  it('renders album from attached albums property on song with year only', async () => {
+    const { setSong } = SongConsumer();
+    render(() => <SongInfo />);
+
+    setSong({
+      ...mockSong2,
+      albums: {
+        id: 2,
+        name: '† (Cross)',
+        artist: 'Justice',
+        catalogid: null,
+        coverfilepath: null,
+        label: 'Ed Banger',
+        mixed: false,
+        releasedateday: null,
+        releasedatemonth: null,
+        releasedateyear: 2007,
+        basicgenreid: null,
+      },
+    });
+
+    expect(await screen.findByText('† (Cross)')).toBeInTheDocument();
+    expect(screen.getByText('2007')).toBeInTheDocument();
   });
 });

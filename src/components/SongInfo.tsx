@@ -6,7 +6,7 @@ import { SongConsumer } from "./SongContext";
 import { useSongs } from "./SongsContext";
 import Backdrop from './Backdrop';
 import { supabase } from "./App";
-import { Song, Style, StyleChildren } from "../model.types";
+import { Album, Song, Style, StyleChildren } from "../model.types";
 import { GenreWrapper } from "./GenreListItem";
 
 const StyleTreeItem: Component<{
@@ -111,6 +111,7 @@ const SongInfo: Component = () => {
 
   const [genreTree, setGenreTree] = createSignal<GenreWrapper[]>([]);
   const [songStyles, setSongStyles] = createSignal<Style[]>([]);
+  const [album, setAlbum] = createSignal<Album | null | undefined>(undefined);
   const [loadingStyles, setLoadingStyles] = createSignal<boolean>(false);
   const [loadingTree, setLoadingTree] = createSignal<boolean>(false);
   const [isEditMode, setIsEditMode] = createSignal<boolean>(false);
@@ -142,6 +143,25 @@ const SongInfo: Component = () => {
     const list = songList();
     if (idx !== -1 && idx < list.length - 1) return list[idx + 1];
     return undefined;
+  });
+
+  const releaseDate = createMemo(() => {
+    const alb = album();
+    if (!alb) return null;
+    const year = alb.releasedateyear;
+    const month = alb.releasedatemonth;
+    const day = alb.releasedateday;
+
+    if (year && month && day) {
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+    if (year && month) {
+      return `${year}-${String(month).padStart(2, '0')}`;
+    }
+    if (year) {
+      return `${year}`;
+    }
+    return null;
   });
 
   const navigateToSong = (targetSong: Song, direction: 'next' | 'prev') => {
@@ -278,7 +298,35 @@ const SongInfo: Component = () => {
 
     if (!currentSong) {
       setSongStyles([]);
+      setAlbum(undefined);
       return;
+    }
+
+    if (currentSong.albums) {
+      setAlbum(currentSong.albums);
+    } else if (currentSong.albumid) {
+      const fetchAlbum = async (albumId: number) => {
+        try {
+          const { data, error } = await supabase
+            .from('albums')
+            .select('*')
+            .eq('id', albumId)
+            .maybeSingle();
+
+          if (error) {
+            console.error('Error fetching album:', error);
+            setAlbum(null);
+          } else {
+            setAlbum(data);
+          }
+        } catch (err) {
+          console.error('Failed to fetch album:', err);
+          setAlbum(null);
+        }
+      };
+      fetchAlbum(currentSong.albumid);
+    } else {
+      setAlbum(null);
     }
 
     const fetchSongStyles = async (songId: number) => {
@@ -393,6 +441,7 @@ const SongInfo: Component = () => {
     setDragX(0);
     setIsDragging(false);
     setAnimState('');
+    setAlbum(undefined);
     setSong(undefined);
   };
 
@@ -591,6 +640,20 @@ const SongInfo: Component = () => {
           <p style={{ "font-weight": "bold" }}>{song()?.artist}</p>
           {/* Display title directly, without a label */}
           <p class="text-sm opacity-80">{song()?.title}</p>
+          {/* Display album name and release date */}
+          <Show when={album()?.name || releaseDate()}>
+            <p class="text-xs opacity-70 mt-0.5 text-right">
+              <Show when={album()?.name}>
+                <span>{album()?.name}</span>
+              </Show>
+              <Show when={album()?.name && releaseDate()}>
+                <span class="mx-1.5">•</span>
+              </Show>
+              <Show when={releaseDate()}>
+                <span>{releaseDate()}</span>
+              </Show>
+            </p>
+          </Show>
 
           {/* YouTube Music Playback Controls */}
           <SongPlayer
