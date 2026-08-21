@@ -54,6 +54,18 @@ export const TAG_GROUPS: { name: string; tags: TagItem[] }[] = [
       { prefix: 'mixed:0', label: 'mixed:0', description: 'Unmixed album' },
     ],
   },
+  {
+    name: 'Modifiers & Operators',
+    tags: [
+      { prefix: '-', label: '- (NOT)', description: 'Negate query atom' },
+      { prefix: '""', label: '"" (Quotes)', description: 'Group multi-word terms' },
+      { prefix: '>=', label: '>=', description: 'Greater than or equal' },
+      { prefix: '<=', label: '<=', description: 'Less than or equal' },
+      { prefix: '>', label: '>', description: 'Greater than' },
+      { prefix: '<', label: '<', description: 'Less than' },
+      { prefix: '=', label: '=', description: 'Exact equal' },
+    ],
+  },
 ];
 
 const QueryBuilderModal: Component<QueryBuilderModalProps> = (props) => {
@@ -81,8 +93,17 @@ const QueryBuilderModal: Component<QueryBuilderModalProps> = (props) => {
       textToInsert = `"${selected}"`;
       cursorOffset = selected.length > 0 ? textToInsert.length : 1;
     } else {
+      const isOperator = /^(>=|<=|>|<|=|[-])$/.test(tagPrefix);
+      const endsWithAtomColon = /:$/.test(current.substring(0, start));
+      const endsWithNegation = /-$/.test(current.substring(0, start));
       // Add a leading space if needed
-      const needsLeadingSpace = start > 0 && !/\s$/.test(current.substring(0, start)) && tagPrefix !== '-';
+      const needsLeadingSpace =
+        start > 0 &&
+        !/\s$/.test(current.substring(0, start)) &&
+        !isOperator &&
+        !endsWithAtomColon &&
+        !endsWithNegation;
+
       if (needsLeadingSpace) {
         textToInsert = ` ${textToInsert}`;
         cursorOffset += 1;

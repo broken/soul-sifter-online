@@ -25,6 +25,7 @@ describe('QueryBuilderModal Tag-based UI', () => {
     expect(screen.getByText('Song Information')).toBeInTheDocument();
     expect(screen.getByText('Music & Attributes')).toBeInTheDocument();
     expect(screen.getByText('Sorting & Status')).toBeInTheDocument();
+    expect(screen.getByText('Modifiers & Operators')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument();
   });
 
@@ -71,6 +72,26 @@ describe('QueryBuilderModal Tag-based UI', () => {
 
     expect(mockOnApply).toHaveBeenCalledWith('artist:Daft bpm:');
     expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('supports quotes and negation modifiers', async () => {
+    render(() => (
+      <QueryBuilderModal
+        isOpen={true}
+        initialQuery=""
+        onClose={mockOnClose}
+        onApply={mockOnApply}
+      />
+    ));
+
+    const notTag = screen.getByRole('button', { name: '- (NOT)' });
+    await fireEvent.click(notTag);
+
+    const artistTag = screen.getByRole('button', { name: 'artist:' });
+    await fireEvent.click(artistTag);
+
+    const input = screen.getByPlaceholderText(/Tap tags below to insert atoms/i) as HTMLInputElement;
+    expect(input.value).toBe('-artist:');
   });
 
   it('inserts sorting preset tags', async () => {
