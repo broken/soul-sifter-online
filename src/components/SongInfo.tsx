@@ -590,166 +590,166 @@ const SongInfo: Component = () => {
           onTouchCancel={onTouchEnd}
         >
           <div class="card-body p-6">
-          {/* Header Bar with Navigation Controls & Close Button */}
-          <div class="flex items-center justify-between text-xs text-base-content/60 -mt-2 mb-2">
-            <div class="flex items-center gap-1">
-              <button
-                type="button"
-                class="btn btn-ghost btn-xs btn-circle"
-                onClick={() => prevSong() && navigateToSong(prevSong()!, 'prev')}
-                disabled={!prevSong()}
-                title="Previous song (Swipe right or Left Arrow)"
-                aria-label="Previous song"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <Show when={currentIndex() !== -1 && songList().length > 0}>
-                <span class="font-mono text-[11px] opacity-75">
-                  {currentIndex() + 1} / {songList().length}
-                </span>
-              </Show>
-              <button
-                type="button"
-                class="btn btn-ghost btn-xs btn-circle"
-                onClick={() => nextSong() && navigateToSong(nextSong()!, 'next')}
-                disabled={!nextSong()}
-                title="Next song (Swipe left or Right Arrow)"
-                aria-label="Next song"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-            <button
-              type="button"
-              class="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-base-content"
-              onClick={handleClose}
-              aria-label="Close modal"
-              title="Close"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Display artist in bold, without a label */}
-          <p style={{ "font-weight": "bold" }}>{song()?.artist}</p>
-          {/* Display title directly, without a label */}
-          <p class="text-sm opacity-80">{song()?.title}</p>
-          {/* Display album name and release date */}
-          <Show when={album()?.name || releaseDate()}>
-            <p class="text-xs opacity-70 mt-0.5 text-right">
-              <Show when={album()?.name}>
-                <span>{album()?.name}</span>
-              </Show>
-              <Show when={album()?.name && releaseDate()}>
-                <span class="mx-1.5">•</span>
-              </Show>
-              <Show when={releaseDate()}>
-                <span>{releaseDate()}</span>
-              </Show>
-            </p>
-          </Show>
-
-          {/* YouTube Music Playback Controls */}
-          <SongPlayer
-            song={song()}
-            onAutoPlayNext={() => nextSong() && setSong(nextSong()!)}
-          />
-
-          {/* Genres / Styles Section */}
-          <div class="mt-3">
-            <div class="text-xs font-semibold uppercase tracking-wider text-base-content/70 mb-1.5">
-              Styles
-            </div>
-
-            {/* List of assigned styles */}
-            <div class="flex flex-wrap gap-1.5 items-center min-h-[28px]">
-              <For each={songStyles()}>
-                {(style) => (
-                  <span class="badge badge-secondary gap-1 py-3 px-2.5 text-xs">
-                    <span>{style.name}</span>
-                    <Show when={isEditMode()}>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs btn-circle h-4 w-4 min-h-0 text-error-content hover:bg-error hover:text-white ml-0.5"
-                        onClick={() => handleRemoveStyle(style.id)}
-                        title={`Remove ${style.name}`}
-                        aria-label={`Remove ${style.name}`}
-                      >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </Show>
+            {/* Header Bar with Navigation Controls & Close Button */}
+            <div class="flex items-center justify-between text-xs text-base-content/60 -mt-2 mb-2">
+              <div class="flex items-center gap-1">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-xs btn-circle"
+                  onClick={() => prevSong() && navigateToSong(prevSong()!, 'prev')}
+                  disabled={!prevSong()}
+                  title="Previous song (Swipe right or Left Arrow)"
+                  aria-label="Previous song"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <Show when={currentIndex() !== -1 && songList().length > 0}>
+                  <span class="font-mono text-[11px] opacity-75">
+                    {currentIndex() + 1} / {songList().length}
                   </span>
-                )}
-              </For>
-              <Show when={!loadingStyles() && songStyles().length === 0}>
-                <span class="text-xs text-base-content/60 italic">No styles assigned</span>
-              </Show>
-              <Show when={loadingStyles()}>
-                <span class="loading loading-spinner loading-xs text-primary"></span>
+                </Show>
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-xs btn-circle"
+                  onClick={() => nextSong() && navigateToSong(nextSong()!, 'next')}
+                  disabled={!nextSong()}
+                  title="Next song (Swipe left or Right Arrow)"
+                  aria-label="Next song"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-base-content"
+                onClick={handleClose}
+                aria-label="Close modal"
+                title="Close"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Display artist in bold, without a label */}
+            <p style={{ "font-weight": "bold" }}>{song()?.artist}</p>
+            {/* Display title directly, without a label */}
+            <p class="text-sm opacity-80">{song()?.title}</p>
+            {/* Display album name and release date */}
+            <Show when={album()?.name || releaseDate()}>
+              <p class="text-xs opacity-70 mt-0.5 text-right">
+                <Show when={album()?.name}>
+                  <span>{album()?.name}</span>
+                </Show>
+                <Show when={album()?.name && releaseDate()}>
+                  <span class="mx-1.5">•</span>
+                </Show>
+                <Show when={releaseDate()}>
+                  <span>{releaseDate()}</span>
+                </Show>
+              </p>
+            </Show>
+
+            {/* YouTube Music Playback Controls */}
+            <SongPlayer
+              song={song()}
+              onAutoPlayNext={() => nextSong() && setSong(nextSong()!)}
+            />
+
+            {/* Genres / Styles Section */}
+            <div class="mt-3">
+              <div class="text-xs font-semibold uppercase tracking-wider text-base-content/70 mb-1.5">
+                Styles
+              </div>
+
+              {/* List of assigned styles */}
+              <div class="flex flex-wrap gap-1.5 items-center min-h-[28px]">
+                <For each={songStyles()}>
+                  {(style) => (
+                    <span class="badge badge-secondary gap-1 py-3 px-2.5 text-xs">
+                      <span>{style.name}</span>
+                      <Show when={isEditMode()}>
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs btn-circle h-4 w-4 min-h-0 text-error-content hover:bg-error hover:text-white ml-0.5"
+                          onClick={() => handleRemoveStyle(style.id)}
+                          title={`Remove ${style.name}`}
+                          aria-label={`Remove ${style.name}`}
+                        >
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </Show>
+                    </span>
+                  )}
+                </For>
+                <Show when={!loadingStyles() && songStyles().length === 0}>
+                  <span class="text-xs text-base-content/60 italic">No styles assigned</span>
+                </Show>
+                <Show when={loadingStyles()}>
+                  <span class="loading loading-spinner loading-xs text-primary"></span>
+                </Show>
+              </div>
+
+              {/* Hierarchical Tree for Adding Styles */}
+              <Show when={isEditMode()}>
+                <div class="mt-2 p-2 bg-base-300 rounded-box flex flex-col gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search styles..."
+                    class="input input-xs input-bordered w-full"
+                    value={searchText()}
+                    onInput={(e) => setSearchText(e.currentTarget.value)}
+                    autofocus
+                  />
+                  <div class="max-h-48 overflow-y-auto flex flex-col divide-y divide-base-200/40">
+                    <Show when={!loadingTree()} fallback={<div class="p-2 text-center text-xs opacity-60">Loading styles tree...</div>}>
+                      <For each={genreTree()}>
+                        {(genreWrapper) => (
+                          <StyleTreeItem
+                            genre={genreWrapper}
+                            padding={0}
+                            assignedStyleIds={assignedStyleIds}
+                            onAddStyle={handleAddStyle}
+                            searchFilter={searchText()}
+                          />
+                        )}
+                      </For>
+                      <Show when={genreTree().length === 0}>
+                        <span class="text-xs text-base-content/60 p-1">No styles available</span>
+                      </Show>
+                    </Show>
+                  </div>
+                </div>
               </Show>
             </div>
 
-            {/* Hierarchical Tree for Adding Styles */}
-            <Show when={isEditMode()}>
-              <div class="mt-2 p-2 bg-base-300 rounded-box flex flex-col gap-2">
-                <input
-                  type="text"
-                  placeholder="Search styles..."
-                  class="input input-xs input-bordered w-full"
-                  value={searchText()}
-                  onInput={(e) => setSearchText(e.currentTarget.value)}
-                  autofocus
-                />
-                <div class="max-h-48 overflow-y-auto flex flex-col divide-y divide-base-200/40">
-                  <Show when={!loadingTree()} fallback={<div class="p-2 text-center text-xs opacity-60">Loading styles tree...</div>}>
-                    <For each={genreTree()}>
-                      {(genreWrapper) => (
-                        <StyleTreeItem
-                          genre={genreWrapper}
-                          padding={0}
-                          assignedStyleIds={assignedStyleIds}
-                          onAddStyle={handleAddStyle}
-                          searchFilter={searchText()}
-                        />
-                      )}
-                    </For>
-                    <Show when={genreTree().length === 0}>
-                      <span class="text-xs text-base-content/60 p-1">No styles available</span>
-                    </Show>
-                  </Show>
-                </div>
-              </div>
-            </Show>
-          </div>
-
-          <div class="card-actions justify-between items-center mt-4">
-            <button
-              type="button"
-              aria-label={isEditMode() ? "Done" : "Edit"}
-              class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
-              onClick={() => {
-                const nextEdit = !isEditMode();
-                setIsEditMode(nextEdit);
-                if (nextEdit) {
-                  fetchGenreTree();
-                }
-              }}
-            >
-              {isEditMode() ? "Done" : "Edit"}
-            </button>
-            <Rating song={song()} mutable={isEditMode()} size="2em" />
+            <div class="card-actions justify-between items-center mt-4">
+              <button
+                type="button"
+                aria-label={isEditMode() ? "Done" : "Edit"}
+                class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
+                onClick={() => {
+                  const nextEdit = !isEditMode();
+                  setIsEditMode(nextEdit);
+                  if (nextEdit) {
+                    fetchGenreTree();
+                  }
+                }}
+              >
+                {isEditMode() ? "Done" : "Edit"}
+              </button>
+              <Rating song={song()} mutable={isEditMode()} size="2em" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </Show>
   );
 };

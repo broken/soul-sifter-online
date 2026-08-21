@@ -90,21 +90,33 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
   const youtubeId = () => props.song?.youtubemusicid?.trim() || props.song?.youtubeid?.trim() || "";
 
-  const updateMediaSession = () => {
+  const updateMediaSession = (targetSong = props.song) => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
 
-    if (props.song) {
+    if (targetSong) {
+      const ytId = targetSong.youtubemusicid?.trim() || targetSong.youtubeid?.trim() || "";
+      const artworkList: Array<{ src: string; sizes: string; type: string }> = [];
+
+      if (ytId) {
+        artworkList.push({
+          src: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+          sizes: "480x360",
+          type: "image/jpeg",
+        });
+      }
+      artworkList.push(
+        { src: "/assets/icon_192.png", sizes: "192x192", type: "image/png" },
+        { src: "/assets/icon_512.png", sizes: "512x512", type: "image/png" }
+      );
+
       try {
         navigator.mediaSession.metadata = new MediaMetadata({
-          title: props.song.title || "Unknown Title",
-          artist: props.song.artist || "Unknown Artist",
-          album: props.song.curator || "",
-          artwork: [
-            { src: "/favicon.ico", sizes: "64x64", type: "image/x-icon" }
-          ],
+          title: targetSong.title || "Unknown Title",
+          artist: targetSong.artist || "Unknown Artist",
+          artwork: artworkList,
         });
-      } catch {
-        // Ignore MediaMetadata construction error in unsupported environments
+      } catch (err) {
+        console.warn("MediaMetadata construction error:", err);
       }
     } else {
       try {
@@ -124,6 +136,26 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     }
   };
 
+  const updatePositionState = (pos: number, dur: number) => {
+    if (
+      typeof navigator !== "undefined" &&
+      "mediaSession" in navigator &&
+      typeof navigator.mediaSession.setPositionState === "function"
+    ) {
+      try {
+        if (dur > 0 && pos >= 0 && pos <= dur) {
+          navigator.mediaSession.setPositionState({
+            duration: dur,
+            playbackRate: 1,
+            position: Math.min(pos, dur),
+          });
+        }
+      } catch {
+        // Ignore position state errors
+      }
+    }
+  };
+
   const playNextSong = (_isAutoPlay = false): boolean => {
     const songList = songs();
     if (!songList || songList.length === 0 || !props.song) return false;
@@ -135,21 +167,8 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     const nextYtId = nextSong.youtubemusicid?.trim() || nextSong.youtubeid?.trim() || "";
 
     // 1. Immediately update MediaSession with next song metadata & playing state
-    if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
-      try {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: nextSong.title || "Unknown Title",
-          artist: nextSong.artist || "Unknown Artist",
-          album: nextSong.curator || "",
-          artwork: [
-            { src: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
-          ],
-        });
-        navigator.mediaSession.playbackState = "playing";
-      } catch {
-        // Ignore
-      }
-    }
+    updateMediaSession(nextSong);
+    updateMediaSessionPlaybackState("playing");
 
     // 2. Seamlessly trigger loadVideoById on the player instance synchronously
     if (nextYtId && playerInstance && typeof playerInstance.loadVideoById === "function") {
@@ -187,19 +206,8 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
         const prevSong = songList[currentIndex - 1];
         const prevYtId = prevSong.youtubemusicid?.trim() || prevSong.youtubeid?.trim() || "";
 
-        if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
-          try {
-            navigator.mediaSession.metadata = new MediaMetadata({
-              title: prevSong.title || "Unknown Title",
-              artist: prevSong.artist || "Unknown Artist",
-              album: prevSong.curator || "",
-              artwork: [
-                { src: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
-              ],
-            });
-            navigator.mediaSession.playbackState = "playing";
-          } catch {}
-        }
+        updateMediaSession(prevSong);
+        updateMediaSessionPlaybackState("playing");
 
         if (prevYtId && playerInstance && typeof playerInstance.loadVideoById === "function") {
           currentlyPlayingYtId = prevYtId;
@@ -229,6 +237,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
           if (dur > 0 && dur !== duration()) {
             setDuration(dur);
           }
+          updatePositionState(cur, dur > 0 ? dur : duration());
         } catch {
           // Ignore polling errors during player transitions
         }
@@ -407,13 +416,28 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
               setIsPlaying(true);
               setIsBuffering(false);
               startTimer();
+              updateMediaSession();
               updateMediaSessionPlaybackState("playing");
+              try {
+                const cur = playerInstance?.getCurrentTime?.() || 0;
+                const dur = playerInstance?.getDuration?.() || duration() || 0;
+                updatePositionState(cur, dur);
+              } catch {
+                // Ignore
+              }
             } else if (state === 2) {
               // PAUSED
               setIsPlaying(false);
               setIsBuffering(false);
               stopTimer();
               updateMediaSessionPlaybackState("paused");
+              try {
+                const cur = playerInstance?.getCurrentTime?.() || 0;
+                const dur = playerInstance?.getDuration?.() || duration() || 0;
+                updatePositionState(cur, dur);
+              } catch {
+                // Ignore
+              }
             } else if (state === 3) {
               // BUFFERING
               setIsBuffering(true);
