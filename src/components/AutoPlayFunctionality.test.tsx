@@ -493,4 +493,135 @@ describe('Auto-Play Playback Behavior', () => {
 
     unmount();
   });
+
+  it('skips songs with trashed=true and no dupeId when advancing to the next song', async () => {
+    setAutoPlayNext(true);
+
+    const testSongsWithTrashed: Song[] = [
+      { ...mockSongs[0], id: 1, trashed: false, dupeid: null, youtubeid: "yt_song_1" },
+      { ...mockSongs[1], id: 2, trashed: true, dupeid: null, youtubeid: "yt_trashed_no_dupe" },
+      { ...mockSongs[2], id: 3, trashed: false, dupeid: null, youtubeid: "yt_song_3" },
+    ];
+
+    const TrashedTestHarness: ParentComponent = () => {
+      const { song, setSong } = SongConsumer();
+      const { setSongs } = useSongs();
+
+      setSongs(testSongsWithTrashed);
+      if (!song()) {
+        setSong(testSongsWithTrashed[0]);
+      }
+
+      return <SongPlayer song={song()} />;
+    };
+
+    const { unmount } = render(() => (
+      <SongContext>
+        <SongsContext>
+          <AutoPlayContext>
+            <TrashedTestHarness />
+          </AutoPlayContext>
+        </SongsContext>
+      </SongContext>
+    ));
+
+    await screen.findByRole('button', { name: /play/i });
+
+    // Song 1 finishes
+    playerEvents.onStateChange({ data: 0 });
+
+    // Should skip song 2 (trashed, no dupeId) and load song 3
+    await waitFor(() => {
+      expect(mockPlayerInstance.loadVideoById).toHaveBeenCalledWith("yt_song_3");
+    });
+    expect(mockPlayerInstance.loadVideoById).not.toHaveBeenCalledWith("yt_trashed_no_dupe");
+
+    unmount();
+  });
+
+  it('does not skip songs with trashed=true if dupeid is present', async () => {
+    setAutoPlayNext(true);
+
+    const testSongsWithDupe: Song[] = [
+      { ...mockSongs[0], id: 1, trashed: false, dupeid: null, youtubeid: "yt_song_1" },
+      { ...mockSongs[1], id: 2, trashed: true, dupeid: 999, youtubeid: "yt_trashed_with_dupe" },
+      { ...mockSongs[2], id: 3, trashed: false, dupeid: null, youtubeid: "yt_song_3" },
+    ];
+
+    const TrashedDupeHarness: ParentComponent = () => {
+      const { song, setSong } = SongConsumer();
+      const { setSongs } = useSongs();
+
+      setSongs(testSongsWithDupe);
+      if (!song()) {
+        setSong(testSongsWithDupe[0]);
+      }
+
+      return <SongPlayer song={song()} />;
+    };
+
+    const { unmount } = render(() => (
+      <SongContext>
+        <SongsContext>
+          <AutoPlayContext>
+            <TrashedDupeHarness />
+          </AutoPlayContext>
+        </SongsContext>
+      </SongContext>
+    ));
+
+    await screen.findByRole('button', { name: /play/i });
+
+    // Song 1 finishes
+    playerEvents.onStateChange({ data: 0 });
+
+    // Song 2 has a dupeid, so it should NOT be skipped
+    await waitFor(() => {
+      expect(mockPlayerInstance.loadVideoById).toHaveBeenCalledWith("yt_trashed_with_dupe");
+    });
+
+    unmount();
+  });
+
+  it('stops playback if all subsequent songs are trashed without dupeid', async () => {
+    setAutoPlayNext(true);
+
+    const allSubsequentTrashed: Song[] = [
+      { ...mockSongs[0], id: 1, trashed: false, dupeid: null, youtubeid: "yt_song_1" },
+      { ...mockSongs[1], id: 2, trashed: true, dupeid: null, youtubeid: "yt_trashed_1" },
+      { ...mockSongs[2], id: 3, trashed: true, dupeid: null, youtubeid: "yt_trashed_2" },
+    ];
+
+    const AllTrashedHarness: ParentComponent = () => {
+      const { song, setSong } = SongConsumer();
+      const { setSongs } = useSongs();
+
+      setSongs(allSubsequentTrashed);
+      if (!song()) {
+        setSong(allSubsequentTrashed[0]);
+      }
+
+      return <SongPlayer song={song()} />;
+    };
+
+    const { unmount } = render(() => (
+      <SongContext>
+        <SongsContext>
+          <AutoPlayContext>
+            <AllTrashedHarness />
+          </AutoPlayContext>
+        </SongsContext>
+      </SongContext>
+    ));
+
+    await screen.findByRole('button', { name: /play/i });
+
+    // Song 1 finishes
+    playerEvents.onStateChange({ data: 0 });
+
+    // No valid next songs exist
+    expect(mockPlayerInstance.loadVideoById).not.toHaveBeenCalled();
+
+    unmount();
+  });
 });

@@ -58,7 +58,7 @@ const formatTime = (seconds: number): string => {
 
 export interface SongPlayerProps {
   song?: Song | null;
-  onAutoPlayNext?: () => void;
+  onAutoPlayNext?: (nextSong?: Song) => void;
 }
 
 const SongPlayer: Component<SongPlayerProps> = (props) => {
@@ -208,7 +208,20 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
     const currentIndex = songList.findIndex((s) => s.id === props.song?.id);
     if (currentIndex === -1 || currentIndex + 1 >= songList.length) return false;
 
-    const nextSong = songList[currentIndex + 1];
+    let nextSong: Song | undefined;
+    for (let i = currentIndex + 1; i < songList.length; i++) {
+      const candidate = songList[i];
+      const isTrashed = Boolean(candidate.trashed) || (candidate.trashed as any) === 1;
+      const hasDupeId = candidate.dupeid != null || (candidate as any).dupeId != null;
+      if (isTrashed && !hasDupeId) {
+        continue;
+      }
+      nextSong = candidate;
+      break;
+    }
+
+    if (!nextSong) return false;
+
     const nextYtId = nextSong.youtubemusicid?.trim() || nextSong.youtubeid?.trim() || "";
 
     startSilentAudio();
@@ -228,7 +241,7 @@ const SongPlayer: Component<SongPlayerProps> = (props) => {
 
     shouldAutoPlayNext = true;
     if (props.onAutoPlayNext) {
-      props.onAutoPlayNext();
+      props.onAutoPlayNext(nextSong);
     } else if (setSong) {
       setSong(nextSong);
     }

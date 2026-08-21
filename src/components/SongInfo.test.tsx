@@ -421,4 +421,32 @@ describe('SongInfo Component', () => {
     expect(await screen.findByText('† (Cross)')).toBeInTheDocument();
     expect(screen.getByText('2007')).toBeInTheDocument();
   });
+
+  it('skips songs with trashed=true and no dupeid when clicking next song button', async () => {
+    // In mockSongsList: mockSong1 (101), mockSong2 (102), mockSong3 (103)
+    // Modify mockSong2 to be trashed with no dupeid
+    mockSong2.trashed = true;
+    mockSong2.dupeid = null;
+
+    const { setSong } = SongConsumer();
+    render(() => <SongInfo />);
+
+    setSong(mockSong1);
+
+    expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
+
+    const nextBtn = screen.getByRole('button', { name: /next song/i });
+    expect(nextBtn).toBeEnabled();
+
+    // Clicking Next should skip mockSong2 (Justice) and go to mockSong3 (Kavinsky)
+    await fireEvent.click(nextBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('Kavinsky')).toBeInTheDocument();
+      expect(screen.getByText('Nightcall')).toBeInTheDocument();
+    });
+
+    // Reset mockSong2
+    mockSong2.trashed = false;
+  });
 });

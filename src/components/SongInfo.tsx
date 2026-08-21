@@ -141,7 +141,16 @@ const SongInfo: Component = () => {
   const nextSong = createMemo(() => {
     const idx = currentIndex();
     const list = songList();
-    if (idx !== -1 && idx < list.length - 1) return list[idx + 1];
+    if (idx === -1) return undefined;
+    for (let i = idx + 1; i < list.length; i++) {
+      const candidate = list[i];
+      const isTrashed = Boolean(candidate.trashed) || (candidate.trashed as any) === 1;
+      const hasDupeId = candidate.dupeid != null || (candidate as any).dupeId != null;
+      if (isTrashed && !hasDupeId) {
+        continue;
+      }
+      return candidate;
+    }
     return undefined;
   });
 
@@ -658,7 +667,10 @@ const SongInfo: Component = () => {
             {/* YouTube Music Playback Controls */}
             <SongPlayer
               song={song()}
-              onAutoPlayNext={() => nextSong() && setSong(nextSong()!)}
+              onAutoPlayNext={(next) => {
+                const target = next || nextSong();
+                if (target) setSong(target);
+              }}
             />
 
             {/* Genres / Styles Section */}

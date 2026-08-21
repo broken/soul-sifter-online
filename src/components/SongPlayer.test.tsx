@@ -2,6 +2,8 @@ import { render, fireEvent, screen, waitFor } from "@solidjs/testing-library";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import '@testing-library/jest-dom/vitest';
 import { createSignal } from "solid-js";
+import SongContext, { SongConsumer } from "./SongContext";
+import SongsContext, { useSongs } from "./SongsContext";
 import SongPlayer from "./SongPlayer";
 import { Song } from "../model.types";
 
@@ -207,5 +209,80 @@ describe("SongPlayer Component", () => {
     playerEvents.onError({ data: 150 });
 
     expect(await screen.findByText(/embed playback restricted/i)).toBeInTheDocument();
+  });
+
+  it("skips trashed songs without dupeId on mediaSession nexttrack action", async () => {
+    let nextTrackHandler: Function | undefined;
+    const originalMediaSession = navigator.mediaSession;
+    const mockMediaSession = {
+      metadata: null,
+      playbackState: "none",
+      setActionHandler: vi.fn((action: string, handler: any) => {
+        if (action === "nexttrack") {
+          nextTrackHandler = handler;
+        }
+      }),
+      setPositionState: vi.fn(),
+    };
+    Object.defineProperty(navigator, "mediaSession", {
+      value: mockMediaSession,
+      writable: true,
+      configurable: true,
+    });
+
+    const mockSongsWithTrashed: Song[] = [
+      mockSongWithYoutube,
+      {
+        ...mockSongWithYoutube,
+        id: 102,
+        title: "Trashed Song",
+        trashed: true,
+        dupeid: null,
+        youtubeid: "trashedYtId",
+      },
+      {
+        ...mockSongWithYoutube,
+        id: 103,
+        title: "Valid Song",
+        trashed: false,
+        dupeid: null,
+        youtubeid: "validYtId",
+      },
+    ];
+
+    const onAutoPlayNextMock = vi.fn();
+
+    const Harness = () => {
+      const { setSongs } = useSongs();
+      const { song, setSong } = SongConsumer();
+      setSongs(mockSongsWithTrashed);
+      if (!song()) setSong(mockSongsWithTrashed[0]);
+      return <SongPlayer song={song()} onAutoPlayNext={onAutoPlayNextMock} />;
+    };
+
+    render(() => (
+      <SongContext>
+        <SongsContext>
+          <Harness />
+        </SongsContext>
+      </SongContext>
+    ));
+
+    await screen.findByRole("button", { name: /play/i });
+
+    expect(nextTrackHandler).toBeDefined();
+    // Trigger nexttrack
+    nextTrackHandler!();
+
+    // Player should load valid song 103 ("validYtId"), skipping trashed song 102 ("trashedYtId")
+    expect(mockPlayerInstance.loadVideoById).toHaveBeenCalledWith("validYtId");
+    expect(mockPlayerInstance.loadVideoById).not.toHaveBeenCalledWith("trashedYtId");
+    expect(onAutoPlayNextMock).toHaveBeenCalledWith(expect.objectContaining({ id: 103 }));
+
+    Object.defineProperty(navigator, "mediaSession", {
+      value: originalMediaSession,
+      writable: true,
+      configurable: true,
+    });
   });
 });
