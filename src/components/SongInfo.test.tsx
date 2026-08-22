@@ -449,4 +449,29 @@ describe('SongInfo Component', () => {
     // Reset mockSong2
     mockSong2.trashed = false;
   });
+
+  it('renders cover art thumbnail when YouTube ID is present', async () => {
+    const { setSong } = SongConsumer();
+    render(() => <SongInfo />);
+
+    setSong(mockSong1);
+
+    const img = await screen.findByRole('img', { name: /cover art/i });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', 'https://i.ytimg.com/vi/FGBhQbmPwH8/maxresdefault.jpg');
+  });
+
+  it('does not render cover art image when YouTube ID is absent', async () => {
+    const { setSong } = SongConsumer();
+    render(() => <SongInfo />);
+
+    setSong({
+      ...mockSong1,
+      youtubeid: null,
+      youtubemusicid: null,
+    });
+
+    expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /cover art/i })).not.toBeInTheDocument();
+  });
 });

@@ -173,6 +173,16 @@ const SongInfo: Component = () => {
     return null;
   });
 
+  const youtubeId = createMemo(() => {
+    const s = song();
+    return s?.youtubemusicid?.trim() || s?.youtubeid?.trim() || "";
+  });
+
+  const coverArtUrl = createMemo(() => {
+    const id = youtubeId();
+    return id ? `https://i.ytimg.com/vi/${id}/maxresdefault.jpg` : null;
+  });
+
   const navigateToSong = (targetSong: Song, direction: 'next' | 'prev') => {
     if (isTransitioning()) return;
     setIsTransitioning(true);
@@ -644,6 +654,30 @@ const SongInfo: Component = () => {
                 </svg>
               </button>
             </div>
+
+            {/* Cover Art */}
+            <Show when={coverArtUrl()}>
+              <div class="flex justify-center mb-3">
+                <div class="w-48 h-48 rounded-lg overflow-hidden shadow-md bg-base-300 relative flex items-center justify-center">
+                  <img
+                    src={coverArtUrl()!}
+                    alt={`${song()?.title || "Song"} cover art`}
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      const id = youtubeId();
+                      if (id && img.src.includes('maxresdefault')) {
+                        // Fallback to hqdefault if maxres isn't available on YouTube
+                        img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+                        // hqdefault has 4:3 letterbox bars on a 16:9 video; scale slightly to crop the 4:3 letterbox bars if needed
+                        img.style.transform = 'scale(1.35)';
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </Show>
 
             {/* Display artist in bold, without a label */}
             <p style={{ "font-weight": "bold" }}>{song()?.artist}</p>
