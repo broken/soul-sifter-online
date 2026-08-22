@@ -24,7 +24,7 @@
   align-items: right;
 }
 /* icon should remain sticky */
-svg {
+.action svg {
   position: sticky;
   left: 16px;
   right: 16px;
