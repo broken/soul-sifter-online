@@ -246,7 +246,7 @@ export default class Push extends Command {
           const chunkSize = 500;
           for (let i = 0; i < ids.length; i += chunkSize) {
             const chunk = ids.slice(i, i + chunkSize);
-            const { error } = await supabase.from(t).delete().in('id', chunk);
+            const { error } = await supabase.from(t.toLowerCase()).delete().in('id', chunk);
             if (error) {
               this.error(`Error deleting from ${t}: ${error.message}`);
             }
