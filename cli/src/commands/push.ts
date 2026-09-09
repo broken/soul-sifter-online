@@ -226,10 +226,36 @@ export default class Push extends Command {
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Push)
 
-    // get the changed lines
+    // Gather changed lines for all tables first
+    const tableChanges: Record<string, [RowKey[], RowKey[]]> = {};
     for (const t of tables) {
-      const data = await getChangesFromGit(args.dir, t);
-      const [removed, added] = data;
+      tableChanges[t] = await getChangesFromGit(args.dir, t);
+    }
+
+    // 1. Process additions/updates in dependency order (forward)
+    for (const t of tables) {
+      const [, added] = tableChanges[t];
+      if (added.length > 0) {
+        this.log(`${t} to add: ${added.length}`)
+        // pipe update to new file
+        await filterUpdates(t, added.length > 1000 ? [] : added, args.dir);
+        // execute upsert
+        // create temporary table first
+        await executePsql(`CREATE TEMP TABLE staging_${t.toLowerCase()} AS SELECT ${fields[t].join(', ')} FROM ${t.toLowerCase()} LIMIT 0`);
+        await executePsql(`\\COPY staging_${t.toLowerCase()} FROM '/tmp/${t}.txt' WITH DELIMITER E'\\t'`);
+        if (fields[t][0] === 'id') {
+          const fieldUpdates = fields[t].filter(x => x !== 'id').map(f => `${f}=excluded.${f}`);
+          await executePsql(`INSERT INTO ${t.toLowerCase()} (${fields[t].join(', ')}) SELECT ${fields[t].join(', ')} FROM staging_${t.toLowerCase()} ON CONFLICT(id) DO UPDATE SET ${fieldUpdates.join(', ')}`);
+        } else {
+          await executePsql(`INSERT INTO ${t.toLowerCase()} (${fields[t].join(', ')}) SELECT ${fields[t].join(', ')} FROM staging_${t.toLowerCase()} ON CONFLICT(${fields[t].join(', ')}) DO NOTHING`);
+        }
+        await executePsql(`DROP TABLE staging_${t.toLowerCase()}`);
+      }
+    }
+
+    // 2. Process removals in reverse dependency order (child tables before parent tables)
+    for (const t of [...tables].reverse()) {
+      const [removed,] = tableChanges[t];
       if (removed.length > 0) {
         this.log(`${t} to remove: ${JSON.stringify(removed)}`)
         if (fields[t][0] !== 'id') {
@@ -253,23 +279,8 @@ export default class Push extends Command {
           }
         }
       }
-      if (added.length > 0) {
-        this.log(`${t} to add: ${added.length}`)
-        // pipe update to new file
-        await filterUpdates(t, added.length > 1000 ? [] : added, args.dir);
-        // execute upsert
-        // create temporary table first
-        await executePsql(`CREATE TEMP TABLE staging_${t.toLowerCase()} AS SELECT ${fields[t].join(', ')} FROM ${t.toLowerCase()} LIMIT 0`);
-        await executePsql(`\\COPY staging_${t.toLowerCase()} FROM '/tmp/${t}.txt' WITH DELIMITER E'\\t'`);
-        if (fields[t][0] === 'id') {
-          const fieldUpdates = fields[t].filter(x => x !== 'id').map(f => `${f}=excluded.${f}`);
-          await executePsql(`INSERT INTO ${t.toLowerCase()} (${fields[t].join(', ')}) SELECT ${fields[t].join(', ')} FROM staging_${t.toLowerCase()} ON CONFLICT(id) DO UPDATE SET ${fieldUpdates.join(', ')}`);
-        } else {
-          await executePsql(`INSERT INTO ${t.toLowerCase()} (${fields[t].join(', ')}) SELECT ${fields[t].join(', ')} FROM staging_${t.toLowerCase()} ON CONFLICT(${fields[t].join(', ')}) DO NOTHING`);
-        }
-        await executePsql(`DROP TABLE staging_${t.toLowerCase()}`);
-      }
     }
-    writeHeadCommitToFile(args.dir)
+
+    await writeHeadCommitToFile(args.dir)
   }
 }
