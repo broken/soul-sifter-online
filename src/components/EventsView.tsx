@@ -1,5 +1,5 @@
 import { type Component, createSignal, onMount, createMemo, Show, For } from "solid-js";
-import { JamBaseService, JamBaseEvent, JamBaseMetro, POPULAR_METROS, JamBaseEventPerformer, normalizeArtistName } from "../services/JamBaseService";
+import { JamBaseService, JamBaseEvent, JamBaseMetro, POPULAR_METROS, JamBaseEventPerformer, normalizeArtistName, extractArtistNames } from "../services/JamBaseService";
 import { useSongs } from "./SongsContext";
 import { supabase } from "./App";
 import ArtistEventsModal from "./ArtistEventsModal";
@@ -16,6 +16,7 @@ const formatDate = (dateStr?: string) => {
       weekday: "short",
       month: "short",
       day: "numeric",
+      year: "numeric",
     });
   } catch (_) {
     return dateStr;
@@ -69,13 +70,23 @@ const EventsView: Component<EventsViewProps> = (props) => {
   const normalizedLibraryArtistSet = createMemo(() => {
     const set = new Set<string>();
     for (const a of libraryArtists()) {
-      const norm = normalizeArtistName(a);
-      if (norm) set.add(norm);
+      for (const extracted of extractArtistNames(a)) {
+        const norm = normalizeArtistName(extracted);
+        if (norm) set.add(norm);
+      }
     }
     for (const s of songs || []) {
       if (s.artist) {
-        const norm = normalizeArtistName(s.artist);
-        if (norm) set.add(norm);
+        for (const extracted of extractArtistNames(s.artist)) {
+          const norm = normalizeArtistName(extracted);
+          if (norm) set.add(norm);
+        }
+      }
+      if ((s as any).remixer) {
+        for (const extracted of extractArtistNames((s as any).remixer)) {
+          const norm = normalizeArtistName(extracted);
+          if (norm) set.add(norm);
+        }
       }
     }
     return set;
@@ -85,25 +96,52 @@ const EventsView: Component<EventsViewProps> = (props) => {
     const set = normalizedLibraryArtistSet();
     if (set.size === 0) return false;
 
-    // 1. Primary: Match against structured performer names
+    // 1. Collect performer candidates
+    const performerCandidates: string[] = [];
     if (event.performer && event.performer.length > 0) {
       for (const p of event.performer) {
-        if (p.name && set.has(normalizeArtistName(p.name))) {
-          return true;
+        if (p.name) {
+          for (const sub of extractArtistNames(p.name)) {
+            const norm = normalizeArtistName(sub);
+            if (norm) performerCandidates.push(norm);
+          }
         }
       }
-      return false;
     }
 
-    // 2. Fallback: only if performer list is empty, check whole word match on event title
-    const normEvent = normalizeArtistName(event.name || "");
-    if (!normEvent) return false;
+    // 2. Exact match on any performer candidate
+    for (const cand of performerCandidates) {
+      if (set.has(cand)) return true;
+    }
 
-    for (const artist of set) {
-      if (artist.length >= 4) {
-        const regex = new RegExp(`(^|\\s)${artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, "i");
-        if (regex.test(normEvent)) {
-          return true;
+    // 3. Word boundary matching between performers and library artists
+    for (const cand of performerCandidates) {
+      if (cand.length >= 3) {
+        for (const artist of set) {
+          if (artist.length >= 3) {
+            if (cand === artist) return true;
+            if (cand.length > artist.length) {
+              const regex = new RegExp(`(^|\\s)${artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, "i");
+              if (regex.test(cand)) return true;
+            }
+            if (artist.length > cand.length) {
+              const regex = new RegExp(`(^|\\s)${cand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, "i");
+              if (regex.test(artist)) return true;
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Whole-word match on event title (event.name)
+    const normEvent = normalizeArtistName(event.name || "");
+    if (normEvent) {
+      for (const artist of set) {
+        if (artist.length >= 4) {
+          const regex = new RegExp(`(^|\\s)${artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, "i");
+          if (regex.test(normEvent)) {
+            return true;
+          }
         }
       }
     }
@@ -117,7 +155,7 @@ const EventsView: Component<EventsViewProps> = (props) => {
 
     try {
       // Load library artists from Supabase / localStorage cache
-      const artists = await JamBaseService.getLibraryArtists(supabase);
+      const artists = await JamBaseService.getLibraryArtists(supabase, forceRefresh);
       setLibraryArtists(artists);
 
       const res = await JamBaseService.getMetroUpcomingEvents({

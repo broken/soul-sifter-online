@@ -332,9 +332,66 @@ export const normalizeArtistName = (name: string): string => {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // strip accents/diacritics
     .replace(/^the\s+/i, '') // strip leading "the "
+    .replace(/\s*&\s*/g, ' and ') // unify & and "and"
     .replace(/[^\w\s]/g, ' ') // replace punctuation with spaces
     .replace(/\s+/g, ' ') // collapse multiple spaces
     .trim();
+};
+
+export const extractArtistNames = (raw: string): string[] => {
+  if (!raw) return [];
+  const results = new Set<string>();
+
+  const isFeature = /\b(?:feat\.?|ft\.?|featuring)\b/i.test(raw);
+
+  // Extract from parenthetical / bracket info like (feat. XYZ) or (DJ Set)
+  const cleaned = raw
+    .replace(/\s*\(([^)]*)\)/g, (_, inner) => {
+      const cleanedInner = inner.replace(/^(feat\.?|ft\.?|with)\s+/i, '').trim();
+      if (cleanedInner && cleanedInner.length >= 2 && !/^(dj set|live|remix|club mix|original mix|vip)$/i.test(cleanedInner)) {
+        results.add(cleanedInner);
+      }
+      return ' ';
+    })
+    .replace(/\s*\[([^\]]*)\]/g, (_, inner) => {
+      const cleanedInner = inner.replace(/^(feat\.?|ft\.?|with)\s+/i, '').trim();
+      if (cleanedInner && cleanedInner.length >= 2 && !/^(dj set|live|remix|club mix|original mix|vip)$/i.test(cleanedInner)) {
+        results.add(cleanedInner);
+      }
+      return ' ';
+    });
+
+  // Only add whole string if it doesn't contain a feature credit
+  const trimmed = raw.trim();
+  if (trimmed && !isFeature) {
+    results.add(trimmed);
+  }
+
+  const baseCleaned = cleaned.trim();
+  if (baseCleaned && !isFeature) {
+    results.add(baseCleaned);
+  }
+
+  // Split on feature/collaboration separators (feat., ft., pres., vs., with, etc.)
+  const featParts = baseCleaned.split(/\s+(?:feat\.?|ft\.?|featuring|pres\.?|presents|vs\.?|vs|with|w\/)\s+/i);
+  for (const part of featParts) {
+    const partTrimmed = part.trim();
+    if (partTrimmed.length >= 2) {
+      results.add(partTrimmed);
+      // Split sub-parts on " x ", "/", ",", "+"
+      const subParts = partTrimmed.split(/\s+x\s+|\s*\/\s*|\s*,\s*|\s*\+\s*/i);
+      if (subParts.length > 1) {
+        for (const sp of subParts) {
+          const spTrimmed = sp.trim();
+          if (spTrimmed.length >= 2) {
+            results.add(spTrimmed);
+          }
+        }
+      }
+    }
+  }
+
+  return Array.from(results);
 };
 
 export function haversineDistanceMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -601,17 +658,19 @@ export class JamBaseService {
   }
 
   // --- Library Artists Local Cache (0 frequent Supabase calls) ---
-  public static async getLibraryArtists(supabaseClient?: SupabaseClient): Promise<string[]> {
-    try {
-      const stored = localStorage.getItem(LIBRARY_ARTISTS_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.timestamp && Date.now() - parsed.timestamp < LIBRARY_ARTISTS_TTL_MS && Array.isArray(parsed.artists)) {
-          return parsed.artists;
+  public static async getLibraryArtists(supabaseClient?: SupabaseClient, forceRefresh = false): Promise<string[]> {
+    if (!forceRefresh) {
+      try {
+        const stored = localStorage.getItem(LIBRARY_ARTISTS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.timestamp && Date.now() - parsed.timestamp < LIBRARY_ARTISTS_TTL_MS && Array.isArray(parsed.artists)) {
+            return parsed.artists;
+          }
         }
+      } catch (e) {
+        console.error('Failed to read library artists from localStorage:', e);
       }
-    } catch (e) {
-      console.error('Failed to read library artists from localStorage:', e);
     }
 
     if (!supabaseClient) {
@@ -619,31 +678,77 @@ export class JamBaseService {
     }
 
     try {
-      const { data, error } = await supabaseClient
-        .from('songs')
-        .select('artist')
-        .not('artist', 'is', null)
-        .limit(10000);
+      const allArtists: string[] = [];
+      let offset = 0;
+      const pageSize = 1000;
 
-      if (error) throw error;
-      if (data) {
-        const unique = Array.from(
-          new Set(
-            data
-              .map((d: any) => d.artist?.trim())
-              .filter((a: any): a is string => Boolean(a && a.length > 0))
-          )
-        ).sort((a, b) => a.localeCompare(b));
+      // 1. Paginate through songs to avoid truncation by PostgREST row limits
+      while (true) {
+        const { data, error } = await supabaseClient
+          .from('songs')
+          .select('artist, remixer')
+          .range(offset, offset + pageSize - 1);
 
-        localStorage.setItem(
-          LIBRARY_ARTISTS_KEY,
-          JSON.stringify({
-            artists: unique,
-            timestamp: Date.now(),
-          })
-        );
-        return unique;
+        if (error) {
+          console.warn('Error querying songs page for artists:', error);
+          break;
+        }
+        if (!data || data.length === 0) break;
+
+        for (const row of data) {
+          if (row.artist) {
+            for (const name of extractArtistNames(row.artist)) {
+              allArtists.push(name);
+            }
+          }
+          if (row.remixer) {
+            for (const name of extractArtistNames(row.remixer)) {
+              allArtists.push(name);
+            }
+          }
+        }
+
+        if (data.length < pageSize) break;
+        offset += pageSize;
       }
+
+      // 2. Fetch album artists
+      try {
+        const { data: albumData } = await supabaseClient
+          .from('albums')
+          .select('artist')
+          .not('artist', 'is', null)
+          .limit(5000);
+
+        if (albumData) {
+          for (const row of albumData) {
+            if (row.artist) {
+              for (const name of extractArtistNames(row.artist)) {
+                allArtists.push(name);
+              }
+            }
+          }
+        }
+      } catch (_) {}
+
+      // 3. Include mapped artists from localStorage
+      const mappings = this.getArtistMappings();
+      for (const m of Object.values(mappings)) {
+        if (m.name) allArtists.push(m.name);
+      }
+
+      const unique = Array.from(new Set(allArtists.filter((a) => a && a.trim().length > 0))).sort((a, b) =>
+        a.localeCompare(b)
+      );
+
+      localStorage.setItem(
+        LIBRARY_ARTISTS_KEY,
+        JSON.stringify({
+          artists: unique,
+          timestamp: Date.now(),
+        })
+      );
+      return unique;
     } catch (e) {
       console.error('Error fetching library artists from Supabase:', e);
     }

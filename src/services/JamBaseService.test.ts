@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { JamBaseService, POPULAR_METROS, normalizeArtistName } from './JamBaseService';
+import { JamBaseService, POPULAR_METROS, normalizeArtistName, extractArtistNames } from './JamBaseService';
 
 describe('JamBaseService', () => {
   beforeEach(() => {
@@ -11,8 +11,27 @@ describe('JamBaseService', () => {
     expect(normalizeArtistName('The Chemical Brothers')).toBe('chemical brothers');
     expect(normalizeArtistName('Chemical Brothers')).toBe('chemical brothers');
     expect(normalizeArtistName('Daft Punk!')).toBe('daft punk');
-    expect(normalizeArtistName('  Above & Beyond  ')).toBe('above beyond');
+    expect(normalizeArtistName('  Above & Beyond  ')).toBe('above and beyond');
+    expect(normalizeArtistName('Above and Beyond')).toBe('above and beyond');
     expect(normalizeArtistName('Beyoncé')).toBe('beyonce');
+  });
+
+  it('extracts collaboration and feature artist names', () => {
+    const extracted1 = extractArtistNames('Above & Beyond feat. Richard Bedford');
+    expect(extracted1).not.toContain('Above & Beyond feat. Richard Bedford');
+    expect(extracted1).toContain('Above & Beyond');
+    expect(extracted1).toContain('Richard Bedford');
+
+    const extracted2 = extractArtistNames('deadmau5 & Kaskade');
+    expect(extracted2).toContain('deadmau5 & Kaskade');
+
+    const extracted3 = extractArtistNames('Eric Prydz vs. CHVRCHES');
+    expect(extracted3).toContain('Eric Prydz vs. CHVRCHES');
+    expect(extracted3).toContain('Eric Prydz');
+    expect(extracted3).toContain('CHVRCHES');
+
+    const extracted4 = extractArtistNames('Kaskade (DJ Set)');
+    expect(extracted4).toContain('Kaskade');
   });
 
   it('manages settings in localStorage', () => {
