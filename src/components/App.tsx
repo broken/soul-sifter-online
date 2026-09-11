@@ -13,6 +13,7 @@ import ActivePlaylistContext from './PlaylistContext'
 import PlaylistList from './PlaylistList'
 import SearchToolbar from './SearchToolbar'
 import Settings from './Settings'
+import EventsView from './EventsView'
 import SongContext from './SongContext'
 import SongInfo from './SongInfo'
 import SongList from './SongList'
@@ -59,14 +60,17 @@ const AppView: Component = () => {
               <PlaylistList />
             </Match>
             <Match when={tab() === 3}>
-              <Settings />
+              <Settings onOpenEvents={() => start(() => setTab(4))} />
+            </Match>
+            <Match when={tab() === 4}>
+              <EventsView onBackToSettings={() => start(() => setTab(3))} />
             </Match>
           </Switch>
         </Suspense>
       </div>
       <SongInfo />
       <GenreInfo />
-      <NavBar start={start} setTab={setTab}/>
+      <NavBar start={start} setTab={setTab} tab={tab}/>
     </div>
   );
 };

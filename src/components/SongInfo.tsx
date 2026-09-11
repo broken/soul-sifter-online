@@ -8,6 +8,7 @@ import Backdrop from './Backdrop';
 import { supabase } from "./App";
 import { Album, Song, Style, StyleChildren } from "../model.types";
 import { GenreWrapper } from "./GenreListItem";
+import ArtistEventsModal from "./ArtistEventsModal";
 
 const StyleTreeItem: Component<{
   genre: GenreWrapper;
@@ -116,6 +117,7 @@ const SongInfo: Component = () => {
   const [loadingTree, setLoadingTree] = createSignal<boolean>(false);
   const [isEditMode, setIsEditMode] = createSignal<boolean>(false);
   const [searchText, setSearchText] = createSignal<string>("");
+  const [showEventsModal, setShowEventsModal] = createSignal<boolean>(false);
 
   // Swipe and transition signals
   const [dragX, setDragX] = createSignal<number>(0);
@@ -777,25 +779,52 @@ const SongInfo: Component = () => {
             </div>
 
             <div class="card-actions justify-between items-center mt-4">
-              <button
-                type="button"
-                aria-label={isEditMode() ? "Done" : "Edit"}
-                class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
-                onClick={() => {
-                  const nextEdit = !isEditMode();
-                  setIsEditMode(nextEdit);
-                  if (nextEdit) {
-                    fetchGenreTree();
-                  }
-                }}
-              >
-                {isEditMode() ? "Done" : "Edit"}
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label={isEditMode() ? "Done" : "Edit"}
+                  class={`btn btn-xs ${isEditMode() ? "btn-error" : "btn-outline btn-error"}`}
+                  onClick={() => {
+                    const nextEdit = !isEditMode();
+                    setIsEditMode(nextEdit);
+                    if (nextEdit) {
+                      fetchGenreTree();
+                    }
+                  }}
+                >
+                  {isEditMode() ? "Done" : "Edit"}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Upcoming Events"
+                  class="btn btn-xs btn-outline btn-primary gap-1"
+                  disabled={!song()?.artist}
+                  onClick={() => setShowEventsModal(true)}
+                  title={`View upcoming concerts for ${song()?.artist || "artist"}`}
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Events
+                </button>
+              </div>
               <Rating song={song()} mutable={isEditMode()} size="2em" />
             </div>
           </div>
         </div>
       </div>
+
+      <Show when={showEventsModal() && !!song()?.artist}>
+        <ArtistEventsModal
+          artistName={song()?.artist || null}
+          onClose={() => setShowEventsModal(false)}
+        />
+      </Show>
     </Show>
   );
 };
