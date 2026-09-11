@@ -90,7 +90,7 @@ const SETTINGS_KEY = 'soul_sifter_jambase_settings';
 const ARTIST_MAPPINGS_KEY = 'soul_sifter_jambase_artists';
 const EVENTS_CACHE_KEY = 'soul_sifter_jambase_events_cache';
 const METROS_CACHE_KEY = 'soul_sifter_jambase_metros_cache';
-const LIBRARY_ARTISTS_KEY = 'soul_sifter_library_artists';
+const LIBRARY_ARTISTS_KEY = 'soul_sifter_library_artists_v3';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const METROS_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const LIBRARY_ARTISTS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -800,6 +800,10 @@ export class JamBaseService {
   public static clearAllCache(): void {
     try {
       localStorage.removeItem(EVENTS_CACHE_KEY);
+      localStorage.removeItem(LIBRARY_ARTISTS_KEY);
+      localStorage.removeItem('soul_sifter_library_artists');
+      localStorage.removeItem('soul_sifter_library_artists_v2');
+      localStorage.removeItem(METROS_CACHE_KEY);
     } catch (e) {
       console.error('Failed to clear JamBase cache:', e);
     }
