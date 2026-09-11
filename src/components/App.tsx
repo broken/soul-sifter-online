@@ -11,7 +11,7 @@ import GenreList from './GenreList'
 import NavBar from './NavBar'
 import ActivePlaylistContext from './PlaylistContext'
 import PlaylistList from './PlaylistList'
-import SearchToolbar from './SearchToolbar'
+import SearchToolbar, { setInternalSearchQuery, setDebouncedSearchQuery } from './SearchToolbar'
 import Settings from './Settings'
 import EventsView from './EventsView'
 import SongContext from './SongContext'
@@ -43,6 +43,13 @@ const AppView: Component = () => {
     document.documentElement.style.fontSize = currentSize;
   });
 
+  const handleSearchArtist = (artistName: string) => {
+    const query = `ar:"${artistName.trim()}"`;
+    setInternalSearchQuery(query);
+    setDebouncedSearchQuery(query);
+    start(() => setTab(0));
+  };
+
   return (
     <div class="flex flex-col h-screen w-screen overflow-hidden relative">
       <SearchToolbar />
@@ -63,7 +70,10 @@ const AppView: Component = () => {
               <Settings onOpenEvents={() => start(() => setTab(4))} />
             </Match>
             <Match when={tab() === 4}>
-              <EventsView onBackToSettings={() => start(() => setTab(3))} />
+              <EventsView
+                onBackToSettings={() => start(() => setTab(3))}
+                onSearchArtist={handleSearchArtist}
+              />
             </Match>
           </Switch>
         </Suspense>

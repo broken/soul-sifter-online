@@ -5,6 +5,7 @@ import Backdrop from "./Backdrop";
 export interface ArtistEventsModalProps {
   artistName: string | null;
   onClose: () => void;
+  onSearchArtist?: (artistName: string) => void;
 }
 
 const formatDate = (dateStr?: string) => {
@@ -206,7 +207,25 @@ const ArtistEventsModal: Component<ArtistEventsModalProps> = (props) => {
                 </div>
               </div>
 
-              <div class="flex items-center gap-1">
+              <div class="flex items-center gap-1.5">
+                <Show when={props.onSearchArtist}>
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-primary gap-1 shadow-sm font-semibold"
+                    onClick={() => {
+                      if (props.artistName) {
+                        props.onSearchArtist!(props.artistName);
+                        props.onClose();
+                      }
+                    }}
+                    title={`Search and listen to ${props.artistName} in your library`}
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    <span>Listen</span>
+                  </button>
+                </Show>
                 <button
                   type="button"
                   class="btn btn-ghost btn-xs btn-circle"

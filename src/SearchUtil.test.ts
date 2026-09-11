@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compareTracks, sortSongsByAlbum, OrderBy } from './SearchUtil';
+import { compareTracks, sortSongsByAlbum, OrderBy, parse, Type } from './SearchUtil';
 import { Song } from './model.types';
 
 const createSong = (partial: Partial<Song>): Song => ({
@@ -127,5 +127,19 @@ describe('SearchUtil sortSongsByAlbum', () => {
       1, // albumid 10, part 1, track 10
       4, // albumid 10, part 2, track 1
     ]);
+  });
+
+  describe('SearchUtil query parsing', () => {
+    it('parses ar: and artistremixer: as S_ARTIST_OR_REMIXER', () => {
+      const atom1 = parse('ar:"Above & Beyond"');
+      expect(atom1).toBeDefined();
+      expect(atom1?.type).toBe(Type.S_ARTIST_OR_REMIXER);
+      expect(atom1?.value).toBe('above & beyond');
+
+      const atom2 = parse('artistremixer:"Eric Prydz"');
+      expect(atom2).toBeDefined();
+      expect(atom2?.type).toBe(Type.S_ARTIST_OR_REMIXER);
+      expect(atom2?.value).toBe('eric prydz');
+    });
   });
 });

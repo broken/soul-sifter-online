@@ -6,6 +6,7 @@ import ArtistEventsModal from "./ArtistEventsModal";
 
 export interface EventsViewProps {
   onBackToSettings: () => void;
+  onSearchArtist?: (artistName: string) => void;
 }
 
 const formatDate = (dateStr?: string) => {
@@ -267,10 +268,18 @@ const EventsView: Component<EventsViewProps> = (props) => {
         <div class="flex items-center gap-2 ml-auto">
           <button
             type="button"
-            class={`btn btn-xs sm:btn-sm ${libraryOnly() ? "btn-secondary" : "btn-ghost bg-base-100"}`}
+            class={`btn btn-xs gap-1.5 transition-all ${
+              libraryOnly()
+                ? "btn-secondary font-bold shadow-sm"
+                : "btn-ghost bg-base-100 text-base-content/70"
+            }`}
             onClick={() => setLibraryOnly(!libraryOnly())}
           >
-            {libraryOnly() ? `✓ My Artists Only (${libraryMatchCount()})` : "Show All Concerts"}
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+            <span>My Artists Only</span>
+            <span class="badge badge-xs bg-base-100/30 text-current">{libraryMatchCount()}</span>
           </button>
           <Show when={fromCache()}>
             <span class="text-[10px] text-base-content/50 italic shrink-0">Cached</span>
@@ -278,15 +287,32 @@ const EventsView: Component<EventsViewProps> = (props) => {
         </div>
       </div>
 
-      {/* Search Input */}
-      <div>
+      {/* Search Input Filter */}
+      <div class="relative">
         <input
           type="text"
-          placeholder="Search shows, artists, or venues..."
-          class="input input-sm input-bordered w-full"
+          placeholder="Filter concerts by title, venue, or performer..."
           value={searchFilter()}
           onInput={(e) => setSearchFilter(e.currentTarget.value)}
+          class="input input-sm input-bordered w-full pl-8"
         />
+        <svg
+          class="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <Show when={searchFilter()}>
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-circle absolute right-1.5 top-1/2 -translate-y-1/2 text-base-content/50"
+            onClick={() => setSearchFilter("")}
+          >
+            ✕
+          </button>
+        </Show>
       </div>
 
       {/* Error View */}
@@ -392,24 +418,44 @@ const EventsView: Component<EventsViewProps> = (props) => {
 
                         {/* Performers */}
                         <Show when={event.performer && event.performer.length > 0}>
-                          <div class="flex flex-wrap gap-1.5 mt-2">
+                          <div class="flex flex-wrap items-center gap-1.5 mt-2">
                             <For each={event.performer}>
                               {(p) => {
                                 const artistInLib = p.name && normalizedLibraryArtistSet().has(normalizeArtistName(p.name));
                                 return (
-                                  <button
-                                    type="button"
-                                    onClick={() => p.name && setSelectedArtistForModal(p.name)}
-                                    class={`badge badge-sm py-2 px-2.5 text-[11px] gap-1 cursor-pointer hover:opacity-80 transition-opacity ${
-                                      artistInLib ? "badge-secondary font-bold" : "badge-ghost"
-                                    }`}
-                                    title={`View all tour dates & details for ${p.name}`}
-                                  >
-                                    <span>{p.name}</span>
-                                    <svg class="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                  </button>
+                                  <div class="inline-flex items-center shadow-xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => p.name && setSelectedArtistForModal(p.name)}
+                                      class={`badge badge-sm py-2 px-2.5 text-[11px] gap-1 cursor-pointer hover:opacity-85 transition-opacity ${
+                                        artistInLib ? "badge-secondary font-bold" : "badge-ghost"
+                                      } ${props.onSearchArtist && p.name ? "rounded-r-none border-r-0" : ""}`}
+                                      title={`View all tour dates & details for ${p.name}`}
+                                    >
+                                      <span>{p.name}</span>
+                                      <svg class="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                      </svg>
+                                    </button>
+                                    <Show when={props.onSearchArtist && p.name}>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (p.name) props.onSearchArtist!(p.name);
+                                        }}
+                                        class={`badge badge-sm py-2 px-1.5 text-[11px] rounded-l-none border-l-0 cursor-pointer hover:opacity-85 transition-opacity ${
+                                          artistInLib ? "badge-secondary border-l border-secondary-focus/30" : "badge-ghost border-l border-base-300"
+                                        }`}
+                                        title={`Search and listen to ${p.name} in your library`}
+                                        aria-label={`Search ${p.name} in library`}
+                                      >
+                                        <svg class="w-3 h-3 opacity-75 hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                        </svg>
+                                      </button>
+                                    </Show>
+                                  </div>
                                 );
                               }}
                             </For>
@@ -453,6 +499,7 @@ const EventsView: Component<EventsViewProps> = (props) => {
         <ArtistEventsModal
           artistName={selectedArtistForModal()}
           onClose={() => setSelectedArtistForModal(null)}
+          onSearchArtist={props.onSearchArtist}
         />
       </Show>
     </div>

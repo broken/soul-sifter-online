@@ -20,6 +20,7 @@ enum Type {
   S_ARTIST,
   S_TITLE,
   S_REMIXER,
+  S_ARTIST_OR_REMIXER,
   S_RATING,
   S_COMMENTS,
   S_CURATOR,
@@ -123,7 +124,7 @@ function parse(queryFragment: string): Atom | undefined {
   let atom = new Atom()
 
   // Replace boost::regex with JavaScript regular expression
-  const regex = /^(-)?((id|a|artist|t|title|remixer|r|rating|comments|c|curator|e|energy|bpm|trashed|lowq|aid|n|album|m|mixed|l|label|y|year|month|day|q|query|limit|o|order|orderby|orderBy):)?(<|>)?(=)?(.+)$/
+  const regex = /^(-)?((id|ar|artistremixer|a|artist|t|title|remixer|r|rating|comments|c|curator|e|energy|bpm|trashed|lowq|aid|n|album|m|mixed|l|label|y|year|month|day|q|query|limit|o|order|orderby|orderBy):)?(<|>)?(=)?(.+)$/
   const match = queryFragment.toLowerCase().match(regex)
   if (!match) {
     return undefined
@@ -148,6 +149,10 @@ function parse(queryFragment: string): Atom | undefined {
     switch (match[3]) {
       case "id":
         atom.type = Type.S_ID
+        break
+      case "ar":
+      case "artistremixer":
+        atom.type = Type.S_ARTIST_OR_REMIXER
         break
       case "a":
       case "artist":
@@ -237,11 +242,15 @@ function parse(queryFragment: string): Atom | undefined {
   }
 
   // Set value
+  let val = match[6];
+  if (val.startsWith('"') && val.endsWith('"') && val.length >= 2) {
+    val = val.slice(1, -1);
+  }
   if (atom.type === Type.CUSTOM_QUERY_PREDICATE) {
-    atom.value = match[6]
+    atom.value = val;
   } else {
     // Replace single quotes with escaped single quotes
-    atom.value = match[6].replace(/'/g, "\\'")
+    atom.value = val.replace(/'/g, "\\'");
   }
 
   return atom
@@ -313,16 +322,25 @@ function buildQueryPredicate(
         else if (negated) builder = builder.not('ilike', artistField, `%${atom.value}%`);
         else builder = builder.ilike(artistField, `%${atom.value}%`);
         break;
+      case Type.S_REMIXER:
+        const remixerField = isPlaylistQuery ? 'songs.remixer' : 'remixer';
+        if (negated) builder = builder.not('ilike', remixerField, `%${atom.value}%`);
+        else builder = builder.ilike(remixerField, `%${atom.value}%`);
+        break;
+      case Type.S_ARTIST_OR_REMIXER:
+        const aField = isPlaylistQuery ? 'songs.artist' : 'artist';
+        const rField = isPlaylistQuery ? 'songs.remixer' : 'remixer';
+        if (negated) {
+          builder = builder.not('ilike', aField, `%${atom.value}%`).not('ilike', rField, `%${atom.value}%`);
+        } else {
+          builder = builder.or(`${aField}.ilike.%${atom.value}%,${rField}.ilike.%${atom.value}%`);
+        }
+        break;
       case Type.S_TITLE:
         const titleField = isPlaylistQuery ? 'songs.title' : 'title';
         if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) builder = buildEqualityOperator(builder, titleField, atom.props, atom.value);
         else if (negated) builder = builder.not('ilike', titleField, `%${atom.value}%`);
         else builder = builder.ilike(titleField, `%${atom.value}%`);
-        break;
-      case Type.S_REMIXER:
-        const remixerField = isPlaylistQuery ? 'songs.remixer' : 'remixer';
-        if (negated) builder = builder.not('ilike', remixerField, `%${atom.value}%`);
-        else builder = builder.ilike(remixerField, `%${atom.value}%`);
         break;
       case Type.S_RATING:
         builder = buildEqualityOperator(builder, isPlaylistQuery ? 'songs.rating' : 'rating', atom.props, atom.value, Property.EQUAL & Property.GREATER_THAN);
@@ -532,5 +550,5 @@ async function searchSongs(
 
 
 export default searchSongs
-export { searchSongs, OrderBy, compareTracks, sortSongsByAlbum }
+export { searchSongs, OrderBy, compareTracks, sortSongsByAlbum, parse, splitString, Type }
 

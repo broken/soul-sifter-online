@@ -19,10 +19,11 @@ export const TAG_GROUPS: { name: string; tags: TagItem[] }[] = [
   {
     name: 'Song Information',
     tags: [
+      { prefix: 'ar:', label: 'artist/remixer:', description: 'Song artist or remixer (ar:)' },
       { prefix: 'a:', label: 'artist:', description: 'Song artist (a:)' },
+      { prefix: 'remixer:', label: 'remixer:', description: 'Song remixer' },
       { prefix: 't:', label: 'title:', description: 'Song title (t:)' },
       { prefix: 'n:', label: 'album:', description: 'Album name (n:)' },
-      { prefix: 'remixer:', label: 'remixer:', description: 'Song remixer' },
       { prefix: 'l:', label: 'label:', description: 'Record label (l:)' },
       { prefix: 'c:', label: 'curator:', description: 'Discovery curator (c:)' },
       { prefix: 'comments:', label: 'comments:', description: 'Song comments' },
