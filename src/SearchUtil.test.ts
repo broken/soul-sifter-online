@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compareTracks, sortSongsByAlbum, OrderBy, parse, Type } from './SearchUtil';
+import { compareTracks, sortSongsByAlbum, OrderBy, parse, splitString, Type } from './SearchUtil';
 import { Song } from './model.types';
 
 const createSong = (partial: Partial<Song>): Song => ({
@@ -130,6 +130,20 @@ describe('SearchUtil sortSongsByAlbum', () => {
   });
 
   describe('SearchUtil query parsing', () => {
+    it('splits query string with quoted prefixed atoms properly', () => {
+      expect(splitString('a:"tyga"')).toEqual(['a:tyga']);
+      expect(splitString('a:"Above & Beyond"')).toEqual(['a:Above & Beyond']);
+      expect(splitString('ar:"Above & Beyond"')).toEqual(['ar:Above & Beyond']);
+      expect(splitString('-a:"David Guetta"')).toEqual(['-a:David Guetta']);
+      expect(splitString('"Above & Beyond"')).toEqual(['Above & Beyond']);
+      expect(splitString('a:tyga bpm:>120 "Los Angeles" -trashed:1')).toEqual([
+        'a:tyga',
+        'bpm:>120',
+        'Los Angeles',
+        '-trashed:1',
+      ]);
+    });
+
     it('parses ar: and artistremixer: as S_ARTIST_OR_REMIXER', () => {
       const atom1 = parse('ar:"Above & Beyond"');
       expect(atom1).toBeDefined();

@@ -102,21 +102,26 @@ function sortSongsByAlbum(songs: Song[]): Song[] {
 
 
 function splitString(str: string): string[] {
-  const regex = /[^\s"]+|"([^"]*)"/g
-  const matches = []
-  let match
+  // Matches:
+  // 1) prefix:"quoted string" (e.g. a:"Above & Beyond", -a:"Tyga", artist:="deadmau5")
+  // 2) standalone "quoted string" (e.g. "Above & Beyond")
+  // 3) unquoted word (e.g. a:tyga, bpm:>120, trance)
+  const regex = /(-?[a-zA-Z]*(?::(?:<=|>=|<|>|=)?)?)"([^"]*)"|[^\s]+/g;
+  const matches: string[] = [];
+  let match;
 
   while ((match = regex.exec(str))) {
-    if (match[1]) {
-      // Matched a quoted string, remove the quotes
-      matches.push(match[1])
+    if (match[1] !== undefined && match[2] !== undefined) {
+      // It matched prefix:"quoted" or "quoted" (where prefix match[1] is '' or e.g. 'a:')
+      const prefix = match[1];
+      const inner = match[2];
+      matches.push(`${prefix}${inner}`);
     } else {
-      // Matched a non-quoted word
-      matches.push(match[0])
+      matches.push(match[0]);
     }
   }
 
-  return matches
+  return matches;
 }
 
 
