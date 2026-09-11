@@ -429,7 +429,7 @@ const EventsView: Component<EventsViewProps> = (props) => {
                                       onClick={() => p.name && setSelectedArtistForModal(p.name)}
                                       class={`badge badge-sm py-2 px-2.5 text-[11px] gap-1 cursor-pointer hover:opacity-85 transition-opacity ${
                                         artistInLib ? "badge-secondary font-bold" : "badge-ghost"
-                                      } ${props.onSearchArtist && p.name ? "rounded-r-none border-r-0" : ""}`}
+                                      } ${props.onSearchArtist && p.name && artistInLib ? "rounded-r-none border-r-0" : ""}`}
                                       title={`View all tour dates & details for ${p.name}`}
                                     >
                                       <span>{p.name}</span>
@@ -437,16 +437,14 @@ const EventsView: Component<EventsViewProps> = (props) => {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                       </svg>
                                     </button>
-                                    <Show when={props.onSearchArtist && p.name}>
+                                    <Show when={props.onSearchArtist && p.name && artistInLib}>
                                       <button
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           if (p.name) props.onSearchArtist!(p.name);
                                         }}
-                                        class={`badge badge-sm py-2 px-1.5 text-[11px] rounded-l-none border-l-0 cursor-pointer hover:opacity-85 transition-opacity ${
-                                          artistInLib ? "badge-secondary border-l border-secondary-focus/30" : "badge-ghost border-l border-base-300"
-                                        }`}
+                                        class="badge badge-sm py-2 px-1.5 text-[11px] rounded-l-none border-l-0 cursor-pointer hover:opacity-85 transition-opacity badge-secondary border-l border-secondary-focus/30"
                                         title={`Search and listen to ${p.name} in your library`}
                                         aria-label={`Search ${p.name} in library`}
                                       >
