@@ -427,15 +427,12 @@ const EventsView: Component<EventsViewProps> = (props) => {
                                     <button
                                       type="button"
                                       onClick={() => p.name && setSelectedArtistForModal(p.name)}
-                                      class={`badge badge-sm py-2 px-2.5 text-[11px] gap-1 cursor-pointer hover:opacity-85 transition-opacity ${
+                                      class={`badge badge-sm py-2 px-2.5 text-[11px] cursor-pointer hover:opacity-85 transition-opacity ${
                                         artistInLib ? "badge-secondary font-bold" : "badge-ghost"
                                       } ${props.onSearchArtist && p.name && artistInLib ? "rounded-r-none border-r-0" : ""}`}
                                       title={`View all tour dates & details for ${p.name}`}
                                     >
                                       <span>{p.name}</span>
-                                      <svg class="w-2.5 h-2.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                      </svg>
                                     </button>
                                     <Show when={props.onSearchArtist && p.name && artistInLib}>
                                       <button
