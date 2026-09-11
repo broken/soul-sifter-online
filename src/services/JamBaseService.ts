@@ -394,6 +394,35 @@ export const extractArtistNames = (raw: string): string[] => {
   return Array.from(results);
 };
 
+export const cleanPerformerName = (name: string): string[] => {
+  if (!name) return [];
+  const results = new Set<string>();
+
+  const trimmed = name.trim();
+  if (trimmed) results.add(trimmed);
+
+  // Strip parentheticals / brackets like (DJ Set), (Live), (Extended Set), - Subtitle, : Subtitle
+  const stripped = trimmed
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/\s*\[[^\]]*\]/g, '')
+    .replace(/\s*-\s+.*$/g, '')
+    .replace(/\s*:\s+.*$/g, '')
+    .trim();
+
+  if (stripped && stripped !== trimmed && stripped.length >= 2) {
+    results.add(stripped);
+  }
+
+  // Also extract sub-artists if JamBase combined them (e.g. "Artist A & Artist B" or "Artist A feat. Artist B")
+  for (const s of Array.from(results)) {
+    for (const extracted of extractArtistNames(s)) {
+      results.add(extracted);
+    }
+  }
+
+  return Array.from(results);
+};
+
 export function haversineDistanceMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 3958.8; // Earth's radius in miles
   const dLat = ((lat2 - lat1) * Math.PI) / 180;

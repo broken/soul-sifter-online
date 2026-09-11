@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { JamBaseService, POPULAR_METROS, normalizeArtistName, extractArtistNames } from './JamBaseService';
+import { JamBaseService, POPULAR_METROS, normalizeArtistName, extractArtistNames, cleanPerformerName } from './JamBaseService';
 
 describe('JamBaseService', () => {
   beforeEach(() => {
@@ -32,6 +32,20 @@ describe('JamBaseService', () => {
 
     const extracted4 = extractArtistNames('Kaskade (DJ Set)');
     expect(extracted4).toContain('Kaskade');
+  });
+
+  it('cleans performer modifiers for exact matching', () => {
+    const p1 = cleanPerformerName('Kaskade (DJ Set)');
+    expect(p1).toContain('Kaskade');
+
+    const p2 = cleanPerformerName('Eric Prydz - HOLO');
+    expect(p2).toContain('Eric Prydz');
+
+    const p3 = cleanPerformerName('deadmau5 (live)');
+    expect(p3).toContain('deadmau5');
+
+    const p4 = cleanPerformerName('Red Hot Chili Peppers');
+    expect(p4).toEqual(['Red Hot Chili Peppers']);
   });
 
   it('manages settings in localStorage', () => {

@@ -1,5 +1,5 @@
 import { type Component, createSignal, onMount, createMemo, Show, For } from "solid-js";
-import { JamBaseService, JamBaseEvent, JamBaseMetro, POPULAR_METROS, JamBaseEventPerformer, normalizeArtistName, extractArtistNames } from "../services/JamBaseService";
+import { JamBaseService, JamBaseEvent, JamBaseMetro, POPULAR_METROS, JamBaseEventPerformer, normalizeArtistName, extractArtistNames, cleanPerformerName } from "../services/JamBaseService";
 import { useSongs } from "./SongsContext";
 import { supabase } from "./App";
 import ArtistEventsModal from "./ArtistEventsModal";
@@ -96,53 +96,32 @@ const EventsView: Component<EventsViewProps> = (props) => {
     const set = normalizedLibraryArtistSet();
     if (set.size === 0) return false;
 
-    // 1. Collect performer candidates
-    const performerCandidates: string[] = [];
+    // 1. Primary: Match structured performers against library artists
     if (event.performer && event.performer.length > 0) {
       for (const p of event.performer) {
         if (p.name) {
-          for (const sub of extractArtistNames(p.name)) {
-            const norm = normalizeArtistName(sub);
-            if (norm) performerCandidates.push(norm);
-          }
-        }
-      }
-    }
-
-    // 2. Exact match on any performer candidate
-    for (const cand of performerCandidates) {
-      if (set.has(cand)) return true;
-    }
-
-    // 3. Word boundary matching between performers and library artists
-    for (const cand of performerCandidates) {
-      if (cand.length >= 3) {
-        for (const artist of set) {
-          if (artist.length >= 3) {
-            if (cand === artist) return true;
-            if (cand.length > artist.length) {
-              const regex = new RegExp(`(^|\\s)${artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, "i");
-              if (regex.test(cand)) return true;
-            }
-            if (artist.length > cand.length) {
-              const regex = new RegExp(`(^|\\s)${cand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, "i");
-              if (regex.test(artist)) return true;
+          const variations = cleanPerformerName(p.name);
+          for (const v of variations) {
+            const norm = normalizeArtistName(v);
+            if (norm && set.has(norm)) {
+              return true;
             }
           }
         }
       }
+      return false;
     }
 
-    // 4. Whole-word match on event title (event.name)
-    const normEvent = normalizeArtistName(event.name || "");
-    if (normEvent) {
-      for (const artist of set) {
-        if (artist.length >= 4) {
-          const regex = new RegExp(`(^|\\s)${artist.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`, "i");
-          if (regex.test(normEvent)) {
-            return true;
-          }
-        }
+    // 2. Fallback ONLY when event.performer is completely empty or missing
+    const eventTitle = (event.name || "").trim();
+    if (!eventTitle) return false;
+
+    // Check headliner before separators like " at ", " with ", " : ", " - "
+    const titleCleaned = eventTitle.split(/\s+(?:at|with|presents|pres\.?|@|:|-|\/)\s+/i)[0]?.trim();
+    if (titleCleaned) {
+      const normTitle = normalizeArtistName(titleCleaned);
+      if (normTitle && set.has(normTitle)) {
+        return true;
       }
     }
 
