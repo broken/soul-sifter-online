@@ -78,7 +78,7 @@ const AppView: Component = () => {
           </Switch>
         </Suspense>
       </div>
-      <SongInfo />
+      <SongInfo onSearchArtist={handleSearchArtist} />
       <GenreInfo />
       <NavBar start={start} setTab={setTab} tab={tab}/>
     </div>

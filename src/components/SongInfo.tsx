@@ -106,7 +106,11 @@ const StyleTreeItem: Component<{
   );
 };
 
-const SongInfo: Component = () => {
+export interface SongInfoProps {
+  onSearchArtist?: (artistName: string) => void;
+}
+
+const SongInfo: Component<SongInfoProps> = (props) => {
   const { song, setSong } = SongConsumer();
   const songsContext = useSongs?.();
 
@@ -823,6 +827,11 @@ const SongInfo: Component = () => {
         <ArtistEventsModal
           artistName={song()?.artist || null}
           onClose={() => setShowEventsModal(false)}
+          onSearchArtist={props.onSearchArtist ? (name) => {
+            setShowEventsModal(false);
+            setSong(undefined);
+            props.onSearchArtist!(name);
+          } : undefined}
         />
       </Show>
     </Show>
