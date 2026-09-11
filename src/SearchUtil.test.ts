@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { compareTracks, sortSongsByAlbum, OrderBy, parse, splitString, Type } from './SearchUtil';
+import { describe, it, expect, vi } from 'vitest';
+import { compareTracks, sortSongsByAlbum, OrderBy, parse, splitString, buildQueryPredicate, Type } from './SearchUtil';
 import { Song } from './model.types';
 
 const createSong = (partial: Partial<Song>): Song => ({
@@ -154,6 +154,39 @@ describe('SearchUtil sortSongsByAlbum', () => {
       expect(atom2).toBeDefined();
       expect(atom2?.type).toBe(Type.S_ARTIST_OR_REMIXER);
       expect(atom2?.value).toBe('eric prydz');
+    });
+
+    it('builds correct supabase filter calls for ar:tyga -ar:tygapaw', () => {
+      const mockBuilder: any = {
+        or: vi.fn().mockReturnThis(),
+        not: vi.fn().mockReturnThis(),
+        ilike: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        lt: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+      };
+
+      buildQueryPredicate(mockBuilder, 'ar:tyga -ar:tygapaw', 10, OrderBy.DATE_ADDED, undefined, false);
+
+      expect(mockBuilder.or).toHaveBeenCalledWith('artist.ilike.%tyga%,remixer.ilike.%tyga%');
+      expect(mockBuilder.not).toHaveBeenCalledWith('artist', 'ilike', '%tygapaw%');
+      expect(mockBuilder.not).toHaveBeenCalledWith('remixer', 'ilike', '%tygapaw%');
+    });
+
+    it('builds correct supabase filter calls for negated artist and title', () => {
+      const mockBuilder: any = {
+        not: vi.fn().mockReturnThis(),
+        ilike: vi.fn().mockReturnThis(),
+        is: vi.fn().mockReturnThis(),
+      };
+
+      buildQueryPredicate(mockBuilder, '-a:tyga -t:"club mix"', 10, OrderBy.DATE_ADDED, undefined, false);
+
+      expect(mockBuilder.not).toHaveBeenCalledWith('artist', 'ilike', '%tyga%');
+      expect(mockBuilder.not).toHaveBeenCalledWith('title', 'ilike', '%club mix%');
     });
   });
 });

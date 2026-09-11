@@ -272,19 +272,19 @@ function buildEqualityOperator(
   const p = props ? props : defaultProps
   const negated = p & Property.NEGATED
   if (p & Property.LESS_THAN && p & Property.EQUAL) {
-    if (negated) return builder.not('lte', field, value)
+    if (negated) return builder.not(field, 'lte', value)
     else return builder.lte(field, value)
   } else if (p & Property.LESS_THAN) {
-    if (negated) return builder.not('lt', field, value)
+    if (negated) return builder.not(field, 'lt', value)
     else return builder.lt(field, value)
   } else if (p & Property.GREATER_THAN && p & Property.EQUAL) {
-    if (negated) return builder.not('gte', field, value)
+    if (negated) return builder.not(field, 'gte', value)
     else return builder.gte(field, value)
   } else if (p & Property.GREATER_THAN) {
-    if (negated) return builder.not('gt', field, value)
+    if (negated) return builder.not(field, 'gt', value)
     else return builder.gt(field, value)
   } else /* (p & Property.EQUAL)  */ {
-    if (negated) return builder.not('eq', field, value)
+    if (negated) return builder.not(field, 'eq', value)
     else return builder.eq(field, value)
   }
 }
@@ -315,7 +315,7 @@ function buildQueryPredicate(
     switch (atom.type) {
       case Type.ANY:
         const searchField = isPlaylistQuery ? 'songs.search_text' : 'search_text';
-        if (negated) builder = builder.not('ilike', searchField, `%${atom.value}%`);
+        if (negated) builder = builder.not(searchField, 'ilike', `%${atom.value}%`);
         else builder = builder.ilike(searchField, `%${atom.value}%`);
         break;
       case Type.S_ID:
@@ -324,19 +324,19 @@ function buildQueryPredicate(
       case Type.S_ARTIST:
         const artistField = isPlaylistQuery ? 'songs.artist' : 'artist';
         if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) builder = buildEqualityOperator(builder, artistField, atom.props, atom.value);
-        else if (negated) builder = builder.not('ilike', artistField, `%${atom.value}%`);
+        else if (negated) builder = builder.not(artistField, 'ilike', `%${atom.value}%`);
         else builder = builder.ilike(artistField, `%${atom.value}%`);
         break;
       case Type.S_REMIXER:
         const remixerField = isPlaylistQuery ? 'songs.remixer' : 'remixer';
-        if (negated) builder = builder.not('ilike', remixerField, `%${atom.value}%`);
+        if (negated) builder = builder.not(remixerField, 'ilike', `%${atom.value}%`);
         else builder = builder.ilike(remixerField, `%${atom.value}%`);
         break;
       case Type.S_ARTIST_OR_REMIXER:
         const aField = isPlaylistQuery ? 'songs.artist' : 'artist';
         const rField = isPlaylistQuery ? 'songs.remixer' : 'remixer';
         if (negated) {
-          builder = builder.not('ilike', aField, `%${atom.value}%`).not('ilike', rField, `%${atom.value}%`);
+          builder = builder.not(aField, 'ilike', `%${atom.value}%`).not(rField, 'ilike', `%${atom.value}%`);
         } else {
           builder = builder.or(`${aField}.ilike.%${atom.value}%,${rField}.ilike.%${atom.value}%`);
         }
@@ -344,7 +344,7 @@ function buildQueryPredicate(
       case Type.S_TITLE:
         const titleField = isPlaylistQuery ? 'songs.title' : 'title';
         if (atom.props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) builder = buildEqualityOperator(builder, titleField, atom.props, atom.value);
-        else if (negated) builder = builder.not('ilike', titleField, `%${atom.value}%`);
+        else if (negated) builder = builder.not(titleField, 'ilike', `%${atom.value}%`);
         else builder = builder.ilike(titleField, `%${atom.value}%`);
         break;
       case Type.S_RATING:
@@ -352,37 +352,37 @@ function buildQueryPredicate(
         break;
       case Type.S_COMMENTS:
         const commentsField = isPlaylistQuery ? 'songs.comments' : 'comments';
-        if (negated) builder = builder.not('ilike', commentsField, `%${atom.value}%`);
+        if (negated) builder = builder.not(commentsField, 'ilike', `%${atom.value}%`);
         else builder = builder.ilike(commentsField, `%${atom.value}%`);
         break;
       case Type.S_CURATOR:
         const curatorField = isPlaylistQuery ? 'songs.curator' : 'curator';
-        if (negated) builder = builder.not('ilike', curatorField, `%${atom.value}%`);
+        if (negated) builder = builder.not(curatorField, 'ilike', `%${atom.value}%`);
         else builder = builder.ilike(curatorField, `%${atom.value}%`);
         break;
       case Type.S_TRASHED:
         const trashedField = isPlaylistQuery ? 'songs.trashed' : 'trashed';
-        if (negated) builder = builder.not('is', trashedField, atom.value);
+        if (negated) builder = builder.not(trashedField, 'is', atom.value);
         else builder = builder.is(trashedField, atom.value);
         break;
       case Type.S_LOW_QUALITY:
         const lowQualityField = isPlaylistQuery ? 'songs.lowquality' : 'lowquality';
-        if (negated) builder = builder.not('is', lowQualityField, atom.value);
+        if (negated) builder = builder.not(lowQualityField, 'is', atom.value);
         else builder = builder.is(lowQualityField, atom.value);
         break;
       case Type.A_ID:
         builder = buildEqualityOperator(builder, 'albums.id', atom.props, atom.value)
         break
       case Type.A_NAME:
-        if (negated) builder = builder.not('ilike', 'albums.name', `%${atom.value}%`)
+        if (negated) builder = builder.not('albums.name', 'ilike', `%${atom.value}%`)
         else builder = builder.ilike('albums.name', `%${atom.value}%`)
         break
       case Type.A_MIXED:
-        if (negated) builder = builder.not('is', 'mixed', atom.value)
+        if (negated) builder = builder.not('mixed', 'is', atom.value)
         else builder = builder.is('mixed', atom.value)
         break
       case Type.A_LABEL:
-        if (negated) builder = builder.not('ilike', 'albums.label', `%${atom.value}%`)
+        if (negated) builder = builder.not('albums.label', 'ilike', `%${atom.value}%`)
         else builder = builder.ilike('albums.label', `%${atom.value}%`)
         break
       case Type.A_YEAR:
@@ -412,9 +412,9 @@ function buildQueryPredicate(
           maxBpm = minBpm + 1;
         }
         if (minBpm > 0 && maxBpm > 0) {
-          if (negated) builder = builder.not('gte', bpmField, atom.value);
+          if (negated) builder = builder.not(bpmField, 'gte', atom.value);
           else builder = builder.gte(bpmField, atom.value);
-          if (negated) builder = builder.not('lt', bpmField, atom.value);
+          if (negated) builder = builder.not(bpmField, 'lt', atom.value);
           else builder = builder.lt(bpmField, atom.value);
           // if (maxBpm > 120) predicate += " or s.bpm between " + (minBpm / 2) + " and " + (maxBpm / 2);
           // if (minBpm <= 100) predicate += " or s.bpm between " + (minBpm * 2) + " and " + (maxBpm * 2);
@@ -555,5 +555,5 @@ async function searchSongs(
 
 
 export default searchSongs
-export { searchSongs, OrderBy, compareTracks, sortSongsByAlbum, parse, splitString, Type }
+export { searchSongs, OrderBy, compareTracks, sortSongsByAlbum, parse, splitString, buildQueryPredicate, Type }
 
