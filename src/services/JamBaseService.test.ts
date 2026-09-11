@@ -88,4 +88,78 @@ describe('JamBaseService', () => {
     expect(result2.events.length).toBe(1);
     expect(globalFetchSpy).toHaveBeenCalledTimes(1);
   });
+
+  describe('isEventNearMetro', () => {
+    it('correctly matches events in the selected metro using city and region', () => {
+      // Los Angeles metro
+      const laEvent = {
+        id: '1',
+        name: 'Concert at Hollywood Bowl',
+        location: {
+          name: 'Hollywood Bowl',
+          address: { addressLocality: 'Los Angeles', addressRegion: 'CA' },
+        },
+      };
+      const pasadenaEvent = {
+        id: '2',
+        name: 'Concert at Rose Bowl',
+        location: {
+          name: 'Rose Bowl',
+          address: { addressLocality: 'Pasadena', addressRegion: { alternateName: 'CA' } },
+        },
+      };
+      const sfEvent = {
+        id: '3',
+        name: 'Concert at Bill Graham',
+        location: {
+          name: 'Bill Graham Civic Auditorium',
+          address: { addressLocality: 'San Francisco', addressRegion: 'CA' },
+        },
+      };
+      const dallasEvent = {
+        id: '4',
+        name: 'Concert at Deep Ellum',
+        location: {
+          name: 'The Factory in Deep Ellum',
+          address: { addressLocality: 'Dallas', addressRegion: 'TX' },
+        },
+      };
+
+      expect(JamBaseService.isEventNearMetro(laEvent, 'jambase:3', 'Los Angeles, CA')).toBe(true);
+      expect(JamBaseService.isEventNearMetro(pasadenaEvent, 'jambase:3', 'Los Angeles, CA')).toBe(true);
+      // San Francisco should NOT match Los Angeles even though both are in CA
+      expect(JamBaseService.isEventNearMetro(sfEvent, 'jambase:3', 'Los Angeles, CA')).toBe(false);
+      // Dallas should NOT match Los Angeles
+      expect(JamBaseService.isEventNearMetro(dallasEvent, 'jambase:3', 'Los Angeles, CA')).toBe(false);
+
+      // Dallas metro
+      expect(JamBaseService.isEventNearMetro(dallasEvent, 'jambase:11', 'Dallas / Fort Worth, TX')).toBe(true);
+      expect(JamBaseService.isEventNearMetro(laEvent, 'jambase:11', 'Dallas / Fort Worth, TX')).toBe(false);
+      expect(JamBaseService.isEventNearMetro(sfEvent, 'jambase:11', 'Dallas / Fort Worth, TX')).toBe(false);
+    });
+
+    it('correctly matches events using geo coordinates distance', () => {
+      // Event in Anaheim (lat: 33.8003, lng: -117.8827) ~26 miles from LA center (34.0522, -118.2437)
+      const anaheimEvent = {
+        id: '5',
+        name: 'Honda Center Show',
+        location: {
+          name: 'Honda Center',
+          geo: { latitude: 33.8003, longitude: -117.8827 },
+        },
+      };
+      // Event in San Francisco (lat: 37.7749, lng: -122.4194) ~350 miles from LA center
+      const sfGeoEvent = {
+        id: '6',
+        name: 'SF Show',
+        location: {
+          name: 'SF Arena',
+          geo: { latitude: 37.7749, longitude: -122.4194 },
+        },
+      };
+
+      expect(JamBaseService.isEventNearMetro(anaheimEvent, 'jambase:3', 'Los Angeles, CA')).toBe(true);
+      expect(JamBaseService.isEventNearMetro(sfGeoEvent, 'jambase:3', 'Los Angeles, CA')).toBe(false);
+    });
+  });
 });

@@ -105,12 +105,6 @@ const ArtistEventsModal: Component<ArtistEventsModalProps> = (props) => {
     }
 
     const settings = JamBaseService.getSettings();
-    const metroNameLower = (settings.metroName || "").toLowerCase();
-    const metroTokens = metroNameLower
-      .split(/[\s,/]+/)
-      .map((t) => t.trim())
-      .filter((t) => t.length >= 2);
-
     const today = new Date();
     const future = new Date();
     future.setDate(today.getDate() + settings.daysLimit);
@@ -124,17 +118,7 @@ const ArtistEventsModal: Component<ArtistEventsModalProps> = (props) => {
         if (d < todayStr || d > futureStr) return false;
       }
 
-      // Location match
-      const loc = e.location;
-      if (!loc) return false;
-      const city = (loc.address?.addressLocality || "").toLowerCase();
-      const region = typeof loc.address?.addressRegion === "object"
-        ? (loc.address.addressRegion?.alternateName || loc.address.addressRegion?.name || "").toLowerCase()
-        : (loc.address?.addressRegion || "").toLowerCase();
-      const venueName = (loc.name || "").toLowerCase();
-      const combinedLoc = `${city} ${region} ${venueName}`;
-
-      return metroTokens.some((token) => combinedLoc.includes(token));
+      return JamBaseService.isEventNearMetro(e, settings.metroId, settings.metroName);
     });
   });
 

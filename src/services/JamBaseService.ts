@@ -117,6 +117,214 @@ export const POPULAR_METROS: JamBaseMetro[] = [
   { identifier: 'jambase:21', name: 'Houston, TX' },
 ];
 
+export interface MetroGeoInfo {
+  identifier: string;
+  name: string;
+  lat: number;
+  lng: number;
+  radiusMiles: number;
+  stateCodes: string[];
+  cities: string[];
+}
+
+export const METRO_GEO_DATA: Record<string, MetroGeoInfo> = {
+  'jambase:3': {
+    identifier: 'jambase:3',
+    name: 'Los Angeles, CA',
+    lat: 34.0522,
+    lng: -118.2437,
+    radiusMiles: 65,
+    stateCodes: ['ca', 'california'],
+    cities: [
+      'los angeles', 'la', 'hollywood', 'west hollywood', 'north hollywood',
+      'beverly hills', 'santa monica', 'pasadena', 'inglewood', 'anaheim',
+      'costa mesa', 'long beach', 'irvine', 'burbank', 'glendale', 'pomona',
+      'ontario', 'riverside', 'orange', 'fullerton', 'torrance', 'santa ana',
+      'huntington beach', 'newport beach', 'downey', 'culver city', 'el segundo',
+      'thousand oaks', 'westwood', 'san bernardino', 'chino'
+    ],
+  },
+  'jambase:11': {
+    identifier: 'jambase:11',
+    name: 'Dallas / Fort Worth, TX',
+    lat: 32.7767,
+    lng: -96.7970,
+    radiusMiles: 65,
+    stateCodes: ['tx', 'texas'],
+    cities: [
+      'dallas', 'fort worth', 'ft worth', 'ft. worth', 'arlington', 'irving',
+      'plano', 'frisco', 'garland', 'denton', 'grand prairie', 'mckinney',
+      'richardson', 'carrollton', 'lewisville', 'grapevine', 'mesquite',
+      'bedford', 'euless', 'hurst', 'allen', 'addison'
+    ],
+  },
+  'jambase:1': {
+    identifier: 'jambase:1',
+    name: 'New York, NY',
+    lat: 40.7128,
+    lng: -74.0060,
+    radiusMiles: 45,
+    stateCodes: ['ny', 'new york', 'nj', 'new jersey'],
+    cities: [
+      'new york', 'nyc', 'brooklyn', 'manhattan', 'queens', 'bronx',
+      'staten island', 'jersey city', 'hoboken', 'newark', 'yonkers',
+      'white plains', 'paramus', 'montclair', 'asbury park', 'port chester'
+    ],
+  },
+  'jambase:2': {
+    identifier: 'jambase:2',
+    name: 'Chicago, IL',
+    lat: 41.8781,
+    lng: -87.6298,
+    radiusMiles: 50,
+    stateCodes: ['il', 'illinois', 'in', 'indiana'],
+    cities: [
+      'chicago', 'evanston', 'rosemont', 'naperville', 'aurora', 'joliet',
+      'elgin', 'gary', 'oak park', 'schaumburg', 'tinley park', 'highland park'
+    ],
+  },
+  'jambase:6': {
+    identifier: 'jambase:6',
+    name: 'San Francisco Bay Area, CA',
+    lat: 37.7749,
+    lng: -122.4194,
+    radiusMiles: 60,
+    stateCodes: ['ca', 'california'],
+    cities: [
+      'san francisco', 'sf', 'oakland', 'berkeley', 'san jose', 'palo alto',
+      'mountain view', 'santa clara', 'sunnyvale', 'fremont', 'hayward',
+      'richmond', 'concord', 'san mateo', 'mill valley', 'san rafael',
+      'walnut creek', 'napa', 'santa cruz'
+    ],
+  },
+  'jambase:7': {
+    identifier: 'jambase:7',
+    name: 'Austin, TX',
+    lat: 30.2672,
+    lng: -97.7431,
+    radiusMiles: 40,
+    stateCodes: ['tx', 'texas'],
+    cities: ['austin', 'round rock', 'cedar park', 'pflugerville', 'georgetown', 'san marcos', 'kyle', 'buda', 'bastrop'],
+  },
+  'jambase:8': {
+    identifier: 'jambase:8',
+    name: 'Atlanta, GA',
+    lat: 33.7490,
+    lng: -84.3880,
+    radiusMiles: 45,
+    stateCodes: ['ga', 'georgia'],
+    cities: ['atlanta', 'marietta', 'alpharetta', 'roswell', 'sandy springs', 'duluth', 'decatur', 'lawrenceville', 'kennesaw', 'smyrna'],
+  },
+  'jambase:9': {
+    identifier: 'jambase:9',
+    name: 'Seattle, WA',
+    lat: 47.6062,
+    lng: -122.3321,
+    radiusMiles: 45,
+    stateCodes: ['wa', 'washington'],
+    cities: ['seattle', 'tacoma', 'bellevue', 'redmond', 'kirkland', 'everett', 'renton', 'kent', 'auburn', 'olympia'],
+  },
+  'jambase:10': {
+    identifier: 'jambase:10',
+    name: 'Nashville, TN',
+    lat: 36.1627,
+    lng: -86.7816,
+    radiusMiles: 40,
+    stateCodes: ['tn', 'tennessee'],
+    cities: ['nashville', 'franklin', 'brentwood', 'murfreesboro', 'hendersonville', 'mt. juliet', 'mount juliet', 'lebanon', 'gallatin'],
+  },
+  'jambase:12': {
+    identifier: 'jambase:12',
+    name: 'Boston, MA',
+    lat: 42.3601,
+    lng: -71.0589,
+    radiusMiles: 40,
+    stateCodes: ['ma', 'massachusetts'],
+    cities: ['boston', 'cambridge', 'somerville', 'brighton', 'allston', 'brookline', 'quincy', 'medford', 'newton', 'salem', 'worcester', 'foxborough'],
+  },
+  'jambase:13': {
+    identifier: 'jambase:13',
+    name: 'Philadelphia, PA',
+    lat: 39.9526,
+    lng: -75.1652,
+    radiusMiles: 45,
+    stateCodes: ['pa', 'pennsylvania', 'nj', 'new jersey', 'de', 'delaware'],
+    cities: ['philadelphia', 'camden', 'chester', 'norristown', 'king of prussia', 'conshohocken', 'upper darby', 'wilmington', 'cherry hill', 'atlantic city'],
+  },
+  'jambase:14': {
+    identifier: 'jambase:14',
+    name: 'Las Vegas, NV',
+    lat: 36.1699,
+    lng: -115.1398,
+    radiusMiles: 40,
+    stateCodes: ['nv', 'nevada'],
+    cities: ['las vegas', 'henderson', 'north las vegas', 'paradise', 'spring valley', 'boulder city'],
+  },
+  'jambase:15': {
+    identifier: 'jambase:15',
+    name: 'Miami / Fort Lauderdale, FL',
+    lat: 25.7617,
+    lng: -80.1918,
+    radiusMiles: 55,
+    stateCodes: ['fl', 'florida'],
+    cities: ['miami', 'miami beach', 'fort lauderdale', 'ft lauderdale', 'ft. lauderdale', 'hollywood', 'pompano beach', 'boca raton', 'west palm beach', 'coral gables', 'hialeah', 'sunrise', 'davie'],
+  },
+  'jambase:16': {
+    identifier: 'jambase:16',
+    name: 'Washington, DC',
+    lat: 38.9072,
+    lng: -77.0369,
+    radiusMiles: 45,
+    stateCodes: ['dc', 'district of columbia', 'md', 'maryland', 'va', 'virginia'],
+    cities: ['washington', 'alexandria', 'arlington', 'bethesda', 'silver spring', 'rockville', 'fairfax', 'falls church', 'vienna', 'reston', 'columbia'],
+  },
+  'jambase:17': {
+    identifier: 'jambase:17',
+    name: 'Phoenix, AZ',
+    lat: 33.4484,
+    lng: -112.0740,
+    radiusMiles: 45,
+    stateCodes: ['az', 'arizona'],
+    cities: ['phoenix', 'scottsdale', 'tempe', 'mesa', 'chandler', 'glendale', 'gilbert', 'peoria', 'surprise'],
+  },
+  'jambase:18': {
+    identifier: 'jambase:18',
+    name: 'Portland, OR',
+    lat: 45.5152,
+    lng: -122.6784,
+    radiusMiles: 40,
+    stateCodes: ['or', 'oregon', 'wa', 'washington'],
+    cities: ['portland', 'beaverton', 'hillsboro', 'gresham', 'tigard', 'lake oswego', 'vancouver'],
+  },
+  'jambase:19': {
+    identifier: 'jambase:19',
+    name: 'San Diego, CA',
+    lat: 32.7157,
+    lng: -117.1611,
+    radiusMiles: 40,
+    stateCodes: ['ca', 'california'],
+    cities: ['san diego', 'chula vista', 'oceanside', 'escondido', 'carlsbad', 'el cajon', 'encinitas', 'la jolla', 'del mar', 'solana beach', 'coronado'],
+  },
+  'jambase:20': {
+    identifier: 'jambase:20',
+    name: 'Denver, CO',
+    lat: 39.7392,
+    lng: -104.9903,
+    radiusMiles: 45,
+    stateCodes: ['co', 'colorado'],
+    cities: ['denver', 'boulder', 'aurora', 'lakewood', 'littleton', 'englewood', 'arvada', 'westminster', 'centennial', 'red rocks', 'morrison'],
+  },
+  'jambase:21': {
+    identifier: 'jambase:21',
+    name: 'Houston, TX',
+    lat: 29.7604,
+    lng: -95.3698,
+    radiusMiles: 45,
+    stateCodes: ['tx', 'texas'],
+    cities: ['houston', 'woodlands', 'the woodlands', 'sugar land', 'katy', 'pasadena', 'pearland', 'spring', 'conroe', 'cypress'],
+  },
+};
+
 export const normalizeArtistName = (name: string): string => {
   if (!name) return '';
   return name
@@ -129,10 +337,98 @@ export const normalizeArtistName = (name: string): string => {
     .trim();
 };
 
+export function haversineDistanceMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3958.8; // Earth's radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export class JamBaseService {
   private static baseUrl = 'https://api.data.jambase.com/v3';
 
   public static normalizeArtistName = normalizeArtistName;
+
+  public static isEventNearMetro(event: JamBaseEvent, metroId?: string, metroName?: string): boolean {
+    const targetMetroId = metroId || this.getSettings().metroId;
+    const targetMetroName = metroName || this.getSettings().metroName;
+    const geoInfo = targetMetroId ? METRO_GEO_DATA[targetMetroId] : undefined;
+
+    // 1. Precise Coordinate Distance check if event has geo coordinates
+    const eventLat = event.location?.geo?.latitude;
+    const eventLng = event.location?.geo?.longitude;
+
+    if (geoInfo && typeof eventLat === 'number' && typeof eventLng === 'number' && !isNaN(eventLat) && !isNaN(eventLng)) {
+      const distance = haversineDistanceMiles(geoInfo.lat, geoInfo.lng, eventLat, eventLng);
+      return distance <= geoInfo.radiusMiles;
+    }
+
+    // 2. City & State Text Matching
+    const loc = event.location;
+    if (!loc) return false;
+
+    const eventCity = (loc.address?.addressLocality || '').toLowerCase().trim();
+    const eventRegion = typeof loc.address?.addressRegion === 'object'
+      ? (loc.address.addressRegion?.alternateName || loc.address.addressRegion?.name || '').toLowerCase().trim()
+      : (loc.address?.addressRegion || '').toLowerCase().trim();
+    const venueName = (loc.name || '').toLowerCase().trim();
+
+    if (geoInfo) {
+      // Check region / state: Event MUST match one of the metro's valid state codes
+      if (eventRegion && !geoInfo.stateCodes.includes(eventRegion)) {
+        return false;
+      }
+
+      // Check city name: must match one of the metro's known cities or venue contains known city
+      if (eventCity) {
+        const exactCityMatch = geoInfo.cities.some(
+          (c) => c === eventCity || eventCity.startsWith(c + ' ') || eventCity.endsWith(' ' + c)
+        );
+        if (exactCityMatch) return true;
+      }
+
+      if (venueName) {
+        const venueCityMatch = geoInfo.cities.some((c) => {
+          if (c.length < 4) return false; // avoid false matches on short abbreviations
+          const regex = new RegExp(`(^|\\s)${c}(\\s|$)`, 'i');
+          return regex.test(venueName);
+        });
+        if (venueCityMatch) return true;
+      }
+
+      return false;
+    }
+
+    // Fallback for custom / unlisted metros: parse "City, ST" format
+    const nameLower = (targetMetroName || '').toLowerCase().trim();
+    const parts = nameLower.split(',').map((p) => p.trim());
+    const targetCityPart = parts[0] || '';
+    const targetStatePart = parts[1] || '';
+
+    // If state was specified, eventRegion must match
+    if (targetStatePart && eventRegion && !eventRegion.includes(targetStatePart) && !targetStatePart.includes(eventRegion)) {
+      return false;
+    }
+
+    // Match city tokens (strictly whole words, min length 3)
+    const cityTokens = targetCityPart
+      .split(/[\s/]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 3);
+
+    if (cityTokens.length > 0 && eventCity) {
+      return cityTokens.some((tok) => eventCity.includes(tok));
+    }
+
+    return false;
+  }
 
   public static getApiKey(): string {
     return (import.meta.env.VITE_JAMBASE_API_KEY || '').trim();
