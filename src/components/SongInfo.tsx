@@ -1,5 +1,5 @@
 import { Show, For, type Component, createSignal, createEffect, onMount, onCleanup, createMemo } from "solid-js";
-import { BsExplicit } from "solid-icons/bs";
+import { BsExplicitFill } from "solid-icons/bs";
 
 import Rating from "./Rating";
 import SongPlayer from "./SongPlayer";
@@ -692,7 +692,7 @@ const SongInfo: Component<SongInfoProps> = (props) => {
             <p class="text-sm opacity-80 flex items-center gap-1.5">
               <span>{song()?.title}</span>
               <Show when={song()?.explicitlyrics}>
-                <BsExplicit class="inline-block shrink-0" title="Explicit" />
+                <BsExplicitFill class="inline-block shrink-0" title="Explicit" />
               </Show>
             </p>
             {/* Display album name and release date */}

@@ -1,5 +1,5 @@
 import { type Component, onMount, onCleanup, Show } from 'solid-js'
-import { BsExplicit } from 'solid-icons/bs'
+import { BsExplicitFill } from 'solid-icons/bs'
 
 import { Song } from '../model.types'
 import Rating from './Rating'
@@ -157,7 +157,7 @@ const SongListItem: Component<{song: Song}> = (props) => {
             <span>
               <b>{props.song.title}</b>
               <Show when={props.song.explicitlyrics}>
-                <BsExplicit class="inline-block shrink-0 ml-1.5 align-[-2px]" title="Explicit" />
+                <BsExplicitFill class="inline-block shrink-0 ml-1.5 align-[-2px]" title="Explicit" />
               </Show>
             </span>
           </span>
