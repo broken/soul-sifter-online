@@ -90,6 +90,7 @@ describe('SongList query-based playlists and normal playlists', () => {
     dupeid: null,
     durationinms: 200000,
     energy: 5,
+    explicitlyrics: null,
     featuring: null,
     filepath: '/path/song.mp3',
     googlesongid: null,

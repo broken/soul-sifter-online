@@ -1,4 +1,5 @@
-import { type Component, onMount, onCleanup } from 'solid-js'
+import { type Component, onMount, onCleanup, Show } from 'solid-js'
+import { BsExplicit } from 'solid-icons/bs'
 
 import { Song } from '../model.types'
 import Rating from './Rating'
@@ -153,7 +154,12 @@ const SongListItem: Component<{song: Song}> = (props) => {
           <span class={styles.data}>
             <span>{props.song.artist}</span>
             <span> - </span>
-            <span><b>{props.song.title}</b></span>
+            <span>
+              <b>{props.song.title}</b>
+              <Show when={props.song.explicitlyrics}>
+                <BsExplicit class="inline-block shrink-0 ml-1.5 align-[-2px]" title="Explicit" />
+              </Show>
+            </span>
           </span>
           <Rating song={props.song} mutable={false} />
         </div>

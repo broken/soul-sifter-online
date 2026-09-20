@@ -1,4 +1,5 @@
 import { Show, For, type Component, createSignal, createEffect, onMount, onCleanup, createMemo } from "solid-js";
+import { BsExplicit } from "solid-icons/bs";
 
 import Rating from "./Rating";
 import SongPlayer from "./SongPlayer";
@@ -688,7 +689,12 @@ const SongInfo: Component<SongInfoProps> = (props) => {
             {/* Display artist in bold, without a label */}
             <p style={{ "font-weight": "bold" }}>{song()?.artist}</p>
             {/* Display title directly, without a label */}
-            <p class="text-sm opacity-80">{song()?.title}</p>
+            <p class="text-sm opacity-80 flex items-center gap-1.5">
+              <span>{song()?.title}</span>
+              <Show when={song()?.explicitlyrics}>
+                <BsExplicit class="inline-block shrink-0" title="Explicit" />
+              </Show>
+            </p>
             {/* Display album name and release date */}
             <Show when={album()?.name || releaseDate()}>
               <p class="text-xs opacity-70 mt-0.5 text-right">

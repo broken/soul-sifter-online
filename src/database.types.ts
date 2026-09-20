@@ -304,6 +304,7 @@ export type Database = {
           dupeid: number | null
           durationinms: number | null
           energy: number | null
+          explicitlyrics: boolean | null
           featuring: string | null
           filepath: string | null
           googlesongid: string | null
@@ -335,6 +336,7 @@ export type Database = {
           dupeid?: number | null
           durationinms?: number | null
           energy?: number | null
+          explicitlyrics?: boolean | null
           featuring?: string | null
           filepath?: string | null
           googlesongid?: string | null
@@ -366,6 +368,7 @@ export type Database = {
           dupeid?: number | null
           durationinms?: number | null
           energy?: number | null
+          explicitlyrics?: boolean | null
           featuring?: string | null
           filepath?: string | null
           googlesongid?: string | null

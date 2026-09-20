@@ -36,6 +36,7 @@ const mockSong1: Song = {
   dupeid: null,
   durationinms: 320000,
   energy: 7,
+  explicitlyrics: null,
   featuring: null,
   filepath: '/music/one_more_time.mp3',
   googlesongid: null,
@@ -473,5 +474,19 @@ describe('SongInfo Component', () => {
 
     expect(await screen.findByText('Daft Punk')).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /cover art/i })).not.toBeInTheDocument();
+  });
+
+  it('renders explicit icon when song has explicitlyrics true', async () => {
+    const { setSong } = SongConsumer();
+    const { container } = render(() => <SongInfo />);
+
+    setSong({
+      ...mockSong1,
+      explicitlyrics: true,
+    });
+
+    expect(await screen.findByText('One More Time')).toBeInTheDocument();
+    const explicitIcon = container.querySelector('svg[title="Explicit"]');
+    expect(explicitIcon).toBeInTheDocument();
   });
 });
