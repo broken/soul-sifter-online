@@ -2,6 +2,7 @@ import { PostgrestQueryBuilder, PostgrestFilterBuilder } from '@supabase/postgre
 
 import { supabase } from './components/App'
 import { Song } from './model.types'
+import { resolveDateValue, applyCustomQueryPredicate } from './CustomQueryUtil'
 
 
 enum OrderBy {
@@ -397,16 +398,16 @@ function buildQueryPredicate(
         else builder = builder.ilike('albums.label', `%${atom.value}%`)
         break
       case Type.A_YEAR:
-        builder = buildEqualityOperator(builder, 'albums.releasedateyear', atom.props, atom.value)
+        builder = buildEqualityOperator(builder, 'albums.releasedateyear', atom.props, resolveDateValue(atom.value))
         break
       case Type.A_MONTH:
-        builder = buildEqualityOperator(builder, 'albums.releasedatemonth', atom.props, atom.value)
+        builder = buildEqualityOperator(builder, 'albums.releasedatemonth', atom.props, resolveDateValue(atom.value))
         break
       case Type.A_DAY:
-        builder = buildEqualityOperator(builder, 'albums.releasedateday', atom.props, atom.value)
+        builder = buildEqualityOperator(builder, 'albums.releasedateday', atom.props, resolveDateValue(atom.value))
         break
       case Type.CUSTOM_QUERY_PREDICATE:
-        console.warn(`Custom query "{atom.value}" is unsupported.`)
+        builder = applyCustomQueryPredicate(builder, atom.value, isPlaylistQuery)
         break
       case Type.S_BPM:
         // Handle BPM range

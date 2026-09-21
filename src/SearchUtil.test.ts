@@ -293,6 +293,52 @@ describe('SearchUtil sortSongsByAlbum', () => {
       buildQueryPredicate(mockBuilder, 'r:4', 10, OrderBy.DATE_ADDED, undefined, true);
       expect(mockBuilder.gte).toHaveBeenCalledWith('songs.rating', '4');
     });
+
+    it('handles dynamic date queries (month(now()), day(now()) offsets)', () => {
+      const mockBuilder: any = {
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockReturnThis(),
+      };
+
+      const now = new Date();
+      const currentMonth = (now.getMonth() + 1).toString();
+      const dayMinus3 = (now.getDate() - 3).toString();
+      const dayPlus7 = (now.getDate() + 7).toString();
+
+      buildQueryPredicate(mockBuilder, 'month:month(now()) day:>=day(now())-3 day:<=day(now())+7', 10, OrderBy.DATE_ADDED, undefined, false);
+
+      expect(mockBuilder.eq).toHaveBeenCalledWith('albums.releasedatemonth', currentMonth);
+      expect(mockBuilder.gte).toHaveBeenCalledWith('albums.releasedateday', dayMinus3);
+      expect(mockBuilder.lte).toHaveBeenCalledWith('albums.releasedateday', dayPlus7);
+    });
+
+    it('handles milestone anniversary custom query together with dynamic date filters', () => {
+      const mockBuilder: any = {
+        in: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockReturnThis(),
+      };
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = (now.getMonth() + 1).toString();
+      const dayMinus3 = (now.getDate() - 3).toString();
+      const dayPlus7 = (now.getDate() + 7).toString();
+
+      const query = 'q:"(year(now())-a.releaseDateYear) % 10 = 0" month:month(now()) day:>=day(now())-3 day:<=day(now())+7';
+      buildQueryPredicate(mockBuilder, query, 10, OrderBy.DATE_ADDED, undefined, false);
+
+      expect(mockBuilder.in).toHaveBeenCalledWith(
+        'albums.releasedateyear',
+        expect.arrayContaining([currentYear, currentYear - 10, currentYear - 20])
+      );
+      expect(mockBuilder.eq).toHaveBeenCalledWith('albums.releasedatemonth', currentMonth);
+      expect(mockBuilder.gte).toHaveBeenCalledWith('albums.releasedateday', dayMinus3);
+      expect(mockBuilder.lte).toHaveBeenCalledWith('albums.releasedateday', dayPlus7);
+    });
   });
 });
+
 
