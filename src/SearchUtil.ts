@@ -274,7 +274,8 @@ function buildEqualityOperator(
   value: string,
   defaultProps: Property = Property.EQUAL
 ): PostgrestFilterBuilder<any, any, any[], any, any> {
-  const p = props ? props : defaultProps
+  const op = (props & (Property.LESS_THAN | Property.GREATER_THAN | Property.EQUAL)) || defaultProps
+  const p = op | (props & Property.NEGATED)
   const negated = p & Property.NEGATED
   if (p & Property.LESS_THAN && p & Property.EQUAL) {
     if (negated) return builder.not(field, 'lte', value)
@@ -353,7 +354,7 @@ function buildQueryPredicate(
         else builder = builder.ilike(titleField, `%${atom.value}%`);
         break;
       case Type.S_RATING:
-        builder = buildEqualityOperator(builder, isPlaylistQuery ? 'songs.rating' : 'rating', atom.props, atom.value, Property.EQUAL & Property.GREATER_THAN);
+        builder = buildEqualityOperator(builder, isPlaylistQuery ? 'songs.rating' : 'rating', atom.props, atom.value, Property.EQUAL | Property.GREATER_THAN);
         break;
       case Type.S_COMMENTS:
         const commentsField = isPlaylistQuery ? 'songs.comments' : 'comments';

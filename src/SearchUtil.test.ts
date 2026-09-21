@@ -225,5 +225,74 @@ describe('SearchUtil sortSongsByAlbum', () => {
       buildQueryPredicate(mockBuilder, 'el:1', 10, OrderBy.DATE_ADDED, undefined, true);
       expect(mockBuilder.is).toHaveBeenCalledWith('songs.explicitlyrics', '1');
     });
+
+    it('parses r: and rating: as S_RATING', () => {
+      const atom1 = parse('r:4');
+      expect(atom1).toBeDefined();
+      expect(atom1?.type).toBe(Type.S_RATING);
+      expect(atom1?.value).toBe('4');
+      expect(atom1?.props).toBe(0);
+
+      const atom2 = parse('rating:=3');
+      expect(atom2).toBeDefined();
+      expect(atom2?.type).toBe(Type.S_RATING);
+      expect(atom2?.value).toBe('3');
+      expect(atom2?.props).toBe(16); // EQUAL
+
+      const atom3 = parse('r:>2');
+      expect(atom3).toBeDefined();
+      expect(atom3?.type).toBe(Type.S_RATING);
+      expect(atom3?.value).toBe('2');
+      expect(atom3?.props).toBe(8); // GREATER_THAN
+
+      const atom4 = parse('r:<=2');
+      expect(atom4).toBeDefined();
+      expect(atom4?.type).toBe(Type.S_RATING);
+      expect(atom4?.value).toBe('2');
+      expect(atom4?.props).toBe(20); // LESS_THAN | EQUAL
+    });
+
+    it('builds correct supabase filter calls for rating with default gte and modifiers', () => {
+      const mockBuilder: any = {
+        gte: vi.fn().mockReturnThis(),
+        gt: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockReturnThis(),
+        lt: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        not: vi.fn().mockReturnThis(),
+      };
+
+      // Default should be greater than or equal to (minimum rating)
+      buildQueryPredicate(mockBuilder, 'r:3', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.gte).toHaveBeenCalledWith('rating', '3');
+
+      buildQueryPredicate(mockBuilder, 'rating:4', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.gte).toHaveBeenCalledWith('rating', '4');
+
+      // Exact equality modifier
+      buildQueryPredicate(mockBuilder, 'r:=0', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.eq).toHaveBeenCalledWith('rating', '0');
+
+      // Greater than modifier
+      buildQueryPredicate(mockBuilder, 'r:>3', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.gt).toHaveBeenCalledWith('rating', '3');
+
+      // Less than modifier
+      buildQueryPredicate(mockBuilder, 'r:<3', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.lt).toHaveBeenCalledWith('rating', '3');
+
+      // Less than or equal modifier
+      buildQueryPredicate(mockBuilder, 'r:<=2', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.lte).toHaveBeenCalledWith('rating', '2');
+
+      // Negated default (not gte)
+      buildQueryPredicate(mockBuilder, '-r:3', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.not).toHaveBeenCalledWith('rating', 'gte', '3');
+
+      // Playlist query
+      buildQueryPredicate(mockBuilder, 'r:4', 10, OrderBy.DATE_ADDED, undefined, true);
+      expect(mockBuilder.gte).toHaveBeenCalledWith('songs.rating', '4');
+    });
   });
 });
+
