@@ -51,6 +51,7 @@ export const TAG_GROUPS: { name: string; tags: TagItem[] }[] = [
       { prefix: 'o:album', label: 'order:album', description: 'Album sort (o:album)' },
       { prefix: 'trashed:1', label: 'trashed:1', description: 'Deleted songs' },
       { prefix: 'trashed:0', label: 'trashed:0', description: 'Non-deleted songs' },
+      { prefix: 'el:0', label: 'explicit:0', description: 'Clean / non-explicit (explicit:0 or el:0)' },
       { prefix: 'm:1', label: 'mixed:1', description: 'Continuous DJ mixed (m:1)' },
       { prefix: 'm:0', label: 'mixed:0', description: 'Unmixed album (m:0)' },
     ],

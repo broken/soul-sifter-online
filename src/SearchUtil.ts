@@ -28,6 +28,7 @@ enum Type {
   S_BPM,
   S_TRASHED,
   S_LOW_QUALITY,
+  S_EXPLICIT_LYRICS,
   A_ID,
   A_NAME,
   A_ARTIST,
@@ -129,7 +130,7 @@ function parse(queryFragment: string): Atom | undefined {
   let atom = new Atom()
 
   // Replace boost::regex with JavaScript regular expression
-  const regex = /^(-)?((id|ar|artistremixer|a|artist|t|title|remixer|r|rating|comments|c|curator|e|energy|bpm|trashed|lowq|aid|n|album|m|mixed|l|label|y|year|month|day|q|query|limit|o|order|orderby|orderBy):)?(<|>)?(=)?(.+)$/
+  const regex = /^(-)?((id|ar|artistremixer|a|artist|t|title|remixer|r|rating|comments|c|curator|e|energy|bpm|trashed|lowq|el|explicit|aid|n|album|m|mixed|l|label|y|year|month|day|q|query|limit|o|order|orderby|orderBy):)?(<|>)?(=)?(.+)$/
   const match = queryFragment.toLowerCase().match(regex)
   if (!match) {
     return undefined
@@ -193,6 +194,10 @@ function parse(queryFragment: string): Atom | undefined {
         break
       case "lowq":
         atom.type = Type.S_LOW_QUALITY
+        break
+      case "el":
+      case "explicit":
+        atom.type = Type.S_EXPLICIT_LYRICS
         break
       case "aid":
         atom.type = Type.A_ID
@@ -369,6 +374,11 @@ function buildQueryPredicate(
         const lowQualityField = isPlaylistQuery ? 'songs.lowquality' : 'lowquality';
         if (negated) builder = builder.not(lowQualityField, 'is', atom.value);
         else builder = builder.is(lowQualityField, atom.value);
+        break;
+      case Type.S_EXPLICIT_LYRICS:
+        const explicitLyricsField = isPlaylistQuery ? 'songs.explicitlyrics' : 'explicitlyrics';
+        if (negated) builder = builder.not(explicitLyricsField, 'is', atom.value);
+        else builder = builder.is(explicitLyricsField, atom.value);
         break;
       case Type.A_ID:
         builder = buildEqualityOperator(builder, 'albums.id', atom.props, atom.value)

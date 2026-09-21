@@ -188,5 +188,42 @@ describe('SearchUtil sortSongsByAlbum', () => {
       expect(mockBuilder.not).toHaveBeenCalledWith('artist', 'ilike', '%tyga%');
       expect(mockBuilder.not).toHaveBeenCalledWith('title', 'ilike', '%club mix%');
     });
+    it('parses el: and explicit: as S_EXPLICIT_LYRICS', () => {
+      const atom1 = parse('el:1');
+      expect(atom1).toBeDefined();
+      expect(atom1?.type).toBe(Type.S_EXPLICIT_LYRICS);
+      expect(atom1?.value).toBe('1');
+
+      const atom2 = parse('explicit:0');
+      expect(atom2).toBeDefined();
+      expect(atom2?.type).toBe(Type.S_EXPLICIT_LYRICS);
+      expect(atom2?.value).toBe('0');
+
+      const atom3 = parse('-el:1');
+      expect(atom3).toBeDefined();
+      expect(atom3?.type).toBe(Type.S_EXPLICIT_LYRICS);
+      expect(atom3?.value).toBe('1');
+      expect(atom3?.props).toBe(1); // NEGATED
+    });
+
+    it('builds correct supabase filter calls for explicit lyrics', () => {
+      const mockBuilder: any = {
+        is: vi.fn().mockReturnThis(),
+        not: vi.fn().mockReturnThis(),
+      };
+
+      buildQueryPredicate(mockBuilder, 'el:1', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.is).toHaveBeenCalledWith('explicitlyrics', '1');
+
+      buildQueryPredicate(mockBuilder, 'explicit:0', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.is).toHaveBeenCalledWith('explicitlyrics', '0');
+
+      buildQueryPredicate(mockBuilder, '-explicit:1', 10, OrderBy.DATE_ADDED, undefined, false);
+      expect(mockBuilder.not).toHaveBeenCalledWith('explicitlyrics', 'is', '1');
+
+      // Playlist query
+      buildQueryPredicate(mockBuilder, 'el:1', 10, OrderBy.DATE_ADDED, undefined, true);
+      expect(mockBuilder.is).toHaveBeenCalledWith('songs.explicitlyrics', '1');
+    });
   });
 });
