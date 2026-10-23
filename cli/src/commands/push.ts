@@ -38,54 +38,110 @@ const fields: Record<string, string[]> = {
 
 type RowKey = number | [number, number];
 
+interface RecordEntry {
+  key: RowKey;
+  line: string;
+}
+
+export const parseRecords = (content: string, table: string): Map<string, RecordEntry> => {
+  const records = new Map<string, RecordEntry>();
+  if (!content) return records;
+
+  const rawLines = content.split(/\r?\n/);
+  const isAssoc = fields[table][0] !== 'id';
+
+  let currentRecord = '';
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    // If starting a new record and line is empty, skip
+    if (!currentRecord && line === '') {
+      continue;
+    }
+
+    // Check if line continues (ends with an unescaped backslash)
+    const isContinuation = /(?:^|[^\\])(?:\\\\)*\\$/.test(line);
+
+    if (isContinuation) {
+      // Strip trailing backslash and append '\n' (matching perl s/\\\R/\n/g)
+      const stripped = line.replace(/\\$/, '');
+      currentRecord += stripped + '\\n';
+      continue;
+    }
+
+    currentRecord += line;
+
+    const trimmed = currentRecord.trim();
+    if (trimmed) {
+      const parts = trimmed.split(/\s+/);
+      let key: RowKey;
+      let keyStr: string;
+
+      if (isAssoc) {
+        if (parts.length >= 2) {
+          const a = Number(parts[0]);
+          const b = Number(parts[1]);
+          if (!isNaN(a) && !isNaN(b)) {
+            key = [a, b];
+            keyStr = `${a}:${b}`;
+          } else {
+            throw new Error(`Failed to parse association key for table '${table}' from record: "${trimmed.slice(0, 50)}"`);
+          }
+        } else {
+          throw new Error(`Failed to parse association key for table '${table}' from record: "${trimmed.slice(0, 50)}"`);
+        }
+      } else {
+        const id = Number(parts[0]);
+        if (isNaN(id)) {
+          throw new Error(`Failed to parse entity ID for table '${table}' from record: "${trimmed.slice(0, 50)}"`);
+        }
+        key = id;
+        keyStr = String(id);
+      }
+
+      records.set(keyStr, { key, line: currentRecord });
+    }
+
+    currentRecord = '';
+  }
+
+  return records;
+};
+
+/**
+ * Returns a tuple of [removed, added] keys for the given table between the last synced commit and HEAD:
+ * - removed: keys of records deleted from the table.
+ * - added: keys of records that are new or updated in the table.
+ */
 const getChangesFromGit = async (baseDir: string, table: string): Promise<[RowKey[], RowKey[]]> => {
   const git: SimpleGit = simpleGit(baseDir);
-
-  // get diff from the commits
   const oldHash = readCommitHashFromFile();
-  const diff = await git.diff([`${oldHash}..HEAD`, '--', `${table}.txt`]);
 
-  // force multi-line strings into a single line
-  const cleaned = diff.replace(/\\\n/g, '  ');
+  // end early if there are no changes in the table file
+  const diffSummary = await git.diffSummary([`${oldHash}..HEAD`, '--', `${table}.txt`]);
+  if (diffSummary.files.length === 0) {
+    return [[], []];
+  }
 
-  // split the diff into individual lines
-  const lines = cleaned.split('\n');
+  const oldContent = await git.show([`${oldHash}:./${table}.txt`]);
+  const newContent = await git.show([`HEAD:./${table}.txt`]);
+  const oldRecords = parseRecords(oldContent, table);
+  const newRecords = parseRecords(newContent, table);
 
-  // filter to only show lines that are changed (starting with + or - but not "+++" or "---")
-  const changedLines = lines.filter((line) =>
-    /^[+-][0-9]/.test(line)
-  );
-
-  const isAssoc = fields[table][0] !== 'id';
-  const parseKey = (line: string): RowKey => {
-    const parts = line.slice(1).trim().split(/\s+/);
-    if (isAssoc) {
-      if (parts.length >= 2) {
-        const a = Number(parts[0]);
-        const b = Number(parts[1]);
-        if (!isNaN(a) && !isNaN(b)) {
-          return [a, b];
-        }
-      }
-      throw new Error(`Failed to parse association key for table '${table}' from line: "${line}"`);
+  const added: RowKey[] = [];
+  for (const [keyStr, { key, line }] of newRecords.entries()) {
+    const old = oldRecords.get(keyStr);
+    if (!old || old.line !== line) {
+      added.push(key);
     }
-    const id = Number(parts[0]);
-    if (isNaN(id)) {
-      throw new Error(`Failed to parse entity ID for table '${table}' from line: "${line}"`);
-    }
-    return id;
-  };
-  const keyToString = (k: RowKey): string => Array.isArray(k) ? `${k[0]}:${k[1]}` : String(k);
+  }
 
-  // split changes & reduce to just keys
-  const added = changedLines
-    .filter(line => line.startsWith('+'))
-    .map(parseKey);
-  const addedKeys = new Set(added.map(keyToString));
-  const removed = changedLines
-    .filter(line => line.startsWith('-'))
-    .map(parseKey)
-    .filter(k => !addedKeys.has(keyToString(k)));
+  const removed: RowKey[] = [];
+  for (const [keyStr, { key }] of oldRecords.entries()) {
+    if (!newRecords.has(keyStr)) {
+      removed.push(key);
+    }
+  }
+
   return [removed, added];
 };
 
@@ -173,7 +229,7 @@ const filterUpdates = (table: string, added: RowKey[], dir: string) => {
         pattern = ` | grep -E '^(${added.join('|')})'`;
       }
     }
-    const cmd = `perl -p -e 's/\\\\\\R/  /g;' ${table}.txt${pattern}`;
+    const cmd = `perl -p -e 's/\\\\\\R/\\\\n/g;' ${table}.txt${pattern}`;
     const childProcess = spawn('sh', ['-c', cmd], { cwd: dir });
 
     childProcess.stdout.pipe(fs.createWriteStream(`/tmp/${table}.txt`));
