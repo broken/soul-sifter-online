@@ -131,18 +131,20 @@ const SongListItem: Component<{song: Song}> = (props) => {
         class={`px-0 py-0 ${styles.swipe_container}`}
         onscroll={handleScroll}
       >
-        {/* Left Action: YouTube Music */}
+        {/* Left Action: YouTube */}
         <a
-          href={getYouTubeMusicUrl(props.song.youtubemusicid || props.song.youtubeid, props.song)}
+          href={getYouTubeUrl(props.song.youtubeid, props.song)}
           target="_blank"
           rel="noopener noreferrer"
           class={`${styles.action_container} ${styles.left}`}
           onclick={(e) => e.stopPropagation()}
-          aria-label="Open in YouTube Music"
+          aria-label="Open in YouTube"
         >
           <div class={styles.overswipe_space} />
           <div class={styles.action_button}>
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4V7h4V3h-6z"/></svg>
+            <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M21.7 8c0-.7-.4-1.3-.8-2-.5-.5-1.2-.8-2-.8C16.2 5 12 5 12 5s-4.2 0-7 .2c-.7 0-1.4.3-2 .9-.3.6-.6 1.2-.7 2l-.2 3.1v1.5c0 1.1 0 2.2.2 3.3 0 .7.4 1.3.8 2 .6.5 1.4.8 2.2.8l6.7.2s4.2 0 7-.2c.7 0 1.4-.3 2-.9.3-.5.6-1.2.7-2l.2-3.1v-1.6c0-1 0-2.1-.2-3.2ZM10 14.6V9l5.4 2.8-5.4 2.8Z" clip-rule="evenodd"/>
+            </svg>
           </div>
         </a>
 
@@ -164,19 +166,17 @@ const SongListItem: Component<{song: Song}> = (props) => {
           <Rating song={props.song} mutable={false} />
         </div>
 
-        {/* Right Action: YouTube */}
+        {/* Right Action: YouTube Music */}
         <a
-          href={getYouTubeUrl(props.song.youtubeid, props.song)}
+          href={getYouTubeMusicUrl(props.song.youtubemusicid || props.song.youtubeid, props.song)}
           target="_blank"
           rel="noopener noreferrer"
           class={`${styles.action_container} ${styles.right}`}
           onclick={(e) => e.stopPropagation()}
-          aria-label="Open in YouTube"
+          aria-label="Open in YouTube Music"
         >
           <div class={styles.action_button}>
-            <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-              <path fill-rule="evenodd" d="M21.7 8c0-.7-.4-1.3-.8-2-.5-.5-1.2-.8-2-.8C16.2 5 12 5 12 5s-4.2 0-7 .2c-.7 0-1.4.3-2 .9-.3.6-.6 1.2-.7 2l-.2 3.1v1.5c0 1.1 0 2.2.2 3.3 0 .7.4 1.3.8 2 .6.5 1.4.8 2.2.8l6.7.2s4.2 0 7-.2c.7 0 1.4-.3 2-.9.3-.5.6-1.2.7-2l.2-3.1v-1.6c0-1 0-2.1-.2-3.2ZM10 14.6V9l5.4 2.8-5.4 2.8Z" clip-rule="evenodd"/>
-            </svg>
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4V7h4V3h-6z"/></svg>
           </div>
           <div class={styles.overswipe_space} />
         </a>

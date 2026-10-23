@@ -86,4 +86,28 @@ describe('SongListItem', () => {
     const explicitIcon = container.querySelector('svg[title="Explicit"]');
     expect(explicitIcon).not.toBeInTheDocument();
   });
+
+  it('renders YouTube link on the left and YouTube Music link on the right', () => {
+    const { container } = render(() => (
+      <table>
+        <tbody>
+          <SongListItem song={baseSong} />
+        </tbody>
+      </table>
+    ));
+
+    const leftLink = screen.getByRole('link', { name: 'Open in YouTube' });
+    const rightLink = screen.getByRole('link', { name: 'Open in YouTube Music' });
+
+    expect(leftLink).toBeInTheDocument();
+    expect(rightLink).toBeInTheDocument();
+
+    expect(leftLink).toHaveAttribute('href', 'https://www.youtube.com/watch?v=xFYQQPAOz7Y');
+    expect(rightLink).toHaveAttribute('href', 'https://music.youtube.com/watch?v=xFYQQPAOz7Y');
+
+    const td = container.querySelector('td');
+    const childLinks = td?.querySelectorAll('a');
+    expect(childLinks?.[0]).toBe(leftLink);
+    expect(childLinks?.[1]).toBe(rightLink);
+  });
 });

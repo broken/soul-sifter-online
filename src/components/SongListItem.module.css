@@ -53,13 +53,13 @@
 }
 /* action background colors and snap points */
 .left {
-  background-color: orchid;
+  background-color: rgb(180, 65, 65);
 }
 .left .action_button {
   scroll-snap-align: start;
 }
 .right {
-  background-color: rgb(180, 65, 65);
+  background-color: orchid;
 }
 .right .action_button {
   scroll-snap-align: end;
