@@ -1,7 +1,7 @@
 import { Suspense, type Component, Switch, Match, createSignal, useTransition, createEffect } from 'solid-js' // Added createEffect
 import { createClient } from '@supabase/supabase-js'
 
-import { useTheme } from './ThemeContext' // Added useTheme
+import { useTheme, darkThemes } from './ThemeContext' // Added useTheme
 import { useFontSize, fontSizes } from './FontSizeContext'
 import AutoPlayContext from './AutoPlayContext'
 import FontSizeContext from './FontSizeContext'
@@ -35,7 +35,16 @@ const AppView: Component = () => {
   const { fontSize } = useFontSize();
 
   createEffect(() => { // Moved from Settings.tsx
-    document.documentElement.setAttribute("data-theme", appTheme());
+    const theme = appTheme();
+    document.documentElement.setAttribute("data-theme", theme);
+
+    // Update <meta name="theme-color"> with the current theme
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    const computedColor = getComputedStyle(document.documentElement).backgroundColor;
+    const content = computedColor && computedColor !== 'rgba(0, 0, 0, 0)' && computedColor !== 'transparent'
+      ? computedColor
+      : (darkThemes.includes(theme) ? '#1f2937' : '#ffffff');
+    metaThemeColor?.setAttribute('content', content);
   });
 
   createEffect(() => {
@@ -51,7 +60,7 @@ const AppView: Component = () => {
   };
 
   return (
-    <div class="flex flex-col h-screen w-screen overflow-hidden relative">
+    <div class="flex flex-col h-screen h-dvh w-screen overflow-hidden relative">
       <SearchToolbar />
       {/* Added flex-1 and overflow-auto to the tab container */}
       <div class="px-0 flex-1 overflow-auto" classList={{ pending: pending() }}>

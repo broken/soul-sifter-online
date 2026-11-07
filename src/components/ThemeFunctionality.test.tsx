@@ -95,6 +95,12 @@ describe('Theme Initialization', () => {
 describe('SearchToolbar Theme Toggling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      document.head.appendChild(meta);
+    }
     // Random startup theme is fine for these tests
   });
 
@@ -113,6 +119,9 @@ describe('SearchToolbar Theme Toggling', () => {
     // Check initial document theme (already tested elsewhere, but good for context)
     await Promise.resolve(); // Allow initial effect to run
     expect(document.documentElement.getAttribute('data-theme')).toBe(initialTheme);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    expect(metaThemeColor).toBeTruthy();
+    expect(metaThemeColor?.getAttribute('content')).toBe(initialThemeIsDark ? '#1f2937' : '#ffffff');
 
     await fireEvent.click(ssoElement);
     const themeAfterFirstClick = appTheme();
@@ -125,6 +134,7 @@ describe('SearchToolbar Theme Toggling', () => {
     }
     await Promise.resolve(); // Allow effect to run
     expect(document.documentElement.getAttribute('data-theme')).toBe(themeAfterFirstClick);
+    expect(metaThemeColor?.getAttribute('content')).toBe(initialThemeIsDark ? '#ffffff' : '#1f2937');
 
     // --- Second toggle ---
     const themeBeforeSecondClick = themeAfterFirstClick; // This is themeAfterFirstClick

@@ -11,7 +11,8 @@ const pwaOptions: Partial<VitePWAOptions> = {
   manifest: {
     name: "Soul Sifter Online",
     short_name: "SSO",
-    theme_color: '#ffffff',
+    theme_color: '#1f2937',
+    background_color: '#1f2937',
     start_url: "https://soul-sifter.web.app/",
     display: "standalone",
     icons: [
