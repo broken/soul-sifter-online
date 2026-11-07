@@ -8,10 +8,7 @@ const NavBar: Component<{start: (fn: () => void, cb?: () => void) => void, setTa
   const isCurrentTab = (index: number) => props.tab ? props.tab() === index : false;
 
   return (
-    <div
-      class="btm-nav bg-primary-content text-primary"
-      style={{ "padding-bottom": "env(safe-area-inset-bottom)", height: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
-    >
+    <div class="btm-nav bg-primary-content text-primary">
       <button class={`bot-nav-bar ${isCurrentTab(0) ? 'active' : ''}`} onClick={updateTab(0)}>
         <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
           <path fill-rule="evenodd" d="M9 7V2.2a2 2 0 0 0-.5.4l-4 3.9a2 2 0 0 0-.3.5H9Zm2 0V2h7a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9h5a2 2 0 0 0 2-2Zm2.3 0A1 1 0 0 0 12 8v5.3a4 4 0 0 0-1.5-.3C8.8 13 7 14.1 7 16s1.8 3 3.5 3 3.5-1.1 3.5-3V9.8a3 3 0 0 1 1 2.2 1 1 0 1 0 2 0 5 5 0 0 0-1.9-3.9 6.4 6.4 0 0 0-1.8-1ZM9 16c0-.4.5-1 1.5-1s1.5.6 1.5 1-.5 1-1.5 1S9 16.4 9 16Z" clip-rule="evenodd"/>
