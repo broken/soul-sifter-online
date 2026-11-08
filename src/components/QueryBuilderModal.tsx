@@ -71,6 +71,99 @@ export const TAG_GROUPS: { name: string; tags: TagItem[] }[] = [
   },
 ];
 
+export const SINGLE_OCCURRENCE_KINDS = new Set<string>([
+  'order',
+  'trashed',
+  'explicit',
+  'mixed',
+  'lowq',
+  'limit',
+]);
+
+export const TOKEN_REGEX = /(-?[a-zA-Z]*(?::(?:<=|>=|<|>|=)?)?"[^"]*"|[^\s]+)/g;
+
+export function getAtomKind(token: string): string | undefined {
+  const trimmed = token.trim();
+  if (!trimmed) return undefined;
+
+  const match = trimmed.toLowerCase().match(/^(-)?([a-z]+):/);
+  if (!match) return undefined;
+
+  const prefix = match[2];
+  switch (prefix) {
+    case 'o':
+    case 'order':
+      return 'order';
+    case 'trashed':
+      return 'trashed';
+    case 'el':
+    case 'explicit':
+      return 'explicit';
+    case 'm':
+    case 'mixed':
+      return 'mixed';
+    case 'lowq':
+      return 'lowq';
+    case 'limit':
+      return 'limit';
+    case 'l':
+      if (/^(-)?l:[0-9]+$/i.test(trimmed)) {
+        return 'limit';
+      }
+      return 'label';
+    case 'a':
+    case 'artist':
+      return 'artist';
+    case 'ar':
+    case 'artistremixer':
+      return 'artistremixer';
+    case 'remixer':
+      return 'remixer';
+    case 't':
+    case 'title':
+      return 'title';
+    case 'n':
+    case 'album':
+      return 'album';
+    case 'label':
+      return 'label';
+    case 'r':
+    case 'rating':
+      return 'rating';
+    case 'comments':
+      return 'comments';
+    case 'c':
+    case 'curator':
+      return 'curator';
+    case 'e':
+    case 'energy':
+      return 'energy';
+    case 'bpm':
+      return 'bpm';
+    case 'y':
+    case 'year':
+      return 'year';
+    case 'month':
+      return 'month';
+    case 'day':
+      return 'day';
+    default:
+      return undefined;
+  }
+}
+
+export function isSingleOccurrenceAtom(token: string): boolean {
+  const kind = getAtomKind(token);
+  return kind !== undefined && SINGLE_OCCURRENCE_KINDS.has(kind);
+}
+
+export function areSameAtomKind(tokenA: string, tokenB: string): boolean {
+  const kindA = getAtomKind(tokenA);
+  const kindB = getAtomKind(tokenB);
+  if (!kindA || !kindB) return false;
+  return kindA === kindB;
+}
+
 const QueryBuilderModal: Component<QueryBuilderModalProps> = (props) => {
   const [queryText, setQueryText] = createSignal('');
   let inputRef: HTMLInputElement | undefined;
@@ -83,10 +176,20 @@ const QueryBuilderModal: Component<QueryBuilderModalProps> = (props) => {
 
   const insertTag = (tagPrefix: string) => {
     const input = inputRef;
-    const current = queryText();
+    let current = queryText();
 
     let start = input ? input.selectionStart ?? current.length : current.length;
     let end = input ? input.selectionEnd ?? current.length : current.length;
+
+    if (isSingleOccurrenceAtom(tagPrefix)) {
+      const tokens = current.match(TOKEN_REGEX) || [];
+      const filtered = tokens.filter((token) => !areSameAtomKind(token, tagPrefix));
+      if (filtered.length !== tokens.length) {
+        current = filtered.join(' ');
+        start = current.length;
+        end = current.length;
+      }
+    }
 
     let textToInsert = tagPrefix;
     let cursorOffset = tagPrefix.length;
